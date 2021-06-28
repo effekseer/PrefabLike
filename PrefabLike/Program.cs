@@ -3,6 +3,16 @@ using System.Collections.Generic;
 
 namespace PrefabLike
 {
+	/*
+	 メインのツリー
+	継承可能なのでDiffで構成される
+	子ノードの生成もDiff
+
+	Prefab
+	実質メインツリーと同じ
+
+	 */
+
 	class Program
 	{
 		static void Main(string[] args)
@@ -43,11 +53,43 @@ namespace PrefabLike
 			return null;
 		}
 
-		public Node CreateNodeFromPrefab(Node prefab)
+		public Node CreateNodeFromPrefab(EditorNode editorNode)
 		{
-			// TODO
-			return null;
+			if (editorNode.BaseType == null && editorNode.Template == null)
+				throw new Exception();
+
+			if (editorNode.BaseType != null && editorNode.Template != null)
+				throw new Exception();
+
+			Node baseNode = null;
+
+			if (editorNode.BaseType != null)
+			{
+				var constructor = editorNode.BaseType.GetConstructor(Type.EmptyTypes);
+				baseNode = (Node)constructor.Invoke(null);
+			}
+			else
+			{
+				baseNode = CreateNodeFromPrefab(editorNode.Template);
+			}
+
+			foreach(var diff in editorNode.Modified.Difference)
+			{
+				var keys = diff.Key.Split(".");
+
+				var fi = baseNode.GetType().GetField(keys[0]);
+				var v = fi.GetValue(baseNode);
+
+				// 構造体の時面倒だなあ
+				// 値を適用する
+			}
+
+			editorNodes[baseNode] = editorNode;
+
+			return baseNode;
 		}
+
+		Dictionary<Node, EditorNode> editorNodes = new Dictionary<Node, EditorNode>();
 	}
 
 	/// <summary>
@@ -60,22 +102,22 @@ namespace PrefabLike
 
 	class Node
 	{
-		// エディタ専用周りは分離したほうがいいかもしれない
+		public Node[] Children = new Node[0];
+	}
 
-		/// <summary>
-		/// Editor only
-		/// </summary>
+	class EditorNode
+	{
+		public Type BaseType;
+
+		public EditorNode Template;
+
+		public EditorNode[] AdditionalChildren;
+
+		// 子の情報が必要
+
 		public FileInformation FileInfo;
 
-		/// <summary>
-		/// Editor only
-		/// </summary>
 		public Modified Modified;
-
-		/// <summary>
-		/// Editor only
-		/// </summary>
-		public Node Template;
 	}
 
 	/// <summary>
