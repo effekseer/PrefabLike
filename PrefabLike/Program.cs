@@ -73,15 +73,30 @@ namespace PrefabLike
 				baseNode = CreateNodeFromPrefab(editorNode.Template);
 			}
 
-			foreach(var diff in editorNode.Modified.Difference)
+			foreach (var addCh in editorNode.AdditionalChildren)
 			{
+				baseNode.Children.Add(CreateNodeFromPrefab(addCh));
+			}
+
+			foreach (var diff in editorNode.Modified.Difference)
+			{
+				// TODO edit nodes
+
 				var keys = diff.Key.Split(".");
 
-				var fi = baseNode.GetType().GetField(keys[0]);
-				var v = fi.GetValue(baseNode);
+				// TODO struct
+				var target = baseNode;
+				var lastClass = baseNode;
+				for(int i = 0; i < keys.Length - 1; i++)
+				{
+					var fi = target.GetType().GetField(keys[i]);
+					target = fi.GetValue(baseNode);
+				}
 
-				// 構造体の時面倒だなあ
-				// 値を適用する
+				{
+					var fi = target.GetType().GetField(keys[i]);
+					fi.SetValue(target, diff.Value);
+				}
 			}
 
 			editorNodes[baseNode] = editorNode;
