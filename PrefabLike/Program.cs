@@ -33,8 +33,47 @@ namespace PrefabLike
 		}
 	}
 
+	class CommandManager
+	{
+		public void Undo()
+		{
+
+		}
+
+		public void Redo()
+		{
+
+		}
+
+		public void StartEdit(object o)
+		{
+			if (o is Node)
+			{
+				// おそらくオブジェクトの種類でUndo分岐しないと辛い
+				// ステートの差分を取得して、Modiedを生成し、ModifiedもUNDOすることになる
+			}
+		}
+
+		public void NotifyEdit(object o)
+		{
+			if (o is Node)
+			{
+				// おそらくオブジェクトの種類でUndo分岐しないと辛い
+			}
+		}
+
+		public void EndEdit(object o)
+		{
+			if (o is Node)
+			{
+				// おそらくオブジェクトの種類でUndo分岐しないと辛い
+			}
+		}
+	}
+
 	class PrefabSyatem
 	{
+
 		public byte[] SavePrefab(Node node)
 		{
 			// TODO
@@ -85,16 +124,38 @@ namespace PrefabLike
 				var keys = diff.Key.Split(".");
 
 				// TODO struct
-				var target = baseNode;
-				var lastClass = baseNode;
+				object? target = baseNode;
+				object? lastClass = baseNode;
 				for(int i = 0; i < keys.Length - 1; i++)
 				{
-					var fi = target.GetType().GetField(keys[i]);
-					target = fi.GetValue(baseNode);
+					var listLey = ListElementInfo.Create(keys[i]);
+
+					if(listLey != null)
+					{
+						var fi = target.GetType().GetField(listLey.Key);
+						var v = fi.GetValue(baseNode);
+						foreach(var p in v.GetType().GetProperties())
+						{
+							if(p.GetIndexParameters().Length > 0)
+							{
+								target = p.GetValue(v, new object?[] { listLey.Index });
+							}
+						}
+					}
+					else
+					{
+						var fi = target.GetType().GetField(keys[i]);
+						target = fi.GetValue(baseNode);
+					}
+
+					if (target.GetType().IsClass)
+					{
+						lastClass = target;
+					}
 				}
 
 				{
-					var fi = target.GetType().GetField(keys[i]);
+					var fi = target.GetType().GetField(keys[keys.Length - 1]);
 					fi.SetValue(target, diff.Value);
 				}
 			}
@@ -107,6 +168,39 @@ namespace PrefabLike
 		Dictionary<Node, EditorNode> editorNodes = new Dictionary<Node, EditorNode>();
 	}
 
+	class ListElementInfo
+	{
+		public string Key;
+		public int Index;
+
+		public static ListElementInfo Create(string str)
+		{
+			// TODO rewrite with Regular Expression
+			var ss = str.Split('[');
+			if (ss.Length != 2)
+				return null;
+
+			var key = ss[0];
+
+			var numStr = ss[1].Replace("]", "");
+
+			if(int.TryParse(numStr, out var n))
+			{
+				var info = new ListElementInfo();
+				info.Key = key;
+				info.Index = n;
+				return info;
+			}
+
+			return null;
+		}
+
+		public override string ToString()
+		{
+			return Key + "[" + Index.ToString() + "]";
+		}
+	}
+
 	/// <summary>
 	/// Store file information.
 	/// </summary>
@@ -117,7 +211,7 @@ namespace PrefabLike
 
 	class Node
 	{
-		public Node[] Children = new Node[0];
+		public List<Node> Children = new List<Node>();
 	}
 
 	class EditorNode
@@ -177,42 +271,4 @@ namespace PrefabLike
 			return ret;
 		}
 	}
-
-	class CommandManager
-	{
-		public void Undo()
-		{
-
-		}
-
-		public void Redo()
-		{
-
-		}
-
-		public void StartEdit(object o)
-		{
-			if (o is Node)
-			{
-				// おそらくオブジェクトの種類でUndo分岐しないと辛い
-				// ステートの差分を取得して、Modiedを生成し、ModifiedもUNDOすることになる
-			}
-		}
-
-		public void NotifyEdit(object o)
-		{
-			if (o is Node)
-			{
-				// おそらくオブジェクトの種類でUndo分岐しないと辛い
-			}
-		}
-
-		public void EndEdit(object o)
-		{
-			if (o is Node)
-			{
-				// おそらくオブジェクトの種類でUndo分岐しないと辛い
-			}
-		}
-	};
 }
