@@ -46,11 +46,18 @@ namespace PrefabLike
 		public string Path;
 	}
 
+
+
+
 	/// <summary>
 	/// Prefab(EditorNodeInformation) のインスタンス。
 	/// </summary>
 	/// <remarks>
 	/// これはランタイムで使用することを想定する。（.efk に含まれる）
+	/// 
+	/// このクラス自体にアプリケーション固有の情報 (姿勢情報や描画に必要なパラメータなど) は持たせるべきではない。
+	/// そういったものはこの Node を継承して持たせる。
+	/// PrefabSystem としては Node には多くの情報は不要。親子関係だけでも足りそう。
 	/// </remarks>
 	class Node
 	{

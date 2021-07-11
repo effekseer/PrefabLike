@@ -13,6 +13,7 @@ namespace PrefabLike
 
 	 */
 
+
 	class Program
 	{
 		static void Main(string[] args)
@@ -22,7 +23,11 @@ namespace PrefabLike
 
 		class TestNode : Node
 		{
-			public TestStruct V1;
+			public int Value1;
+			public float Value2;
+			public string Value3;
+			public TestStruct Value4;
+			List<float> Value5;
 		}
 
 		struct TestStruct
