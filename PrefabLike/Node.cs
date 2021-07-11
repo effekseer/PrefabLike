@@ -46,15 +46,32 @@ namespace PrefabLike
 		public string Path;
 	}
 
+	/// <summary>
+	/// Prefab(EditorNodeInformation) のインスタンス。
+	/// </summary>
+	/// <remarks>
+	/// これはランタイムで使用することを想定する。（.efk に含まれる）
+	/// </remarks>
 	class Node
 	{
 		public List<Node> Children = new List<Node>();
 	}
 
+	/// <summary>
+	/// Prefab 情報本体
+	/// </summary>
+	/// <remarks>
+	/// ランタイムには含まれない。.efkefc ファイルに含まれるエディタ用の情報となる。
+	/// .efk をエクスポートするときにすべての Prefab はインスタンス化する想定。
+	/// </remarks>
 	class EditorNodeInformation
 	{
 		public Type BaseType;
 
+		/// <summary>
+		/// 継承元。Prefab は別の Prefab を元に作成することができる。
+		/// TODO: GUI で変更箇所を太文字にしたりするため、これに対してどのフィールドを変更したかといった差分情報が必要。
+		/// </summary>
 		public EditorNodeInformation Template;
 
 		public EditorNodeInformation[] AdditionalChildren;
