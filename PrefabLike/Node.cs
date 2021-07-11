@@ -51,13 +51,13 @@ namespace PrefabLike
 		public List<Node> Children = new List<Node>();
 	}
 
-	class EditorNode
+	class EditorNodeInformation
 	{
 		public Type BaseType;
 
-		public EditorNode Template;
+		public EditorNodeInformation Template;
 
-		public EditorNode[] AdditionalChildren;
+		public EditorNodeInformation[] AdditionalChildren;
 
 		// 子の情報が必要
 

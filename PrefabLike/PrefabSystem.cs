@@ -25,7 +25,7 @@ namespace PrefabLike
 			return null;
 		}
 
-		public Node CreateNodeFromPrefab(EditorNode editorNode)
+		public Node CreateNodeFromPrefab(EditorNodeInformation editorNode)
 		{
 			if (editorNode.BaseType == null && editorNode.Template == null)
 				throw new Exception();
@@ -98,7 +98,7 @@ namespace PrefabLike
 			return baseNode;
 		}
 
-		Dictionary<Node, EditorNode> editorNodes = new Dictionary<Node, EditorNode>();
+		Dictionary<Node, EditorNodeInformation> editorNodes = new Dictionary<Node, EditorNodeInformation>();
 	}
 
 }
