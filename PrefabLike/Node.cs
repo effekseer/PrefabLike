@@ -4,40 +4,6 @@ using System.Text;
 
 namespace PrefabLike
 {
-
-	class ListElementInfo
-	{
-		public string Key;
-		public int Index;
-
-		public static ListElementInfo Create(string str)
-		{
-			// TODO rewrite with Regular Expression
-			var ss = str.Split('[');
-			if (ss.Length != 2)
-				return null;
-
-			var key = ss[0];
-
-			var numStr = ss[1].Replace("]", "");
-
-			if (int.TryParse(numStr, out var n))
-			{
-				var info = new ListElementInfo();
-				info.Key = key;
-				info.Index = n;
-				return info;
-			}
-
-			return null;
-		}
-
-		public override string ToString()
-		{
-			return Key + "[" + Index.ToString() + "]";
-		}
-	}
-
 	/// <summary>
 	/// Store file information.
 	/// </summary>
@@ -95,35 +61,117 @@ namespace PrefabLike
 	/// </summary>
 	class Modified
 	{
-		public Dictionary<string, object> Difference = new Dictionary<string, object>();
+		public Dictionary<AccessKeyGroup, object> Difference = new Dictionary<AccessKeyGroup, object>();
 	}
 
-	/// <summary>
-	/// 差分をとるためのやつ
-	/// </summary>
-	class State
+	class AccessKeyGroup
 	{
-		Dictionary<string, object> values = new Dictionary<string, object>();
+		public AccessKey[] Keys = null;
+
+		public override int GetHashCode()
+		{
+			var hash = 0;
+
+			foreach (var key in Keys)
+			{
+				hash += key.GetHashCode();
+			}
+
+			return hash;
+		}
+
+		public override bool Equals(object obj)
+		{
+			var o = obj as AccessKeyGroup;
+			if (o == null) return false;
+
+			if (Keys.Length != o.Keys.Length)
+				return false;
+
+			for (int i = 0; i < Keys.Length; i++)
+			{
+				if (!Keys[i].Equals(o.Keys[i]))
+					return false;
+			}
+
+			return true;
+		}
+	}
+
+	class AccessKey
+	{
+	}
+
+	class AccessKeyField : AccessKey
+	{
+		public string Name;
+
+		public override int GetHashCode()
+		{
+			return Name.GetHashCode();
+		}
+
+		public override bool Equals(object obj)
+		{
+			var o = obj as AccessKeyField;
+			if (o is null)
+				return false;
+
+			return Name == o.Name;
+		}
+	}
+
+	class AccessKeyListElement : AccessKey
+	{
+		public string Name;
+		public int Index;
+
+		public override int GetHashCode()
+		{
+			return Name.GetHashCode() + Index.GetHashCode();
+		}
+
+		public override bool Equals(object obj)
+		{
+			var o = obj as AccessKeyListElement;
+			if (o is null)
+				return false;
+
+			return Name == o.Name && Index == o.Index;
+		}
+	}
+
+
+	class FieldState
+	{
+		Dictionary<AccessKeyGroup, object> values = new Dictionary<AccessKeyGroup, object>();
 		public void Store(object o)
 		{
-			// 木構造未対応
 			var fields = o.GetType().GetFields();
 			foreach (var field in fields)
 			{
-				// 構造体とクラスで分岐すべき
+				if (field.FieldType.IsGenericType)
+				{
+					Console.WriteLine("Generic is not supported now.");
+					continue;
+				}
+
 				var value = field.GetValue(o);
-				values.Add(field.Name, value);
+
+				var group = new AccessKeyGroup();
+				group.Keys = new AccessKey[] { new AccessKeyField { Name = field.Name } };
+				values.Add(group, value);
 			}
 		}
 
-		public Dictionary<string, object> GenerateDifference(State state)
+		public Dictionary<AccessKeyGroup, object> GenerateDifference(FieldState state)
 		{
-			Dictionary<string, object> ret = new Dictionary<string, object>();
+			var ret = new Dictionary<AccessKeyGroup, object>();
 
 			foreach (var value in state.values)
 			{
 				var newVal = values[value.Key];
-				if (newVal != value.Value)
+				if (!newVal.Equals(value.Value))
 				{
 					ret.Add(value.Key, newVal);
 				}

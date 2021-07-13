@@ -52,9 +52,28 @@ namespace PrefabLike
 
 			foreach (var diff in editorNode.Modified.Difference)
 			{
+				var keys = diff.Key.Keys;
+
+				object target = baseNode;
+
+				for (int i = 0; i < keys.Length; i++)
+				{
+					var key = keys[i];
+
+					if(key is AccessKeyField)
+					{
+						var k = key as AccessKeyField;
+						var field = target.GetType().GetField(k.Name);
+						target = field.GetValue(target);
+					}
+
+					// 構造体を逆からたどって生成する必要がある
+					//target.GetType()
+				}
+
+				/*
 				// TODO edit nodes
 
-				var keys = diff.Key.Split(".");
 
 				// TODO struct
 				object? target = baseNode;
@@ -91,6 +110,7 @@ namespace PrefabLike
 					var fi = target.GetType().GetField(keys[keys.Length - 1]);
 					fi.SetValue(target, diff.Value);
 				}
+				*/
 			}
 
 			editorNodes[baseNode] = editorNode;

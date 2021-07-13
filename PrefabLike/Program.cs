@@ -13,12 +13,36 @@ namespace PrefabLike
 
 	 */
 
+	/*
+	EditorNodeInformationから変更後データを復元する
+	 */
 
 	class Program
 	{
 		static void Main(string[] args)
 		{
-			Console.WriteLine("Hello World!");
+			TestDiff();
+		}
+
+		static void TestDiff()
+		{
+			TestStruct v = new TestStruct();
+
+			var before = new FieldState();
+			before.Store(v);
+
+			v.A = 2.0f;
+
+			var after = new FieldState();
+			after.Store(v);
+
+			var diff = before.GenerateDifference(after);
+
+			foreach (var d in diff)
+			{
+				Console.WriteLine(d.Key);
+				Console.WriteLine(d.Value);
+			}
 		}
 
 		class TestNode : Node
