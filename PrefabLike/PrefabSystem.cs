@@ -42,12 +42,12 @@ namespace PrefabLike
 			}
 			else
 			{
-				baseNode = CreateNodeFromPrefab(editorNode.Template);
+				baseNode = CreateNodeFromPrefab(editorNode.Template);   // recursion
 			}
 
 			foreach (var addCh in editorNode.AdditionalChildren)
 			{
-				baseNode.Children.Add(CreateNodeFromPrefab(addCh));
+				baseNode.Children.Add(CreateNodeFromPrefab(addCh));   // recursion
 			}
 
 			foreach (var diff in editorNode.Modified.Difference)
@@ -60,7 +60,7 @@ namespace PrefabLike
 				{
 					var key = keys[i];
 
-					if(key is AccessKeyField)
+					if (key is AccessKeyField)
 					{
 						var k = key as AccessKeyField;
 						var field = target.GetType().GetField(k.Name);

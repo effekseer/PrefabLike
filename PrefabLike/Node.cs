@@ -7,7 +7,7 @@ namespace PrefabLike
 	/// <summary>
 	/// Store file information.
 	/// </summary>
-	class FileInformation
+	public class FileInformation
 	{
 		public string Path;
 	}
@@ -25,7 +25,7 @@ namespace PrefabLike
 	/// そういったものはこの Node を継承して持たせる。
 	/// PrefabSystem としては Node には多くの情報は不要。親子関係だけでも足りそう。
 	/// </remarks>
-	class Node
+	public class Node
 	{
 		public List<Node> Children = new List<Node>();
 	}
@@ -37,13 +37,17 @@ namespace PrefabLike
 	/// ランタイムには含まれない。.efkefc ファイルに含まれるエディタ用の情報となる。
 	/// .efk をエクスポートするときにすべての Prefab はインスタンス化する想定。
 	/// </remarks>
-	class EditorNodeInformation
+	public class EditorNodeInformation
 	{
+		/// <summary>
+		/// この Prefab が生成するインスタンスの型。
+		/// Template と同時に使うことはできない。BaseType を持つなら、Template は null でなければならない。
+		/// </summary>
 		public Type BaseType;
 
 		/// <summary>
 		/// 継承元。Prefab は別の Prefab を元に作成することができる。
-		/// TODO: GUI で変更箇所を太文字にしたりするため、これに対してどのフィールドを変更したかといった差分情報が必要。
+		/// BaseType が null の場合、これをもとにインスタンスを作成する。
 		/// </summary>
 		public EditorNodeInformation Template;
 
@@ -53,18 +57,23 @@ namespace PrefabLike
 
 		public FileInformation FileInfo;
 
+		/// <summary>
+		/// 差分情報。
+		/// この Prefab が生成するインスタンスに対して set するフィールドのセット。
+		/// これを使って GUI で変更箇所を太文字にしたりする。
+		/// </summary>
 		public Modified Modified;
 	}
 
 	/// <summary>
 	/// A class to contain differences
 	/// </summary>
-	class Modified
+	public class Modified
 	{
 		public Dictionary<AccessKeyGroup, object> Difference = new Dictionary<AccessKeyGroup, object>();
 	}
 
-	class AccessKeyGroup
+	public class AccessKeyGroup
 	{
 		public AccessKey[] Keys = null;
 
@@ -98,11 +107,11 @@ namespace PrefabLike
 		}
 	}
 
-	class AccessKey
+	public class AccessKey
 	{
 	}
 
-	class AccessKeyField : AccessKey
+	public class AccessKeyField : AccessKey
 	{
 		public string Name;
 
@@ -121,7 +130,7 @@ namespace PrefabLike
 		}
 	}
 
-	class AccessKeyListElement : AccessKey
+	public class AccessKeyListElement : AccessKey
 	{
 		public string Name;
 		public int Index;
@@ -142,7 +151,7 @@ namespace PrefabLike
 	}
 
 
-	class FieldState
+	public class FieldState
 	{
 		Dictionary<AccessKeyGroup, object> values = new Dictionary<AccessKeyGroup, object>();
 		public void Store(object o)
@@ -171,7 +180,7 @@ namespace PrefabLike
 			foreach (var value in state.values)
 			{
 				var newVal = values[value.Key];
-				if (!newVal.Equals(value.Value))
+				if (!object.Equals(newVal, value.Value))
 				{
 					ret.Add(value.Key, newVal);
 				}
