@@ -51,7 +51,7 @@ namespace PrefabLike
 		/// </summary>
 		public EditorNodeInformation Template;
 
-		public EditorNodeInformation[] AdditionalChildren;
+		public List<EditorNodeInformation> AdditionalChildren = new List<EditorNodeInformation>();
 
 		// 子の情報が必要
 
@@ -62,7 +62,7 @@ namespace PrefabLike
 		/// この Prefab が生成するインスタンスに対して set するフィールドのセット。
 		/// これを使って GUI で変更箇所を太文字にしたりする。
 		/// </summary>
-		public Modified Modified;
+		public Modified Modified = new Modified();
 	}
 
 	/// <summary>

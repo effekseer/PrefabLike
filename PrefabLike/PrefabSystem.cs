@@ -4,7 +4,7 @@ using System.Text;
 
 namespace PrefabLike
 {
-	class PrefabSyatem
+	public class PrefabSyatem
 	{
 
 		public byte[] SavePrefab(Node node)
@@ -63,8 +63,11 @@ namespace PrefabLike
 					if (key is AccessKeyField)
 					{
 						var k = key as AccessKeyField;
+						var v = diff.Value;
 						var field = target.GetType().GetField(k.Name);
-						target = field.GetValue(target);
+						field.SetValue(target, v);
+
+						//target = field.GetValue(target);
 					}
 
 					// 構造体を逆からたどって生成する必要がある

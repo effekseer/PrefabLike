@@ -21,7 +21,7 @@ namespace PrefabLikeTest
         }
 
         [Test]
-        public void DiffTest1()
+        public void Diff1()
         {
             var v = new TestNode1();
 
@@ -54,6 +54,34 @@ namespace PrefabLikeTest
                 Assert.AreEqual("Value1", field.Name);  // Value1 が差分として出ている
                 Assert.AreEqual(0, pair.Value);         // before 側の値として 0 が検出される
             }
+        }
+
+        [Test]
+        public void Instantiate1()
+        {
+            var system = new PrefabSyatem();
+            var prefab = new EditorNodeInformation();
+
+            // 差分から prefab を作る
+            {
+                prefab.BaseType = typeof(TestNode1);
+
+                var v = new TestNode1();
+
+                var before = new FieldState();
+                before.Store(v);
+
+                v.Value1 = 5;
+
+                var after = new FieldState();
+                after.Store(v);
+
+                prefab.Modified.Difference = after.GenerateDifference(before);
+            }
+
+            // インスタンスを作ってみる
+            var node2 = system.CreateNodeFromPrefab(prefab) as TestNode1;
+            Assert.AreEqual(5, node2.Value1);   // prefab が持っている値が設定されていること
         }
     }
 }
