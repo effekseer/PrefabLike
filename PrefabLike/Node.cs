@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Linq;
 
 namespace PrefabLike
 {
@@ -153,9 +154,10 @@ namespace PrefabLike
 
 	public class FieldState
 	{
-		Dictionary<AccessKeyGroup, object> values = new Dictionary<AccessKeyGroup, object>();
-		public void Store(object o)
+		Dictionary<AccessKey, object> GetValues(object o)
 		{
+			Dictionary<AccessKey, object> values = new Dictionary<AccessKey, object>();
+
 			var fields = o.GetType().GetFields();
 			foreach (var field in fields)
 			{
@@ -165,21 +167,65 @@ namespace PrefabLike
 					continue;
 				}
 
-				var value = field.GetValue(o);
-
-				var group = new AccessKeyGroup();
-				group.Keys = new AccessKey[] { new AccessKeyField { Name = field.Name } };
-				values.Add(group, value);
+				if (field.FieldType == typeof(int) || field.FieldType == typeof(string) || field.FieldType == typeof(bool))
+				{
+					var value = field.GetValue(o);
+					var key = new AccessKeyField { Name = field.Name };
+					values.Add(key, value);
+				}
+				else
+				{
+					var value = field.GetValue(o);
+					var key = new AccessKeyField { Name = field.Name };
+					var internalValues = GetValues(value);
+					values.Add(key, internalValues);
+				}
 			}
+
+			return values;
+		}
+
+		Dictionary<AccessKeyGroup, object> MakeGroup(Dictionary<AccessKey, object> a2o)
+		{
+			var dst = new Dictionary<AccessKeyGroup, object>();
+
+			Action<AccessKey[], Dictionary<AccessKey, object>> recursive = null;
+			recursive = (AccessKey[] keys, Dictionary<AccessKey, object> a2or) =>
+			 {
+				 foreach(var kv in a2or)
+				 {
+					 var nextKeys = keys.Concat(new[] { kv.Key }).ToArray();
+
+					 if (kv.Value is Dictionary<AccessKey, object>)
+					 {
+						 recursive(nextKeys, kv.Value as Dictionary<AccessKey, object>);
+					 }
+					 else
+					 {
+						 dst.Add(new AccessKeyGroup { Keys = nextKeys }, kv.Value);
+					 }
+				 }
+			 };
+
+			return dst;
+		}
+
+		Dictionary<AccessKey, object> currentValues = new Dictionary<AccessKey, object>();
+		public void Store(object o)
+		{
+			currentValues = GetValues(o);
 		}
 
 		public Dictionary<AccessKeyGroup, object> GenerateDifference(FieldState state)
 		{
 			var ret = new Dictionary<AccessKeyGroup, object>();
 
-			foreach (var value in state.values)
+			var stateValues = MakeGroup(state.currentValues);
+			var current = MakeGroup(currentValues);
+
+			foreach (var value in stateValues)
 			{
-				var newVal = values[value.Key];
+				var newVal = current[value.Key];
 				if (!object.Equals(newVal, value.Value))
 				{
 					ret.Add(value.Key, newVal);

@@ -5,7 +5,12 @@ VisualStudioVersion = 16.0.30907.101
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PrefabLike", "PrefabLike\PrefabLike.csproj", "{53DB9DF8-E61A-4E0F-B4AC-0463AE7935A2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PrefabLikeTest", "PrefabLikeTest\PrefabLikeTest.csproj", "{F0D15B5A-77E1-423A-8C42-4315FE7BF1D2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PrefabLikeTest", "PrefabLikeTest\PrefabLikeTest.csproj", "{F0D15B5A-77E1-423A-8C42-4315FE7BF1D2}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{EE4A8FED-21EB-4576-9CD0-16F7D78D0552}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
