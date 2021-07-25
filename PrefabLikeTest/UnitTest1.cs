@@ -11,6 +11,14 @@ namespace PrefabLikeTest
 			public float A;
 			public float B;
 			public float C;
+			public TestStruct2 St;
+		}
+
+		struct TestStruct2
+		{
+			public float A;
+			public float B;
+			public float C;
 		}
 
 		class TestClass1
@@ -85,16 +93,18 @@ namespace PrefabLikeTest
 		{
 			var v = new TestNodeStruct();
 			v.Struct1.A = 1.0f;
+			v.Struct1.St.B = 3.0f;
 
 			var before = new FieldState();
 			before.Store(v);
 			v.Struct1.A = 2.0f;
+			v.Struct1.St.B = 4.0f;
 
 			var after = new FieldState();
 			after.Store(v);
 
 			var diff = before.GenerateDifference(after);
-			Assert.AreEqual(1, diff.Count);
+			Assert.AreEqual(2, diff.Count);
 			Assert.AreEqual(1.0f, diff.First().Value);
 		}
 
@@ -180,6 +190,32 @@ namespace PrefabLikeTest
 			//	var node2 = system.CreateNodeFromPrefab(prefab) as TestNodePrimitive;
 			//	Assert.AreEqual(5, node2.Value1);
 			//}
+		}
+
+		[Test]
+		public void InstantiateStruct()
+		{
+			var system = new PrefabSyatem();
+			var prefab = new EditorNodeInformation();
+
+			{
+				prefab.BaseType = typeof(TestNodeStruct);
+
+				var v = new TestNodeStruct();
+
+				var before = new FieldState();
+				before.Store(v);
+
+				v.Struct1.A = 2.0f;
+
+				var after = new FieldState();
+				after.Store(v);
+
+				prefab.Modified.Difference = after.GenerateDifference(before);
+			}
+
+			var node2 = system.CreateNodeFromPrefab(prefab) as TestNodeStruct;
+			Assert.AreEqual(2, node2.Struct1.A); 
 		}
 	}
 }

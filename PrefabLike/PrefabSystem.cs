@@ -54,7 +54,8 @@ namespace PrefabLike
 			{
 				var keys = diff.Key.Keys;
 
-				object target = baseNode;
+				List<object> objects = new List<object>();
+				objects.Add(baseNode);
 
 				for (int i = 0; i < keys.Length; i++)
 				{
@@ -63,15 +64,28 @@ namespace PrefabLike
 					if (key is AccessKeyField)
 					{
 						var k = key as AccessKeyField;
-						var v = diff.Value;
-						var field = target.GetType().GetField(k.Name);
-						field.SetValue(target, v);
+						var field = objects[objects.Count - 1].GetType().GetField(k.Name);
+						objects.Add(field.GetValue(objects[objects.Count - 1]));
 
-						//target = field.GetValue(target);
 					}
+				}
 
-					// 構造体を逆からたどって生成する必要がある
-					//target.GetType()
+				System.Diagnostics.Debug.Assert(objects.Count - 1 == keys.Length);
+
+				objects[objects.Count - 1] = diff.Value;
+
+				for(int i = keys.Length - 1; i >= 0; i--)
+				{
+					var key = keys[i];
+
+					if (key is AccessKeyField)
+					{
+						var k = key as AccessKeyField;
+						var field = objects[i].GetType().GetField(k.Name);
+						var o = objects[i];
+						field.SetValue(o, objects[i + 1]);
+						objects[i] = o;
+					}
 				}
 
 				/*
