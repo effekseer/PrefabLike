@@ -65,7 +65,33 @@ namespace PrefabLike
 					{
 						var k = key as AccessKeyField;
 						var field = objects[objects.Count - 1].GetType().GetField(k.Name);
-						objects.Add(field.GetValue(objects[objects.Count - 1]));
+
+						// not found because a data structure was changed
+						if (field == null)
+						{
+							goto Exit;
+						}
+
+						var o = field.GetValue(objects[objects.Count - 1]);
+						
+						if(o is null)
+						{
+							if(field.FieldType.IsClass)
+							{
+								o = field.FieldType.GetConstructor(new Type[0]).Invoke(null);
+
+								if (o == null)
+								{
+									goto Exit;
+								}
+							}
+							else
+							{
+								goto Exit;
+							}
+						}
+
+						objects.Add(o);
 
 					}
 				}
@@ -87,47 +113,7 @@ namespace PrefabLike
 						objects[i] = o;
 					}
 				}
-
-				/*
-				// TODO edit nodes
-
-
-				// TODO struct
-				object? target = baseNode;
-				object? lastClass = baseNode;
-				for (int i = 0; i < keys.Length - 1; i++)
-				{
-					var listLey = ListElementInfo.Create(keys[i]);
-
-					if (listLey != null)
-					{
-						var fi = target.GetType().GetField(listLey.Key);
-						var v = fi.GetValue(baseNode);
-						foreach (var p in v.GetType().GetProperties())
-						{
-							if (p.GetIndexParameters().Length > 0)
-							{
-								target = p.GetValue(v, new object?[] { listLey.Index });
-							}
-						}
-					}
-					else
-					{
-						var fi = target.GetType().GetField(keys[i]);
-						target = fi.GetValue(baseNode);
-					}
-
-					if (target.GetType().IsClass)
-					{
-						lastClass = target;
-					}
-				}
-
-				{
-					var fi = target.GetType().GetField(keys[keys.Length - 1]);
-					fi.SetValue(target, diff.Value);
-				}
-				*/
+			Exit:;
 			}
 
 			editorNodes[baseNode] = editorNode;

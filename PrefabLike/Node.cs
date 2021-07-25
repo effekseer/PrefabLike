@@ -375,6 +375,14 @@ namespace PrefabLike
 				}
 			}
 
+			foreach(var value in current)
+			{
+				if(!stateValues.ContainsKey(value.Key))
+				{
+					ret.Add(value.Key, value.Value);
+				}
+			}
+
 			return ret;
 		}
 	}

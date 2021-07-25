@@ -215,7 +215,34 @@ namespace PrefabLikeTest
 			}
 
 			var node2 = system.CreateNodeFromPrefab(prefab) as TestNodeStruct;
-			Assert.AreEqual(2, node2.Struct1.A); 
+			Assert.AreEqual(2, node2.Struct1.A);
+		}
+
+		[Test]
+		public void InstantiateClass()
+		{
+			var system = new PrefabSyatem();
+			var prefab = new EditorNodeInformation();
+
+			{
+				prefab.BaseType = typeof(TestNodeClass);
+
+				var v = new TestNodeClass();
+
+				var before = new FieldState();
+				before.Store(v);
+
+				v.Class1_1 = new TestClass1();
+				v.Class1_1.A = 2.0f;
+
+				var after = new FieldState();
+				after.Store(v);
+
+				prefab.Modified.Difference = after.GenerateDifference(before);
+			}
+
+			var node2 = system.CreateNodeFromPrefab(prefab) as TestNodeClass;
+			Assert.AreEqual(2.0f, node2.Class1_1.A);
 		}
 	}
 }
