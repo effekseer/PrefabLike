@@ -74,7 +74,10 @@ namespace PrefabLike
 
 
 
+
+
 			var o = new JObject();
+			o["BaseType"] = BaseType.AssemblyQualifiedName;
 
 			var difference = new JArray();
 			foreach (var pair in Modified.Difference)
@@ -92,8 +95,21 @@ namespace PrefabLike
 
 		public static EditorNodeInformation Deserialize(string json)
 		{
-			var obj = Newtonsoft.Json.JsonConvert.DeserializeObject<EditorNodeInformation>(json);
-			return obj;
+			var prefab = new EditorNodeInformation();
+
+			var o = JObject.Parse(json);
+			var typeName = (string)o["BaseType"];
+			prefab.BaseType = Type.GetType(typeName);
+
+			var difference = (JArray)o["Modified.Difference"];//.Values<JObject>();
+			foreach (var pair in difference)
+			{
+				var key = AccessKeyGroup.Deserialize((JObject)pair["Key"]); //AccessKey.FromJson((JObject)pair["Key"]);
+				var value = pair["Value"].ToObject<object>();
+				prefab.Modified.Difference.Add(key, value);
+			}
+
+			return prefab;
 		}
 	}
 
@@ -181,6 +197,19 @@ namespace PrefabLike
 			o["Keys"] = keys;
 			return o;
 		}
+
+		public static AccessKeyGroup Deserialize(JObject o)
+		{
+			var ret = new AccessKeyGroup();
+			var keys = (JArray)o["Keys"];
+			var result = new List<AccessKey>();
+			foreach (var key in keys)
+			{
+				result.Add(AccessKey.FromJson((JObject)key));
+			}
+			ret.Keys = result.ToArray();
+			return ret;
+		}
 	}
 
 	public abstract class AccessKey
@@ -199,7 +228,7 @@ namespace PrefabLike
 			return o;
 		}
 
-		public AccessKey FromJson(JObject o)
+		public static AccessKey FromJson(JObject o)
 		{
 			var type = (AccessKeyType)(int)o["Type"];
 			AccessKey key;

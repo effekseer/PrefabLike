@@ -183,7 +183,7 @@ namespace PrefabLikeTest
 			}
 
 			// Load and Instantiate
-			// TODO: 
+			// TODO: Json.net を使って一度保存すると、その後読み取った整数はすべて Int64 になる。これを SetValue しようとすると キャストエラーになる。対策が必要。
 			//{
 			//	var prefab = EditorNodeInformation.Deserialize(json);
 
