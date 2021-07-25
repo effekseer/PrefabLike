@@ -72,6 +72,8 @@ namespace PrefabLikeTest
 		public void DiffStruct()
 		{
 			var v = new TestNodeStruct();
+			v.Struct1.A = 1.0f;
+
 			var before = new FieldState();
 			before.Store(v);
 			v.Struct1.A = 2.0f;
@@ -81,7 +83,7 @@ namespace PrefabLikeTest
 
 			var diff = before.GenerateDifference(after);
 			Assert.AreEqual(1, diff.Count);
-			Assert.AreEqual(2.0f, diff.First().Value);
+			Assert.AreEqual(1.0f, diff.First().Value);
 		}
 
 		[Test]

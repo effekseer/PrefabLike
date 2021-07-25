@@ -167,7 +167,7 @@ namespace PrefabLike
 					continue;
 				}
 
-				if (field.FieldType == typeof(int) || field.FieldType == typeof(string) || field.FieldType == typeof(bool))
+				if (field.FieldType == typeof(int) || field.FieldType == typeof(string) || field.FieldType == typeof(bool) || field.FieldType == typeof(float))
 				{
 					var value = field.GetValue(o);
 					var key = new AccessKeyField { Name = field.Name };
@@ -206,6 +206,8 @@ namespace PrefabLike
 					 }
 				 }
 			 };
+
+			recursive(new AccessKey[0], a2o);
 
 			return dst;
 		}
