@@ -64,6 +64,12 @@ namespace PrefabLike
 		/// これを使って GUI で変更箇所を太文字にしたりする。
 		/// </summary>
 		public Modified Modified = new Modified();
+
+		public string Serialize()
+		{
+			string json = Newtonsoft.Json.JsonConvert.SerializeObject(this, Newtonsoft.Json.Formatting.Indented);
+			return json;
+		}
 	}
 
 	/// <summary>

@@ -124,7 +124,7 @@ namespace PrefabLikeTest
 			var system = new PrefabSyatem();
 			var prefab = new EditorNodeInformation();
 
-			// 差分から prefab を作る
+			// Create Prefab from diff.
 			{
 				prefab.BaseType = typeof(TestNodePrimitive);
 
@@ -144,6 +144,32 @@ namespace PrefabLikeTest
 			// インスタンスを作ってみる
 			var node2 = system.CreateNodeFromPrefab(prefab) as TestNodePrimitive;
 			Assert.AreEqual(5, node2.Value1);   // prefab が持っている値が設定されていること
+		}
+
+		[Test]
+		public void SaveLoad()
+		{
+			var system = new PrefabSyatem();
+			var prefab = new EditorNodeInformation();
+
+			// Create Prefab from diff.
+			{
+				prefab.BaseType = typeof(TestNode1);
+
+				var v = new TestNode1();
+
+				var before = new FieldState();
+				before.Store(v);
+
+				v.Value1 = 5;
+
+				var after = new FieldState();
+				after.Store(v);
+
+				prefab.Modified.Difference = after.GenerateDifference(before);
+			}
+
+			prefab.Serialize();
 		}
 	}
 }
