@@ -68,6 +68,12 @@ namespace PrefabLike
 
 		public string Serialize()
 		{
+			// TODO:
+			if (Template != null) throw new NotImplementedException();
+			if (AdditionalChildren.Count > 0) throw new NotImplementedException();
+
+
+
 			var o = new JObject();
 
 			var difference = new JArray();
