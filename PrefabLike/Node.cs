@@ -176,6 +176,11 @@ namespace PrefabLike
 				else
 				{
 					var value = field.GetValue(o);
+					if (value is null)
+					{
+						continue;
+					}
+
 					var key = new AccessKeyField { Name = field.Name };
 					var internalValues = GetValues(value);
 					values.Add(key, internalValues);
@@ -192,7 +197,7 @@ namespace PrefabLike
 			Action<AccessKey[], Dictionary<AccessKey, object>> recursive = null;
 			recursive = (AccessKey[] keys, Dictionary<AccessKey, object> a2or) =>
 			 {
-				 foreach(var kv in a2or)
+				 foreach (var kv in a2or)
 				 {
 					 var nextKeys = keys.Concat(new[] { kv.Key }).ToArray();
 

@@ -13,8 +13,14 @@ namespace PrefabLikeTest
 			public float C;
 		}
 
-		// プリミティブな型をフィールドに持つテストクラス
-		class TestNode1 : Node
+		class TestClass1
+		{
+			public float A;
+			public float B;
+			public float C;
+		}
+
+		class TestNodePrimitive : Node
 		{
 			public int Value1;
 			public float Value2;
@@ -26,6 +32,12 @@ namespace PrefabLikeTest
 			public TestStruct1 Struct1;
 		}
 
+		class TestNodeClass : Node
+		{
+			public TestClass1 Class1_1;
+			public TestClass1 Class1_2;
+		}
+
 		[SetUp]
 		public void Setup()
 		{
@@ -33,9 +45,9 @@ namespace PrefabLikeTest
 		}
 
 		[Test]
-		public void Diff1()
+		public void DiffPrimitive()
 		{
-			var v = new TestNode1();
+			var v = new TestNodePrimitive();
 
 			var before = new FieldState();
 			before.Store(v);    // ここでオブジェクトのスナップショットが取られる
@@ -87,6 +99,26 @@ namespace PrefabLikeTest
 		}
 
 		[Test]
+		public void DiffClass()
+		{
+			var v = new TestNodeClass();
+			v.Class1_1 = new TestClass1();
+			v.Class1_1.A = 1.0f;
+
+			var before = new FieldState();
+			before.Store(v);
+			v.Class1_1.A = 2.0f;
+
+			var after = new FieldState();
+			after.Store(v);
+
+			var diff = before.GenerateDifference(after);
+			Assert.AreEqual(1, diff.Count);
+			Assert.AreEqual(1.0f, diff.First().Value);
+		}
+
+
+		[Test]
 		public void Instantiate1()
 		{
 			var system = new PrefabSyatem();
@@ -94,9 +126,9 @@ namespace PrefabLikeTest
 
 			// 差分から prefab を作る
 			{
-				prefab.BaseType = typeof(TestNode1);
+				prefab.BaseType = typeof(TestNodePrimitive);
 
-				var v = new TestNode1();
+				var v = new TestNodePrimitive();
 
 				var before = new FieldState();
 				before.Store(v);
@@ -110,7 +142,7 @@ namespace PrefabLikeTest
 			}
 
 			// インスタンスを作ってみる
-			var node2 = system.CreateNodeFromPrefab(prefab) as TestNode1;
+			var node2 = system.CreateNodeFromPrefab(prefab) as TestNodePrimitive;
 			Assert.AreEqual(5, node2.Value1);   // prefab が持っている値が設定されていること
 		}
 	}
