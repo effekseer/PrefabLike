@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Linq;
+using Newtonsoft.Json.Linq;
 
 namespace PrefabLike
 {
@@ -67,8 +68,26 @@ namespace PrefabLike
 
 		public string Serialize()
 		{
-			string json = Newtonsoft.Json.JsonConvert.SerializeObject(this, Newtonsoft.Json.Formatting.Indented);
+			var o = new JObject();
+
+			var difference = new JArray();
+			foreach (var pair in Modified.Difference)
+			{
+				var p = new JObject();
+				p["Key"] = pair.Key.Serialize();
+				p["Value"] = JToken.FromObject(pair.Value);
+				difference.Add(p);
+			}
+			o["Modified.Difference"] = difference;
+
+			string json = o.ToString();
 			return json;
+		}
+
+		public static EditorNodeInformation Deserialize(string json)
+		{
+			var obj = Newtonsoft.Json.JsonConvert.DeserializeObject<EditorNodeInformation>(json);
+			return obj;
 		}
 	}
 
@@ -77,7 +96,39 @@ namespace PrefabLike
 	/// </summary>
 	public class Modified
 	{
+		/// <summary>
+		/// </summary>
+		/// <remarks>
+		/// e.g.)
+		/// ```
+		/// obj.Pos.X = 1;
+		/// obj.Pos.Y = 2;
+		/// ```
+		/// ```
+		/// Difference: {
+		///		{ ["Pos", "X"], 1 },	// { AccessKeyGroup, value }
+		///		{ ["Pos", "Y"], 2 },	// { AccessKeyGroup, value }
+		///	}
+		/// ```
+		/// </remarks>
 		public Dictionary<AccessKeyGroup, object> Difference = new Dictionary<AccessKeyGroup, object>();
+
+		public JObject Serialize()
+		{
+			var o = new JObject();
+			var difference = new JArray();
+			foreach (var pair in Difference)
+			{
+				var d = new JObject();
+			}
+			o["Difference"] = difference;
+			return o;
+		}
+
+		public static void Deserialize(JObject o)
+		{
+			throw new NotImplementedException();
+		}
 	}
 
 	public class AccessKeyGroup
@@ -112,10 +163,58 @@ namespace PrefabLike
 
 			return true;
 		}
+
+		public JObject Serialize()
+		{
+			var o = new JObject();
+			var keys = new JArray();
+			foreach (var key in Keys)
+			{
+				keys.Add(key.ToJson());
+			}
+			o["Keys"] = keys;
+			return o;
+		}
 	}
 
-	public class AccessKey
+	public abstract class AccessKey
 	{
+		protected enum AccessKeyType
+		{
+			Field = 1,
+			ListElement = 2,
+		}
+
+		public JObject ToJson()
+		{
+			JObject o = new JObject();
+			o["Type"] = (int)GetAccessKeyType();
+			Serialize(o);
+			return o;
+		}
+
+		public AccessKey FromJson(JObject o)
+		{
+			var type = (AccessKeyType)(int)o["Type"];
+			AccessKey key;
+			switch (type)
+			{
+				case AccessKeyType.Field:
+					key = new AccessKeyField();
+					break;
+				case AccessKeyType.ListElement:
+					key = new AccessKeyListElement();
+					break;
+				default:
+					throw new NotImplementedException();
+			}
+			key.Deserialize(o);
+			return key;
+		}
+
+		protected abstract AccessKeyType GetAccessKeyType();
+		protected abstract void Serialize(JObject o);
+		protected abstract void Deserialize(JObject o);
 	}
 
 	public class AccessKeyField : AccessKey
@@ -134,6 +233,21 @@ namespace PrefabLike
 				return false;
 
 			return Name == o.Name;
+		}
+
+		protected override AccessKeyType GetAccessKeyType()
+		{
+			return AccessKeyType.Field;
+		}
+
+		protected override void Serialize(JObject o)
+		{
+			o["Name"] = Name;
+		}
+
+		protected override void Deserialize(JObject o)
+		{
+			Name = (string)o["Name"];
 		}
 	}
 
@@ -154,6 +268,22 @@ namespace PrefabLike
 				return false;
 
 			return Name == o.Name && Index == o.Index;
+		}
+		protected override AccessKeyType GetAccessKeyType()
+		{
+			return AccessKeyType.ListElement;
+		}
+
+		protected override void Serialize(JObject o)
+		{
+			o["Name"] = Name;
+			o["Index"] = Index;
+		}
+
+		protected override void Deserialize(JObject o)
+		{
+			Name = (string)o["Name"];
+			Index = (int)o["Index"];
 		}
 	}
 

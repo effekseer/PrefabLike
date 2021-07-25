@@ -150,13 +150,14 @@ namespace PrefabLikeTest
 		public void SaveLoad()
 		{
 			var system = new PrefabSyatem();
-			var prefab = new EditorNodeInformation();
+			string json;
 
-			// Create Prefab from diff.
+			// Create Prefab from diff. and save to json.
 			{
-				prefab.BaseType = typeof(TestNode1);
+				var prefab = new EditorNodeInformation();
+				prefab.BaseType = typeof(TestNodePrimitive);
 
-				var v = new TestNode1();
+				var v = new TestNodePrimitive();
 
 				var before = new FieldState();
 				before.Store(v);
@@ -167,9 +168,18 @@ namespace PrefabLikeTest
 				after.Store(v);
 
 				prefab.Modified.Difference = after.GenerateDifference(before);
+
+				json = prefab.Serialize();
 			}
 
-			prefab.Serialize();
+			// Load and Instantiate
+			// TODO: 
+			//{
+			//	var prefab = EditorNodeInformation.Deserialize(json);
+
+			//	var node2 = system.CreateNodeFromPrefab(prefab) as TestNodePrimitive;
+			//	Assert.AreEqual(5, node2.Value1);
+			//}
 		}
 	}
 }
