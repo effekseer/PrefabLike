@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace PrefabLike
@@ -50,7 +52,11 @@ namespace PrefabLike
 				baseNode.Children.Add(CreateNodeFromPrefab(addCh));   // recursion
 			}
 
-			foreach (var diff in editorNode.Modified.Difference)
+			// TODO : refactor
+			var differenceFirst = editorNode.Modified.Difference.Where(_=>_.Key.Keys.Last() is AccessKeyListCount).ToArray();
+			var differenceSecond = editorNode.Modified.Difference.Where(_ => !(_.Key.Keys.Last() is AccessKeyListCount)).ToArray();
+
+			foreach (var diff in differenceFirst.Concat(differenceSecond))
 			{
 				var keys = diff.Key.Keys;
 
@@ -73,10 +79,10 @@ namespace PrefabLike
 						}
 
 						var o = field.GetValue(objects[objects.Count - 1]);
-						
-						if(o is null)
+
+						if (o is null)
 						{
-							if(field.FieldType.IsClass)
+							if (field.FieldType.IsClass)
 							{
 								o = field.FieldType.GetConstructor(new Type[0]).Invoke(null);
 
@@ -92,7 +98,39 @@ namespace PrefabLike
 						}
 
 						objects.Add(o);
+					}
+					else if (key is AccessKeyListCount)
+					{
+						var o = objects[objects.Count - 1];
+						if( o is IList)
+						{
+							var list = (IList)o;
+							while(list.Count < 0)
+							{
+								var newValue = o.GetType().GetGenericArguments()[0].GetConstructor(null).Invoke(null);
+								list.Add(newValue);
+							}
+						}
+					}
+					else if (key is AccessKeyListElement)
+					{
+						var k = key as AccessKeyListElement;
+						foreach (var pi in objects[objects.Count - 1].GetType().GetProperties())
+						{
+							if (pi.GetIndexParameters().Length != 1)
+							{
+								continue;
+							}
 
+							var o = pi.GetValue(objects[objects.Count - 1]);
+
+							objects.Add(o);
+							break;
+						}
+					}
+					else
+					{
+						throw new Exception();
 					}
 				}
 
@@ -100,7 +138,7 @@ namespace PrefabLike
 
 				objects[objects.Count - 1] = diff.Value;
 
-				for(int i = keys.Length - 1; i >= 0; i--)
+				for (int i = keys.Length - 1; i >= 0; i--)
 				{
 					var key = keys[i];
 
@@ -111,6 +149,30 @@ namespace PrefabLike
 						var o = objects[i];
 						field.SetValue(o, objects[i + 1]);
 						objects[i] = o;
+					}
+					else if (key is AccessKeyListCount)
+					{
+						// None
+					}
+					else if (key is AccessKeyListElement)
+					{
+						var k = key as AccessKeyListElement;
+						foreach (var pi in objects[i].GetType().GetProperties())
+						{
+							if (pi.GetIndexParameters().Length != 1)
+							{
+								continue;
+							}
+
+							var o = objects[i];
+							pi.SetValue(o, objects[i + 1]);
+							objects[i] = o;
+							break;
+						}
+					}
+					else
+					{
+						throw new Exception();
 					}
 				}
 			Exit:;

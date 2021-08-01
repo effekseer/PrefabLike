@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using System.Linq;
@@ -286,14 +287,44 @@ namespace PrefabLike
 		}
 	}
 
+	public class AccessKeyListCount : AccessKey
+	{
+		public override int GetHashCode()
+		{
+			return 0;
+		}
+
+		public override bool Equals(object obj)
+		{
+			var o = obj as AccessKeyListCount;
+			if (o is null)
+				return false;
+
+			return true;
+		}
+
+		protected override AccessKeyType GetAccessKeyType()
+		{
+			throw new NotImplementedException();
+		}
+
+		protected override void Serialize(JObject o)
+		{
+			throw new NotImplementedException();
+		}
+		protected override void Deserialize(JObject o)
+		{
+			throw new NotImplementedException();
+		}
+	}
+
 	public class AccessKeyListElement : AccessKey
 	{
-		public string Name;
 		public int Index;
 
 		public override int GetHashCode()
 		{
-			return Name.GetHashCode() + Index.GetHashCode();
+			return Index.GetHashCode();
 		}
 
 		public override bool Equals(object obj)
@@ -302,7 +333,7 @@ namespace PrefabLike
 			if (o is null)
 				return false;
 
-			return Name == o.Name && Index == o.Index;
+			return Index == o.Index;
 		}
 		protected override AccessKeyType GetAccessKeyType()
 		{
@@ -311,13 +342,11 @@ namespace PrefabLike
 
 		protected override void Serialize(JObject o)
 		{
-			o["Name"] = Name;
 			o["Index"] = Index;
 		}
 
 		protected override void Deserialize(JObject o)
 		{
-			Name = (string)o["Name"];
 			Index = (int)o["Index"];
 		}
 	}
@@ -325,6 +354,40 @@ namespace PrefabLike
 
 	public class FieldState
 	{
+		object ConvertValue(object o)
+		{
+			var type = o.GetType();
+
+			if (type == typeof(int) || type == typeof(string) || type == typeof(bool) || type == typeof(float))
+			{
+				return o;
+			}
+			else if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(List<>))
+			{
+				var list = (IList)o;
+				var values = new Dictionary<AccessKey, object>();
+
+				values.Add(new AccessKeyListCount(), list.Count);
+
+				for (int i = 0; i < list.Count; i++)
+				{
+					var v = ConvertValue(list[i]);
+					values.Add(new AccessKeyListElement { Index = i }, v);
+				}
+
+				return values;
+			}
+			else if (type.IsGenericType)
+			{
+				Console.WriteLine("Generic is not supported now.");
+				return null;
+			}
+			else
+			{
+				return GetValues(o);
+			}
+		}
+
 		Dictionary<AccessKey, object> GetValues(object o)
 		{
 			Dictionary<AccessKey, object> values = new Dictionary<AccessKey, object>();
@@ -332,30 +395,26 @@ namespace PrefabLike
 			var fields = o.GetType().GetFields();
 			foreach (var field in fields)
 			{
-				if (field.FieldType.IsGenericType)
+				// TODO : refactor
+				if (field.Name == "Children")
 				{
-					Console.WriteLine("Generic is not supported now.");
 					continue;
 				}
 
-				if (field.FieldType == typeof(int) || field.FieldType == typeof(string) || field.FieldType == typeof(bool) || field.FieldType == typeof(float))
+				var value = field.GetValue(o);
+				if (value is null)
 				{
-					var value = field.GetValue(o);
-					var key = new AccessKeyField { Name = field.Name };
-					values.Add(key, value);
+					continue;
 				}
-				else
-				{
-					var value = field.GetValue(o);
-					if (value is null)
-					{
-						continue;
-					}
 
-					var key = new AccessKeyField { Name = field.Name };
-					var internalValues = GetValues(value);
-					values.Add(key, internalValues);
+				var converted = ConvertValue(value);
+				if (converted is null)
+				{
+					continue;
 				}
+
+				var key = new AccessKeyField { Name = field.Name };
+				values.Add(key, converted);
 			}
 
 			return values;
@@ -403,6 +462,12 @@ namespace PrefabLike
 
 			foreach (var value in stateValues)
 			{
+				if (!current.ContainsKey(value.Key))
+				{
+					ret.Add(value.Key, value.Value);
+					continue;
+				}
+
 				var newVal = current[value.Key];
 				if (!object.Equals(newVal, value.Value))
 				{
@@ -410,9 +475,9 @@ namespace PrefabLike
 				}
 			}
 
-			foreach(var value in current)
+			foreach (var value in current)
 			{
-				if(!stateValues.ContainsKey(value.Key))
+				if (!stateValues.ContainsKey(value.Key))
 				{
 					ret.Add(value.Key, value.Value);
 				}

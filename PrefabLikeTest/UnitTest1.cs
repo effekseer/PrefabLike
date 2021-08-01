@@ -28,6 +28,11 @@ namespace PrefabLikeTest
 			public float C;
 		}
 
+		class TestList1
+		{
+			public System.Collections.Generic.List<int> Values = new System.Collections.Generic.List<int>();
+		}
+
 		class TestNodePrimitive : Node
 		{
 			public int Value1;
@@ -127,6 +132,21 @@ namespace PrefabLikeTest
 			Assert.AreEqual(1.0f, diff.First().Value);
 		}
 
+		[Test]
+		public void DiffList()
+		{
+			var v = new TestList1();
+
+			var before = new FieldState();
+			before.Store(v);
+			v.Values.Add(1);
+
+			var after = new FieldState();
+			after.Store(v);
+
+			var diff = before.GenerateDifference(after);
+			Assert.AreEqual(2, diff.Count);
+		}
 
 		[Test]
 		public void Instantiate1()
