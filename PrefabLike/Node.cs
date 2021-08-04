@@ -7,6 +7,11 @@ using Newtonsoft.Json.Linq;
 
 namespace PrefabLike
 {
+	public class BaseObject
+	{
+
+	}
+
 	/// <summary>
 	/// Store file information.
 	/// </summary>
@@ -14,9 +19,6 @@ namespace PrefabLike
 	{
 		public string Path;
 	}
-
-
-
 
 	/// <summary>
 	/// Prefab(EditorNodeInformation) のインスタンス。
@@ -28,7 +30,7 @@ namespace PrefabLike
 	/// そういったものはこの Node を継承して持たせる。
 	/// PrefabSystem としては Node には多くの情報は不要。親子関係だけでも足りそう。
 	/// </remarks>
-	public class Node
+	public class Node : BaseObject
 	{
 		public List<Node> Children = new List<Node>();
 	}
@@ -362,6 +364,10 @@ namespace PrefabLike
 			{
 				return o;
 			}
+			else if (type.IsSubclassOf(typeof(BaseObject)))
+			{
+				return o;
+			}
 			else if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(List<>))
 			{
 				var list = (IList)o;
@@ -485,5 +491,11 @@ namespace PrefabLike
 
 			return ret;
 		}
+	}
+
+	class ResourceReference
+	{
+		public int ID;
+		public string RelativePath;
 	}
 }
