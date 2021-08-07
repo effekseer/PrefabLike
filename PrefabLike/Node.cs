@@ -287,6 +287,11 @@ namespace PrefabLike
 		{
 			Name = (string)o["Name"];
 		}
+
+		public override string ToString()
+		{
+			return Name;
+		}
 	}
 
 	public class AccessKeyListCount : AccessKey
@@ -317,6 +322,11 @@ namespace PrefabLike
 		protected override void Deserialize(JObject o)
 		{
 			throw new NotImplementedException();
+		}
+
+		public override string ToString()
+		{
+			return "!Count";
 		}
 	}
 
@@ -350,6 +360,11 @@ namespace PrefabLike
 		protected override void Deserialize(JObject o)
 		{
 			Index = (int)o["Index"];
+		}
+
+		public override string ToString()
+		{
+			return "[" + Index + "]";
 		}
 	}
 
