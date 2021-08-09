@@ -19,11 +19,14 @@ namespace PrefabLike
 	/// </remarks>
 	public class Node
 	{
+		public int GUID;
 		public List<Node> Children = new List<Node>();
 	}
 
 	public class NodeTreeBase
 	{
+		public int GUID;
+
 		/// <summary>
 		/// この Prefab が生成するインスタンスの型。
 		/// Template と同時に使うことはできない。BaseType を持つなら、Template は null でなければならない。
@@ -49,7 +52,7 @@ namespace PrefabLike
 
 		public NodeTreeBase Base = new NodeTreeBase();
 
-		public List<NodeTreeGroup> AdditionalChildren = new List<NodeTreeGroup>();
+		public List<NodeTreeBase> AdditionalChildren = new List<NodeTreeBase>();
 
 		// 子の情報が必要
 

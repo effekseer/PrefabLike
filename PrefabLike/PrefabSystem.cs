@@ -14,34 +14,44 @@ namespace PrefabLike
 			return null;
 		}
 
-		public Node CreateNodeFromPrefab(NodeTreeGroup editorNode)
+		Node CreateNode(NodeTreeBase nodeTreeBase)
 		{
-			if (editorNode.Base.BaseType == null && editorNode.Base.Template == null)
+			if (nodeTreeBase.BaseType == null && nodeTreeBase.Template == null)
 				throw new Exception();
 
-			if (editorNode.Base.BaseType != null && editorNode.Base.Template != null)
+			if (nodeTreeBase.BaseType != null && nodeTreeBase.Template != null)
 				throw new Exception();
 
 			Node baseNode = null;
 
-			if (editorNode.Base.BaseType != null)
+			if (nodeTreeBase.BaseType != null)
 			{
-				var constructor = editorNode.Base.BaseType.GetConstructor(Type.EmptyTypes);
+				var constructor = nodeTreeBase.BaseType.GetConstructor(Type.EmptyTypes);
 				baseNode = (Node)constructor.Invoke(null);
 			}
 			else
 			{
-				baseNode = CreateNodeFromPrefab(editorNode.Base.Template);   // recursion
+				baseNode = CreateNodeFromPrefab(nodeTreeBase.Template);
 			}
 
-			foreach (var addCh in editorNode.AdditionalChildren)
+			baseNode.GUID = nodeTreeBase.GUID;
+
+			return baseNode;
+		}
+
+
+		public Node CreateNodeFromPrefab(NodeTreeGroup nodeTreeGroup)
+		{
+			var baseNode = CreateNode(nodeTreeGroup.Base);
+
+			foreach (var addCh in nodeTreeGroup.AdditionalChildren)
 			{
-				baseNode.Children.Add(CreateNodeFromPrefab(addCh));   // recursion
+				baseNode.Children.Add(CreateNode(addCh));
 			}
 
 			// TODO : refactor
-			var differenceFirst = editorNode.Modified.Difference.Where(_=>_.Key.Keys.Last() is AccessKeyListCount).ToArray();
-			var differenceSecond = editorNode.Modified.Difference.Where(_ => !(_.Key.Keys.Last() is AccessKeyListCount)).ToArray();
+			var differenceFirst = nodeTreeGroup.Modified.Difference.Where(_ => _.Key.Keys.Last() is AccessKeyListCount).ToArray();
+			var differenceSecond = nodeTreeGroup.Modified.Difference.Where(_ => !(_.Key.Keys.Last() is AccessKeyListCount)).ToArray();
 
 			foreach (var diff in differenceFirst.Concat(differenceSecond))
 			{
@@ -89,10 +99,10 @@ namespace PrefabLike
 					else if (key is AccessKeyListCount)
 					{
 						var o = objects[objects.Count - 1];
-						if( o is IList)
+						if (o is IList)
 						{
 							var list = (IList)o;
-							while(list.Count < 0)
+							while (list.Count < 0)
 							{
 								var newValue = o.GetType().GetGenericArguments()[0].GetConstructor(null).Invoke(null);
 								list.Add(newValue);
@@ -165,7 +175,7 @@ namespace PrefabLike
 			Exit:;
 			}
 
-			nodeToNodeTreeGroup[baseNode] = editorNode;
+			nodeToNodeTreeGroup[baseNode] = nodeTreeGroup;
 
 			return baseNode;
 		}
