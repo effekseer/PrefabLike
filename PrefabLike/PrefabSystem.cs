@@ -8,43 +8,30 @@ namespace PrefabLike
 {
 	public class PrefabSyatem
 	{
-
-		public byte[] SavePrefab(Node node)
-		{
-			// TODO
-			return null;
-		}
-
-		public Node LoadPrefab(byte[] data)
-		{
-			// TODO
-			return null;
-		}
-
 		public Node MakePrefab(Node node)
 		{
 			// TODO
 			return null;
 		}
 
-		public Node CreateNodeFromPrefab(EditorNodeInformation editorNode)
+		public Node CreateNodeFromPrefab(NodeTreeGroup editorNode)
 		{
-			if (editorNode.BaseType == null && editorNode.Template == null)
+			if (editorNode.Base.BaseType == null && editorNode.Base.Template == null)
 				throw new Exception();
 
-			if (editorNode.BaseType != null && editorNode.Template != null)
+			if (editorNode.Base.BaseType != null && editorNode.Base.Template != null)
 				throw new Exception();
 
 			Node baseNode = null;
 
-			if (editorNode.BaseType != null)
+			if (editorNode.Base.BaseType != null)
 			{
-				var constructor = editorNode.BaseType.GetConstructor(Type.EmptyTypes);
+				var constructor = editorNode.Base.BaseType.GetConstructor(Type.EmptyTypes);
 				baseNode = (Node)constructor.Invoke(null);
 			}
 			else
 			{
-				baseNode = CreateNodeFromPrefab(editorNode.Template);   // recursion
+				baseNode = CreateNodeFromPrefab(editorNode.Base.Template);   // recursion
 			}
 
 			foreach (var addCh in editorNode.AdditionalChildren)
@@ -178,12 +165,12 @@ namespace PrefabLike
 			Exit:;
 			}
 
-			editorNodes[baseNode] = editorNode;
+			nodeToNodeTreeGroup[baseNode] = editorNode;
 
 			return baseNode;
 		}
 
-		Dictionary<Node, EditorNodeInformation> editorNodes = new Dictionary<Node, EditorNodeInformation>();
+		Dictionary<Node, NodeTreeGroup> nodeToNodeTreeGroup = new Dictionary<Node, NodeTreeGroup>();
 	}
 
 }

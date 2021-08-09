@@ -152,11 +152,11 @@ namespace PrefabLikeTest
 		public void Instantiate1()
 		{
 			var system = new PrefabSyatem();
-			var prefab = new EditorNodeInformation();
+			var prefab = new NodeTreeGroup();
 
 			// Create Prefab from diff.
 			{
-				prefab.BaseType = typeof(TestNodePrimitive);
+				prefab.Base.BaseType = typeof(TestNodePrimitive);
 
 				var v = new TestNodePrimitive();
 
@@ -184,8 +184,8 @@ namespace PrefabLikeTest
 
 			// Create Prefab from diff. and save to json.
 			{
-				var prefab = new EditorNodeInformation();
-				prefab.BaseType = typeof(TestNodePrimitive);
+				var prefab = new NodeTreeGroup();
+				prefab.Base.BaseType = typeof(TestNodePrimitive);
 
 				var v = new TestNodePrimitive();
 
@@ -216,10 +216,10 @@ namespace PrefabLikeTest
 		public void InstantiateStruct()
 		{
 			var system = new PrefabSyatem();
-			var prefab = new EditorNodeInformation();
+			var prefab = new NodeTreeGroup();
 
 			{
-				prefab.BaseType = typeof(TestNodeStruct);
+				prefab.Base.BaseType = typeof(TestNodeStruct);
 
 				var v = new TestNodeStruct();
 
@@ -242,10 +242,10 @@ namespace PrefabLikeTest
 		public void InstantiateClass()
 		{
 			var system = new PrefabSyatem();
-			var prefab = new EditorNodeInformation();
+			var prefab = new NodeTreeGroup();
 
 			{
-				prefab.BaseType = typeof(TestNodeClass);
+				prefab.Base.BaseType = typeof(TestNodeClass);
 
 				var v = new TestNodeClass();
 

@@ -7,19 +7,6 @@ using Newtonsoft.Json.Linq;
 
 namespace PrefabLike
 {
-	public class BaseObject
-	{
-
-	}
-
-	/// <summary>
-	/// Store file information.
-	/// </summary>
-	public class FileInformation
-	{
-		public string Path;
-	}
-
 	/// <summary>
 	/// Prefab(EditorNodeInformation) のインスタンス。
 	/// </summary>
@@ -30,19 +17,12 @@ namespace PrefabLike
 	/// そういったものはこの Node を継承して持たせる。
 	/// PrefabSystem としては Node には多くの情報は不要。親子関係だけでも足りそう。
 	/// </remarks>
-	public class Node : BaseObject
+	public class Node
 	{
 		public List<Node> Children = new List<Node>();
 	}
 
-	/// <summary>
-	/// Prefab 情報本体
-	/// </summary>
-	/// <remarks>
-	/// ランタイムには含まれない。.efkefc ファイルに含まれるエディタ用の情報となる。
-	/// .efk をエクスポートするときにすべての Prefab はインスタンス化する想定。
-	/// </remarks>
-	public class EditorNodeInformation
+	public class NodeTreeBase
 	{
 		/// <summary>
 		/// この Prefab が生成するインスタンスの型。
@@ -54,13 +34,24 @@ namespace PrefabLike
 		/// 継承元。Prefab は別の Prefab を元に作成することができる。
 		/// BaseType が null の場合、これをもとにインスタンスを作成する。
 		/// </summary>
-		public EditorNodeInformation Template;
+		public NodeTreeGroup Template;
+	}
 
-		public List<EditorNodeInformation> AdditionalChildren = new List<EditorNodeInformation>();
+	/// <summary>
+	/// Prefab 情報本体
+	/// </summary>
+	/// <remarks>
+	/// ランタイムには含まれない。.efkefc ファイルに含まれるエディタ用の情報となる。
+	/// .efk をエクスポートするときにすべての Prefab はインスタンス化する想定。
+	/// </remarks>
+	public class NodeTreeGroup : Asset
+	{
+
+		public NodeTreeBase Base = new NodeTreeBase();
+
+		public List<NodeTreeGroup> AdditionalChildren = new List<NodeTreeGroup>();
 
 		// 子の情報が必要
-
-		public FileInformation FileInfo;
 
 		/// <summary>
 		/// 差分情報。
@@ -72,7 +63,7 @@ namespace PrefabLike
 		public string Serialize()
 		{
 			// TODO:
-			if (Template != null) throw new NotImplementedException();
+			if (Base.Template != null) throw new NotImplementedException();
 			if (AdditionalChildren.Count > 0) throw new NotImplementedException();
 
 
@@ -80,7 +71,7 @@ namespace PrefabLike
 
 
 			var o = new JObject();
-			o["BaseType"] = BaseType.AssemblyQualifiedName;
+			o["BaseType"] = Base.BaseType.AssemblyQualifiedName;
 
 			var difference = new JArray();
 			foreach (var pair in Modified.Difference)
@@ -96,13 +87,13 @@ namespace PrefabLike
 			return json;
 		}
 
-		public static EditorNodeInformation Deserialize(string json)
+		public static NodeTreeGroup Deserialize(string json)
 		{
-			var prefab = new EditorNodeInformation();
+			var prefab = new NodeTreeGroup();
 
 			var o = JObject.Parse(json);
 			var typeName = (string)o["BaseType"];
-			prefab.BaseType = Type.GetType(typeName);
+			prefab.Base.BaseType = Type.GetType(typeName);
 
 			var difference = (JArray)o["Modified.Difference"];//.Values<JObject>();
 			foreach (var pair in difference)
@@ -379,7 +370,11 @@ namespace PrefabLike
 			{
 				return o;
 			}
-			else if (type.IsSubclassOf(typeof(BaseObject)))
+			else if (type.IsSubclassOf(typeof(Node)))
+			{
+				return o;
+			}
+			else if (type.IsSubclassOf(typeof(Asset)))
 			{
 				return o;
 			}
