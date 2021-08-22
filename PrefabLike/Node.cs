@@ -369,7 +369,12 @@ namespace PrefabLike
 		{
 			var type = o.GetType();
 
-			if (type == typeof(int) || type == typeof(string) || type == typeof(bool) || type == typeof(float))
+			if (type.IsPrimitive)
+			{
+				// Boolean Byte SByte Int16 UInt16 Int32 UInt32 Int64 UInt64 IntPtr UIntPtr Char Double Single 
+				return o;
+			}
+			else if (type == typeof(string))
 			{
 				return o;
 			}
@@ -399,6 +404,11 @@ namespace PrefabLike
 			else if (type.IsGenericType)
 			{
 				Console.WriteLine("Generic is not supported now.");
+				return null;
+			}
+			else if (type == typeof(decimal))
+			{
+				Console.WriteLine("decimal is not supported now.");
 				return null;
 			}
 			else

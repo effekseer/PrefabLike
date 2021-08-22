@@ -40,6 +40,23 @@ namespace PrefabLikeTest
 			public string Value3;
 		}
 
+		class TestNodePrimitive2 : Node
+		{
+			public bool ValueBool;
+			public byte ValueByte;
+			public sbyte ValueSByte;
+			public double ValueDobule;
+			public float ValueFloat;
+			public int ValueInt32;
+			public uint ValueUInt32;
+			public long ValueInt64;
+			public ulong ValueUInt64;
+			public short ValueInt16;
+			public ushort ValueUInt16;
+			public char ValueChar;
+			public string ValueString;
+		}
+
 		class TestNodeStruct : Node
 		{
 			public TestStruct1 Struct1;
@@ -185,14 +202,26 @@ namespace PrefabLikeTest
 			// Create Prefab from diff. and save to json.
 			{
 				var prefab = new NodeTreeGroup();
-				prefab.Base.BaseType = typeof(TestNodePrimitive);
+				prefab.Base.BaseType = typeof(TestNodePrimitive2);
 
-				var v = new TestNodePrimitive();
+				var v = new TestNodePrimitive2();
 
 				var before = new FieldState();
 				before.Store(v);
 
-				v.Value1 = 5;
+				v.ValueBool = true;
+				v.ValueByte = 1;
+				v.ValueSByte = 2;
+				v.ValueDobule = 4.0;
+				v.ValueFloat = 5.0f;
+				v.ValueInt32 = 6;
+				v.ValueUInt32 = 7;
+				v.ValueInt64 = 8;
+				v.ValueUInt64 = 9;
+				v.ValueInt16 = 10;
+				v.ValueUInt16 = 11;
+				v.ValueChar = 'A';
+				v.ValueString = "ABC";
 
 				var after = new FieldState();
 				after.Store(v);
@@ -206,8 +235,20 @@ namespace PrefabLikeTest
 			{
 				var prefab = NodeTreeGroup.Deserialize(json);
 
-				var node2 = system.CreateNodeFromPrefab(prefab) as TestNodePrimitive;
-				Assert.AreEqual(5, node2.Value1);
+				var node2 = system.CreateNodeFromPrefab(prefab) as TestNodePrimitive2;
+				Assert.AreEqual(true, node2.ValueBool);
+				Assert.AreEqual(1, node2.ValueByte);
+				Assert.AreEqual(2, node2.ValueSByte);
+				Assert.AreEqual(4.0, node2.ValueDobule);
+				Assert.AreEqual(5.0f, node2.ValueFloat);
+				Assert.AreEqual(6, node2.ValueInt32);
+				Assert.AreEqual(7, node2.ValueUInt32);
+				Assert.AreEqual(8, node2.ValueInt64);
+				Assert.AreEqual(9, node2.ValueUInt64);
+				Assert.AreEqual(10, node2.ValueInt16);
+				Assert.AreEqual(11, node2.ValueUInt16);
+				Assert.AreEqual('A', node2.ValueChar);
+				Assert.AreEqual("ABC", node2.ValueString);
 			}
 		}
 

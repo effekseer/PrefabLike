@@ -77,9 +77,15 @@ namespace PrefabLike
 
 						var o = field.GetValue(objects[objects.Count - 1]);
 
+						// Create an instance if it is an object type.
 						if (o is null)
 						{
-							if (field.FieldType.IsClass)
+							if (field.FieldType == typeof(string))
+							{
+								// String is an object type, but it can be serialized like a value, so there is no need to create an instance.
+								// (Calling GetConstructor raises an exception)
+							}
+							else if (field.FieldType.IsClass)
 							{
 								o = field.FieldType.GetConstructor(new Type[0]).Invoke(null);
 
