@@ -144,7 +144,7 @@ namespace PrefabLike
 						var k = key as AccessKeyField;
 						var field = objects[i].GetType().GetField(k.Name);
 						var o = objects[i];
-						field.SetValue(o, objects[i + 1]);
+						field.SetValue(o, Convert.ChangeType(objects[i + 1], field.FieldType));
 						objects[i] = o;
 					}
 					else if (key is AccessKeyListCount)
