@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
 using PrefabLike;
@@ -66,6 +67,11 @@ namespace PrefabLikeTest
 		{
 			public TestClass1 Class1_1;
 			public TestClass1 Class1_2;
+		}
+
+		class TestNodeList : Node
+		{
+			public List<int> ValuesInt32;
 		}
 
 		[SetUp]
@@ -249,6 +255,41 @@ namespace PrefabLikeTest
 				Assert.AreEqual(11, node2.ValueUInt16);
 				Assert.AreEqual('A', node2.ValueChar);
 				Assert.AreEqual("ABC", node2.ValueString);
+			}
+		}
+
+		[Test]
+		public void SaveLoadList()
+		{
+			var system = new PrefabSyatem();
+			string json;
+
+			// Create Prefab from diff. and save to json.
+			{
+				var prefab = new NodeTreeGroup();
+				prefab.Base.BaseType = typeof(TestNodeList);
+
+				var v = new TestNodeList();
+
+				var before = new FieldState();
+				before.Store(v);
+
+				v.ValuesInt32 = new List<int>() { 1, 2, 3 };
+
+				var after = new FieldState();
+				after.Store(v);
+
+				prefab.Modified.Difference = after.GenerateDifference(before);
+
+				json = prefab.Serialize();
+			}
+
+			// Load and Instantiate
+			{
+				var prefab = NodeTreeGroup.Deserialize(json);
+
+				var node2 = system.CreateNodeFromPrefab(prefab) as TestNodeList;
+				Assert.AreEqual(1, node2.ValuesInt32.SequenceEqual(new List<int>() { 1, 2, 3 }));
 			}
 		}
 

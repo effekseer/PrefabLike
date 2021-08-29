@@ -52,13 +52,16 @@ namespace PrefabLike
 			// TODO : refactor
 			var differenceFirst = nodeTreeGroup.Modified.Difference.Where(_ => _.Key.Keys.Last() is AccessKeyListCount).ToArray();
 			var differenceSecond = nodeTreeGroup.Modified.Difference.Where(_ => !(_.Key.Keys.Last() is AccessKeyListCount)).ToArray();
-
+			
 			foreach (var diff in differenceFirst.Concat(differenceSecond))
 			{
 				var keys = diff.Key.Keys;
 
 				List<object> objects = new List<object>();
 				objects.Add(baseNode);
+
+				//--------------------
+				// 1. Create Instances
 
 				for (int i = 0; i < keys.Length; i++)
 				{
@@ -108,10 +111,20 @@ namespace PrefabLike
 						if (o is IList)
 						{
 							var list = (IList)o;
-							while (list.Count < 0)
+							var count = (Int64)diff.Value;
+							while (list.Count < count)
 							{
-								var newValue = o.GetType().GetGenericArguments()[0].GetConstructor(null).Invoke(null);
-								list.Add(newValue);
+								var type = o.GetType().GetGenericArguments()[0];
+								if (type.IsValueType)
+								{
+									var newValue = Activator.CreateInstance(type);	// default(T)
+									list.Add(newValue);
+								}
+								else
+								{
+									var newValue = type.GetConstructor(null).Invoke(null);
+									list.Add(newValue);
+								}
 							}
 						}
 					}
@@ -141,6 +154,9 @@ namespace PrefabLike
 
 				objects[objects.Count - 1] = diff.Value;
 
+				//--------------------
+				// 2. Set Values
+
 				for (int i = keys.Length - 1; i >= 0; i--)
 				{
 					var key = keys[i];
@@ -149,9 +165,21 @@ namespace PrefabLike
 					{
 						var k = key as AccessKeyField;
 						var field = objects[i].GetType().GetField(k.Name);
-						var o = objects[i];
-						field.SetValue(o, Convert.ChangeType(objects[i + 1], field.FieldType));
-						objects[i] = o;
+						if (field.FieldType.IsClass)
+						{
+							// List の場合、その Count を表す KeyGroup は次のようになっている。
+							// - [0] AccessKeyField { Name = "List型のフィールド名" }
+							// - [1] AccessKeyListCount {}
+							// このとき [0] の場合はこの if に入ってくる。
+							// プリミティブな値の場合はここでフィールドに値を格納する必要があるが、
+							// そうではないオブジェクト型は ↑ のほうでインスタンス作成済みなので、ここでは何もする必要はない。
+						}
+						else
+						{
+							var o = objects[i];
+							field.SetValue(o, Convert.ChangeType(objects[i + 1], field.FieldType));
+							objects[i] = o;
+						}
 					}
 					else if (key is AccessKeyListCount)
 					{

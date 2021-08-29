@@ -150,6 +150,13 @@ namespace PrefabLike
 		}
 	}
 
+	/// <summary>
+	/// 複数の AccessKey をまとめて、ひとつの DictionalyKey とするためのデータ構造。
+	/// </summary>
+	/// <remarks>
+	/// プリミティブな値の場合、Keys は 1 つ。単にフィールド名を表す。
+	/// リスト要素の値の場合、Key は 2 つ。Keys[0] は List 型のフィールド名。Keys[1] は要素番号を現す。
+	/// </remarks>
 	public class AccessKeyGroup
 	{
 		public AccessKey[] Keys = null;
@@ -215,6 +222,7 @@ namespace PrefabLike
 		{
 			Field = 1,
 			ListElement = 2,
+			ListCount = 3,
 		}
 
 		public JObject ToJson()
@@ -236,6 +244,9 @@ namespace PrefabLike
 					break;
 				case AccessKeyType.ListElement:
 					key = new AccessKeyListElement();
+					break;
+				case AccessKeyType.ListCount:
+					key = new AccessKeyListCount();
 					break;
 				default:
 					throw new NotImplementedException();
@@ -306,16 +317,16 @@ namespace PrefabLike
 
 		protected override AccessKeyType GetAccessKeyType()
 		{
-			throw new NotImplementedException();
+			return AccessKeyType.ListCount;
 		}
 
 		protected override void Serialize(JObject o)
 		{
-			throw new NotImplementedException();
+			//throw new NotImplementedException();
 		}
 		protected override void Deserialize(JObject o)
 		{
-			throw new NotImplementedException();
+			//throw new NotImplementedException();
 		}
 
 		public override string ToString()
