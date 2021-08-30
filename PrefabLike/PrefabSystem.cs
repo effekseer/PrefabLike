@@ -67,7 +67,19 @@ namespace PrefabLike
 				{
 					var key = keys[i];
 
-					if (key is AccessKeyField)
+					if(key is AccessKeyGUID)
+					{
+						var k = key as AccessKeyGUID;
+						var node = objects[objects.Count - 1] as Node;
+						if(node == null)
+						{
+							goto Exit;
+						}
+
+						var child = node.Children.FirstOrDefault(_ => _.GUID == k.GUID);
+						objects.Add(child);
+					}
+					else if (key is AccessKeyField)
 					{
 						var k = key as AccessKeyField;
 						var field = objects[objects.Count - 1].GetType().GetField(k.Name);
@@ -161,7 +173,11 @@ namespace PrefabLike
 				{
 					var key = keys[i];
 
-					if (key is AccessKeyField)
+					if (key is AccessKeyGUID)
+					{
+						// A structure of node is not changed with a difference	
+					}
+					else if (key is AccessKeyField)
 					{
 						var k = key as AccessKeyField;
 						var field = objects[i].GetType().GetField(k.Name);

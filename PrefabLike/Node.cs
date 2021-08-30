@@ -7,6 +7,16 @@ using Newtonsoft.Json.Linq;
 
 namespace PrefabLike
 {
+	public class NodeReference
+	{
+
+	}
+
+	public class AssetInstance
+	{
+
+	}
+
 	/// <summary>
 	/// Prefab(EditorNodeInformation) のインスタンス。
 	/// </summary>
@@ -19,13 +29,13 @@ namespace PrefabLike
 	/// </remarks>
 	public class Node
 	{
-		public int GUID;
+		public System.Guid GUID;
 		public List<Node> Children = new List<Node>();
 	}
 
 	public class NodeTreeBase
 	{
-		public int GUID;
+		public System.Guid GUID;
 
 		/// <summary>
 		/// この Prefab が生成するインスタンスの型。
@@ -220,6 +230,7 @@ namespace PrefabLike
 	{
 		protected enum AccessKeyType
 		{
+			GUID = 0,
 			Field = 1,
 			ListElement = 2,
 			ListCount = 3,
@@ -258,6 +269,45 @@ namespace PrefabLike
 		protected abstract AccessKeyType GetAccessKeyType();
 		protected abstract void Serialize(JObject o);
 		protected abstract void Deserialize(JObject o);
+	}
+
+	public class AccessKeyGUID : AccessKey
+	{
+		public System.Guid GUID;
+
+		public override int GetHashCode()
+		{
+			return GUID.GetHashCode();
+		}
+
+		public override bool Equals(object obj)
+		{
+			var o = obj as AccessKeyGUID;
+			if (o is null)
+				return false;
+
+			return GUID == o.GUID;
+		}
+
+		protected override AccessKeyType GetAccessKeyType()
+		{
+			return AccessKeyType.GUID;
+		}
+
+		protected override void Serialize(JObject o)
+		{
+			o["GUID"] = GUID;
+		}
+
+		protected override void Deserialize(JObject o)
+		{
+			GUID = (System.Guid)o["Name"];
+		}
+
+		public override string ToString()
+		{
+			return GUID.ToString();
+		}
 	}
 
 	public class AccessKeyField : AccessKey
