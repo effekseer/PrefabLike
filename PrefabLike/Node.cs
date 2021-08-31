@@ -12,9 +12,10 @@ namespace PrefabLike
 
 	}
 
-	public class AssetInstance
+	class ResourceReference
 	{
-
+		public int ID;
+		public string RelativePath;
 	}
 
 	/// <summary>
@@ -29,8 +30,13 @@ namespace PrefabLike
 	/// </remarks>
 	public class Node
 	{
-		public System.Guid GUID;
+		public Guid GUID;
 		public List<Node> Children = new List<Node>();
+
+		public bool IsChidlrenGUIDValid()
+		{
+			return Children.Select(_ => _.GUID).Distinct().Count() == Children.Count();
+		}
 	}
 
 	public class NodeTreeBase
@@ -66,12 +72,19 @@ namespace PrefabLike
 
 		// 子の情報が必要
 
-		/// <summary>
-		/// 差分情報。
-		/// この Prefab が生成するインスタンスに対して set するフィールドのセット。
-		/// これを使って GUI で変更箇所を太文字にしたりする。
-		/// </summary>
-		public Modified Modified = new Modified();
+		public class ModifiedNode
+		{
+			public System.Guid[] Path = new Guid[0];
+
+			/// <summary>
+			/// 差分情報。
+			/// この Prefab が生成するインスタンスに対して set するフィールドのセット。
+			/// これを使って GUI で変更箇所を太文字にしたりする。
+			/// </summary>
+			public Modified Modified = new Modified();
+		}
+
+		public ModifiedNode[] ModifiedNodes = new ModifiedNode[0];
 
 		public string Serialize()
 		{
@@ -79,22 +92,36 @@ namespace PrefabLike
 			if (Base.Template != null) throw new NotImplementedException();
 			if (AdditionalChildren.Count > 0) throw new NotImplementedException();
 
-
-
-
-
 			var o = new JObject();
 			o["BaseType"] = Base.BaseType.AssemblyQualifiedName;
 
-			var difference = new JArray();
-			foreach (var pair in Modified.Difference)
+			var nodeArray = new JArray();
+
+			foreach (var node in ModifiedNodes)
 			{
-				var p = new JObject();
-				p["Key"] = pair.Key.Serialize();
-				p["Value"] = JToken.FromObject(pair.Value);
-				difference.Add(p);
+				var jnode = new JObject();
+
+				var jpath = new JArray();
+				foreach (var id in node.Path)
+				{
+					jpath.Add(id.ToString());
+				}
+
+				var difference = new JArray();
+				foreach (var pair in node.Modified.Difference)
+				{
+					var p = new JObject();
+					p["Key"] = pair.Key.Serialize();
+					p["Value"] = JToken.FromObject(pair.Value);
+					difference.Add(p);
+				}
+
+				jnode["Path"] = jpath;
+				jnode["Difference"] = difference;
+				nodeArray.Add(jnode);
 			}
-			o["Modified.Difference"] = difference;
+
+			o["ModifiedNodes"] = nodeArray;
 
 			string json = o.ToString();
 			return json;
@@ -108,13 +135,27 @@ namespace PrefabLike
 			var typeName = (string)o["BaseType"];
 			prefab.Base.BaseType = Type.GetType(typeName);
 
-			var difference = (JArray)o["Modified.Difference"];//.Values<JObject>();
-			foreach (var pair in difference)
+			var modifiedNodes = (JArray)o["ModifiedNodes"];
+
+			Func<JObject, ModifiedNode> deserializeModifiedNode = (o) =>
 			{
-				var key = AccessKeyGroup.Deserialize((JObject)pair["Key"]); //AccessKey.FromJson((JObject)pair["Key"]);
-				var value = pair["Value"].ToObject<object>();
-				prefab.Modified.Difference.Add(key, value);
-			}
+				var mn = new ModifiedNode();
+
+				var jpath = (JArray)o["Path"];
+				mn.Path = jpath.Select(_ => System.Guid.Parse(_.ToObject<string>())).ToArray();
+
+				var difference = (JArray)o["Difference"];//.Values<JObject>();
+				foreach (var pair in difference)
+				{
+					var key = AccessKeyGroup.Deserialize((JObject)pair["Key"]); //AccessKey.FromJson((JObject)pair["Key"]);
+					var value = pair["Value"].ToObject<object>();
+					mn.Modified.Difference.Add(key, value);
+				}
+
+				return mn;
+			};
+
+			prefab.ModifiedNodes = modifiedNodes.Select(_ => deserializeModifiedNode((JObject)_)).ToArray();
 
 			return prefab;
 		}
@@ -230,10 +271,9 @@ namespace PrefabLike
 	{
 		protected enum AccessKeyType
 		{
-			GUID = 0,
-			Field = 1,
-			ListElement = 2,
-			ListCount = 3,
+			Field = 0,
+			ListElement = 1,
+			ListCount = 2,
 		}
 
 		public JObject ToJson()
@@ -269,45 +309,6 @@ namespace PrefabLike
 		protected abstract AccessKeyType GetAccessKeyType();
 		protected abstract void Serialize(JObject o);
 		protected abstract void Deserialize(JObject o);
-	}
-
-	public class AccessKeyGUID : AccessKey
-	{
-		public System.Guid GUID;
-
-		public override int GetHashCode()
-		{
-			return GUID.GetHashCode();
-		}
-
-		public override bool Equals(object obj)
-		{
-			var o = obj as AccessKeyGUID;
-			if (o is null)
-				return false;
-
-			return GUID == o.GUID;
-		}
-
-		protected override AccessKeyType GetAccessKeyType()
-		{
-			return AccessKeyType.GUID;
-		}
-
-		protected override void Serialize(JObject o)
-		{
-			o["GUID"] = GUID;
-		}
-
-		protected override void Deserialize(JObject o)
-		{
-			GUID = (System.Guid)o["Name"];
-		}
-
-		public override string ToString()
-		{
-			return GUID.ToString();
-		}
 	}
 
 	public class AccessKeyField : AccessKey
@@ -575,11 +576,5 @@ namespace PrefabLike
 
 			return ret;
 		}
-	}
-
-	class ResourceReference
-	{
-		public int ID;
-		public string RelativePath;
 	}
 }

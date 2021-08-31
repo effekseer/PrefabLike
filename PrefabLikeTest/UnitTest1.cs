@@ -191,11 +191,12 @@ namespace PrefabLikeTest
 				var after = new FieldState();
 				after.Store(v);
 
-				prefab.Modified.Difference = after.GenerateDifference(before);
+				prefab.ModifiedNodes = new NodeTreeGroup.ModifiedNode[1];
+				prefab.ModifiedNodes[0].Modified.Difference = after.GenerateDifference(before);
 			}
 
 			// インスタンスを作ってみる
-			var node2 = system.CreateNodeFromPrefab(prefab) as TestNodePrimitive;
+			var node2 = system.CreateNodeFromNodeTreeGroup(prefab) as TestNodePrimitive;
 			Assert.AreEqual(5, node2.Value1);   // prefab が持っている値が設定されていること
 		}
 
@@ -232,7 +233,8 @@ namespace PrefabLikeTest
 				var after = new FieldState();
 				after.Store(v);
 
-				prefab.Modified.Difference = after.GenerateDifference(before);
+				prefab.ModifiedNodes = new NodeTreeGroup.ModifiedNode[1];
+				prefab.ModifiedNodes[0].Modified.Difference = after.GenerateDifference(before);
 
 				json = prefab.Serialize();
 			}
@@ -241,7 +243,7 @@ namespace PrefabLikeTest
 			{
 				var prefab = NodeTreeGroup.Deserialize(json);
 
-				var node2 = system.CreateNodeFromPrefab(prefab) as TestNodePrimitive2;
+				var node2 = system.CreateNodeFromNodeTreeGroup(prefab) as TestNodePrimitive2;
 				Assert.AreEqual(true, node2.ValueBool);
 				Assert.AreEqual(1, node2.ValueByte);
 				Assert.AreEqual(2, node2.ValueSByte);
@@ -279,7 +281,8 @@ namespace PrefabLikeTest
 				var after = new FieldState();
 				after.Store(v);
 
-				prefab.Modified.Difference = after.GenerateDifference(before);
+				prefab.ModifiedNodes = new NodeTreeGroup.ModifiedNode[1];
+				prefab.ModifiedNodes[0].Modified.Difference = after.GenerateDifference(before);
 
 				json = prefab.Serialize();
 			}
@@ -288,7 +291,7 @@ namespace PrefabLikeTest
 			{
 				var prefab = NodeTreeGroup.Deserialize(json);
 
-				var node2 = system.CreateNodeFromPrefab(prefab) as TestNodeList;
+				var node2 = system.CreateNodeFromNodeTreeGroup(prefab) as TestNodeList;
 				Assert.AreEqual(1, node2.ValuesInt32.SequenceEqual(new List<int>() { 1, 2, 3 }));
 			}
 		}
@@ -312,10 +315,11 @@ namespace PrefabLikeTest
 				var after = new FieldState();
 				after.Store(v);
 
-				prefab.Modified.Difference = after.GenerateDifference(before);
+				prefab.ModifiedNodes = new NodeTreeGroup.ModifiedNode[1];
+				prefab.ModifiedNodes[0].Modified.Difference = after.GenerateDifference(before);
 			}
 
-			var node2 = system.CreateNodeFromPrefab(prefab) as TestNodeStruct;
+			var node2 = system.CreateNodeFromNodeTreeGroup(prefab) as TestNodeStruct;
 			Assert.AreEqual(2, node2.Struct1.A);
 		}
 
@@ -339,10 +343,11 @@ namespace PrefabLikeTest
 				var after = new FieldState();
 				after.Store(v);
 
-				prefab.Modified.Difference = after.GenerateDifference(before);
+				prefab.ModifiedNodes = new NodeTreeGroup.ModifiedNode[1];
+				prefab.ModifiedNodes[0].Modified.Difference = after.GenerateDifference(before);
 			}
 
-			var node2 = system.CreateNodeFromPrefab(prefab) as TestNodeClass;
+			var node2 = system.CreateNodeFromNodeTreeGroup(prefab) as TestNodeClass;
 			Assert.AreEqual(2.0f, node2.Class1_1.A);
 		}
 	}
