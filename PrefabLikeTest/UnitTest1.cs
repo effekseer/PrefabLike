@@ -192,6 +192,7 @@ namespace PrefabLikeTest
 				after.Store(v);
 
 				prefab.ModifiedNodes = new NodeTreeGroup.ModifiedNode[1];
+				prefab.ModifiedNodes[0] = new NodeTreeGroup.ModifiedNode();
 				prefab.ModifiedNodes[0].Modified.Difference = after.GenerateDifference(before);
 			}
 
@@ -344,6 +345,7 @@ namespace PrefabLikeTest
 				after.Store(v);
 
 				prefab.ModifiedNodes = new NodeTreeGroup.ModifiedNode[1];
+				prefab.ModifiedNodes[0] = new NodeTreeGroup.ModifiedNode();
 				prefab.ModifiedNodes[0].Modified.Difference = after.GenerateDifference(before);
 			}
 
