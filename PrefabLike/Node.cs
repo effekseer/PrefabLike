@@ -70,6 +70,32 @@ namespace PrefabLike
 
 		public List<NodeTreeBase> AdditionalChildren = new List<NodeTreeBase>();
 
+		public void AddChild(Type type)
+		{
+			var treeBase = new NodeTreeBase { GUID = NewId(), BaseType = type };
+			AdditionalChildren.Add(treeBase);
+		}
+
+		public void AddChild(NodeTreeGroup treeGroup)
+		{
+			var treeBase = new NodeTreeBase { GUID = NewId(), Template = treeGroup };
+			AdditionalChildren.Add(treeBase);
+		}
+
+		Guid NewId()
+		{
+			while (true)
+			{
+				var id = Guid.NewGuid();
+				if (AdditionalChildren.Any(_ => _.GUID == id))
+				{
+					continue;
+				}
+
+				return id;
+			}
+		}
+
 		// 子の情報が必要
 
 		public class ModifiedNode
