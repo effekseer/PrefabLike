@@ -4,35 +4,44 @@ using System.Text;
 
 namespace PrefabLike
 {
+	public class Command
+	{
+		virtual public void Execute() { }
+		virtual public void Unexecute() { }
+	}
+
+	public class DelegateCommand : Command
+	{
+		public Action OnExecute;
+		public Action OnUnexecute;
+
+		public override void Execute()
+		{
+			OnExecute?.Invoke();
+		}
+
+		public override void Unexecute()
+		{
+			OnUnexecute?.Invoke();
+		}
+	}
+
 	public class CommandManager
 	{
-		class Command
+		class EditFieldState
 		{
-			virtual public void Execute() { }
-			virtual public void Unexecute() { }
+			public object Target;
+			public bool IsEdited = false;
+			public FieldState State = new FieldState();
 		}
 
-		class CustomCommand : Command
-		{
-			public Action OnExecute;
-			public Action OnUnexecute;
-
-			public override void Execute()
-			{
-				OnExecute?.Invoke();
-			}
-
-			public override void Unexecute()
-			{
-				OnUnexecute?.Invoke();
-			}
-		}
+		Dictionary<object, EditFieldState> editFieldStates = new Dictionary<object, EditFieldState>();
 
 		int currentCommand = -1;
 
 		List<Command> commands = new List<Command>();
 
-		void AddCommand(Command command)
+		public void AddCommand(Command command)
 		{
 			var count = commands.Count - (currentCommand + 1);
 			if (count > 0)
@@ -67,7 +76,7 @@ namespace PrefabLike
 			nodeTreeGroup.AddChild(type);
 			var after = nodeTreeGroup.AdditionalChildren.ToArray();
 
-			var command = new CustomCommand();
+			var command = new DelegateCommand();
 			command.OnExecute = () =>
 			{
 				nodeTreeGroup.AdditionalChildren.Clear();
@@ -83,30 +92,47 @@ namespace PrefabLike
 			AddCommand(command);
 		}
 
-		public void StartEdit(object o)
+		public void StartEditFields(object o)
 		{
-			if (o is Node)
+			var state = new EditFieldState { Target = o };
+			state.State.Store(o);
+			editFieldStates.Add(o, state);
+		}
+
+		public void NotifyEditFields(object o)
+		{
+			if(editFieldStates.TryGetValue(o, out var v))
 			{
-				// おそらくオブジェクトの種類でUndo分岐しないと辛い
-				// ステートの差分を取得して、Modiedを生成し、ModifiedもUNDOすることになる
+				v.IsEdited = true;
 			}
 		}
 
-		public void NotifyEdit(object o)
+		public void EndEditFields(object o)
 		{
-			if (o is Node)
+			if (editFieldStates.TryGetValue(o, out var v))
 			{
-				// おそらくオブジェクトの種類でUndo分岐しないと辛い
-			}
-		}
+				if(v.IsEdited)
+				{
+					var fs = new FieldState();
+					fs.Store(o);
+					var diff = v.State.GenerateDifference(fs);
 
-		public void EndEdit(object o)
-		{
-			if (o is Node)
-			{
-				// おそらくオブジェクトの種類でUndo分岐しないと辛い
+					var command = new DelegateCommand();
+					command.OnExecute = () =>
+					{
+						// TODO
+					};
+
+					command.OnUnexecute = () =>
+					{
+						// TODO
+					};
+
+					AddCommand(command);
+				}
+
+				editFieldStates.Remove(o);
 			}
 		}
 	}
-
 }
