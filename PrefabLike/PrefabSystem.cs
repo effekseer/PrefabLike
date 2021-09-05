@@ -183,7 +183,9 @@ namespace PrefabLike
 						{
 							var k = key as AccessKeyField;
 							var field = objects[i].GetType().GetField(k.Name);
-							if (field.FieldType.IsClass)
+							var o = objects[i];
+
+							if (o is IList)
 							{
 								// List の場合、その Count を表す KeyGroup は次のようになっている。
 								// - [0] AccessKeyField { Name = "List型のフィールド名" }
@@ -194,7 +196,6 @@ namespace PrefabLike
 							}
 							else
 							{
-								var o = objects[i];
 								field.SetValue(o, Convert.ChangeType(objects[i + 1], field.FieldType));
 								objects[i] = o;
 							}
