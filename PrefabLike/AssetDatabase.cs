@@ -15,10 +15,10 @@ namespace PrefabLike
 
 		public Asset LoadAsset(string path)
 		{
-			if(assets.ContainsKey(path))
+			if (assets.ContainsKey(path))
 			{
 				Asset asset;
-				if(assets[path].TryGetTarget(out asset))
+				if (assets[path].TryGetTarget(out asset))
 				{
 					return asset;
 				}

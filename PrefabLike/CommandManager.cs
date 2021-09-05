@@ -101,7 +101,7 @@ namespace PrefabLike
 
 		public void NotifyEditFields(object o)
 		{
-			if(editFieldStates.TryGetValue(o, out var v))
+			if (editFieldStates.TryGetValue(o, out var v))
 			{
 				v.IsEdited = true;
 			}
@@ -111,7 +111,7 @@ namespace PrefabLike
 		{
 			if (editFieldStates.TryGetValue(o, out var v))
 			{
-				if(v.IsEdited)
+				if (v.IsEdited)
 				{
 					var fs = new FieldState();
 					fs.Store(o);

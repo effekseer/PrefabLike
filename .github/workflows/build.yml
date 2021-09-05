@@ -1,0 +1,21 @@
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  formats:
+    name: Check format
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-dotnet@v1
+      - name: CheckFormat
+        run: |
+         dotnet tool install -g dotnet-format
+         dotnet format --check -f PrefabLike/
+         dotnet format --check -f PrefabLikeTest/
+        shell: sh
