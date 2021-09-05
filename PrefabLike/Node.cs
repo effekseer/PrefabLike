@@ -448,6 +448,10 @@ namespace PrefabLike
 			{
 				return o;
 			}
+			else if (type == typeof(Guid))
+			{
+				return o;
+			}
 			else if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(List<>))
 			{
 				var list = (IList)o;
