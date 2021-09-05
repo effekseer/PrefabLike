@@ -88,7 +88,8 @@ namespace PrefabLike
 						if (key is AccessKeyField)
 						{
 							var k = key as AccessKeyField;
-							var field = objects[objects.Count - 1].GetType().GetField(k.Name);
+							var obj = objects[objects.Count - 1];
+							var field = obj.GetType().GetField(k.Name);
 
 							// not found because a data structure was changed
 							if (field == null)
@@ -96,7 +97,7 @@ namespace PrefabLike
 								goto Exit;
 							}
 
-							var o = field.GetValue(objects[objects.Count - 1]);
+							var o = field.GetValue(obj);
 
 							// Create an instance if it is an object type.
 							if (o is null)
@@ -114,6 +115,8 @@ namespace PrefabLike
 									{
 										goto Exit;
 									}
+
+									field.SetValue(obj, o);
 								}
 								else
 								{
@@ -149,18 +152,10 @@ namespace PrefabLike
 						else if (key is AccessKeyListElement)
 						{
 							var k = key as AccessKeyListElement;
-							foreach (var pi in objects[objects.Count - 1].GetType().GetProperties())
-							{
-								if (pi.GetIndexParameters().Length != 1)
-								{
-									continue;
-								}
+							var list = objects[objects.Count - 1] as IList;
 
-								var o = pi.GetValue(objects[objects.Count - 1]);
+							// TODO: List 要素が Object 型である場合、ここでインスタンスを作っておく必要がある
 
-								objects.Add(o);
-								break;
-							}
 						}
 						else
 						{
@@ -170,7 +165,7 @@ namespace PrefabLike
 
 					System.Diagnostics.Debug.Assert(objects.Count - 1 == keys.Length);
 
-					objects[objects.Count - 1] = diff.Value;
+					//objects[objects.Count - 1] = diff.Value;
 
 					//--------------------
 					// 2. Set Values
@@ -207,6 +202,9 @@ namespace PrefabLike
 						else if (key is AccessKeyListElement)
 						{
 							var k = key as AccessKeyListElement;
+							//var list = objects[i] as IList;
+							//list[k.Index] = diff.Value;
+
 							foreach (var pi in objects[i].GetType().GetProperties())
 							{
 								if (pi.GetIndexParameters().Length != 1)
@@ -215,7 +213,7 @@ namespace PrefabLike
 								}
 
 								var o = objects[i];
-								pi.SetValue(o, objects[i + 1]);
+								pi.SetValue(o, Convert.ChangeType(diff.Value, pi.PropertyType), new object[] { k.Index });
 								objects[i] = o;
 								break;
 							}

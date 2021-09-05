@@ -69,7 +69,7 @@ namespace PrefabLikeTest
 			public TestClass1 Class1_2;
 		}
 
-		class TestNodeList : Node
+		class TestNode_ListTest : Node
 		{
 			public List<int> ValuesInt32;
 		}
@@ -271,9 +271,9 @@ namespace PrefabLikeTest
 			// Create Prefab from diff. and save to json.
 			{
 				var prefab = new NodeTreeGroup();
-				prefab.Base.BaseType = typeof(TestNodeList);
+				prefab.Base.BaseType = typeof(TestNode_ListTest);
 
-				var v = new TestNodeList();
+				var v = new TestNode_ListTest();
 
 				var before = new FieldState();
 				before.Store(v);
@@ -294,8 +294,8 @@ namespace PrefabLikeTest
 			{
 				var prefab = NodeTreeGroup.Deserialize(json);
 
-				var node2 = system.CreateNodeFromNodeTreeGroup(prefab) as TestNodeList;
-				Assert.AreEqual(1, node2.ValuesInt32.SequenceEqual(new List<int>() { 1, 2, 3 }));
+				var node2 = system.CreateNodeFromNodeTreeGroup(prefab) as TestNode_ListTest;
+				Assert.AreEqual(true, node2.ValuesInt32.SequenceEqual(new List<int>() { 1, 2, 3 }));
 			}
 		}
 

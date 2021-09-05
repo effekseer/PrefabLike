@@ -295,7 +295,7 @@ namespace PrefabLike
 
 	public abstract class AccessKey
 	{
-		protected enum AccessKeyType
+		public enum AccessKeyType
 		{
 			Field = 0,
 			ListElement = 1,
@@ -305,7 +305,7 @@ namespace PrefabLike
 		public JObject ToJson()
 		{
 			JObject o = new JObject();
-			o["Type"] = (int)GetAccessKeyType();
+			o["Type"] = (int)Type;
 			Serialize(o);
 			return o;
 		}
@@ -332,7 +332,8 @@ namespace PrefabLike
 			return key;
 		}
 
-		protected abstract AccessKeyType GetAccessKeyType();
+		public abstract AccessKeyType Type { get; }
+
 		protected abstract void Serialize(JObject o);
 		protected abstract void Deserialize(JObject o);
 	}
@@ -355,10 +356,7 @@ namespace PrefabLike
 			return Name == o.Name;
 		}
 
-		protected override AccessKeyType GetAccessKeyType()
-		{
-			return AccessKeyType.Field;
-		}
+		public override AccessKeyType Type { get => AccessKeyType.Field; }
 
 		protected override void Serialize(JObject o)
 		{
@@ -392,10 +390,7 @@ namespace PrefabLike
 			return true;
 		}
 
-		protected override AccessKeyType GetAccessKeyType()
-		{
-			return AccessKeyType.ListCount;
-		}
+		public override AccessKeyType Type { get => AccessKeyType.ListCount; }
 
 		protected override void Serialize(JObject o)
 		{
@@ -429,10 +424,7 @@ namespace PrefabLike
 
 			return Index == o.Index;
 		}
-		protected override AccessKeyType GetAccessKeyType()
-		{
-			return AccessKeyType.ListElement;
-		}
+		public override AccessKeyType Type { get => AccessKeyType.ListElement; }
 
 		protected override void Serialize(JObject o)
 		{
