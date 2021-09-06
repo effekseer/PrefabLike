@@ -18,6 +18,10 @@ jobs:
          dotnet tool install -g dotnet-format
          dotnet format --check -f PrefabLike/
          dotnet format --check -f PrefabLikeTest/
+        shell: sh
+
+      - name: Test
+        run: |
          dotnet build PrefabLikeTest/
          dotnet test PrefabLikeTest/
         shell: sh
