@@ -69,10 +69,16 @@ namespace PrefabLikeTest
 			public TestClass1 Class1_2;
 		}
 
-		class TestNode_ListTest : Node
+		class TestNode_ListValue : Node
 		{
 			public List<int> ValuesInt32;
 		}
+
+		class TestNode_ListClass : Node
+		{
+			public List<TestClass1> Values;
+		}
+
 
 		[SetUp]
 		public void Setup()
@@ -271,9 +277,9 @@ namespace PrefabLikeTest
 			// Create Prefab from diff. and save to json.
 			{
 				var prefab = new NodeTreeGroup();
-				prefab.Base.BaseType = typeof(TestNode_ListTest);
+				prefab.Base.BaseType = typeof(TestNode_ListValue);
 
-				var v = new TestNode_ListTest();
+				var v = new TestNode_ListValue();
 
 				var before = new FieldState();
 				before.Store(v);
@@ -294,8 +300,45 @@ namespace PrefabLikeTest
 			{
 				var prefab = NodeTreeGroup.Deserialize(json);
 
-				var node2 = system.CreateNodeFromNodeTreeGroup(prefab) as TestNode_ListTest;
+				var node2 = system.CreateNodeFromNodeTreeGroup(prefab) as TestNode_ListValue;
 				Assert.AreEqual(true, node2.ValuesInt32.SequenceEqual(new List<int>() { 1, 2, 3 }));
+			}
+		}
+
+		[Test]
+		public void SaveLoadListClass()
+		{
+			var system = new PrefabSyatem();
+			string json;
+
+			// Create Prefab from diff. and save to json.
+			{
+				var prefab = new NodeTreeGroup();
+				prefab.Base.BaseType = typeof(TestNode_ListClass);
+
+				var v = new TestNode_ListClass();
+
+				var before = new FieldState();
+				before.Store(v);
+
+				v.Values = new List<TestClass1>() { new TestClass1 { A = 3 } };
+
+				var after = new FieldState();
+				after.Store(v);
+
+				prefab.ModifiedNodes = new NodeTreeGroup.ModifiedNode[1];
+				prefab.ModifiedNodes[0] = new NodeTreeGroup.ModifiedNode();
+				prefab.ModifiedNodes[0].Modified.Difference = after.GenerateDifference(before);
+
+				json = prefab.Serialize();
+			}
+
+			// Load and Instantiate
+			{
+				var prefab = NodeTreeGroup.Deserialize(json);
+
+				var node2 = system.CreateNodeFromNodeTreeGroup(prefab) as TestNode_ListClass;
+				Assert.AreEqual(3, node2.Values[0].A);
 			}
 		}
 

@@ -8,6 +8,53 @@ namespace PrefabLike
 {
 	class Difference
 	{
+		static object CreateDefaultValue(Type type)
+		{
+			if (type.IsValueType)
+			{
+				return Activator.CreateInstance(type);
+			}
+			else
+			{
+				var constructor = type.GetConstructor(new Type[] { });
+				if (constructor == null)
+				{
+					return null;
+				}
+
+				return constructor.Invoke(null);
+			}
+		}
+
+		static object GetValueWithIndex(object target, int index)
+		{
+			foreach (var pi in target.GetType().GetProperties())
+			{
+				if (pi.GetIndexParameters().Length != 1)
+				{
+					continue;
+				}
+
+				return pi.GetValue(target, new object[] { index });
+			}
+			return null;
+		}
+
+		static bool SetValueToIndex(object target, object value, int index)
+		{
+			foreach (var pi in target.GetType().GetProperties())
+			{
+				if (pi.GetIndexParameters().Length != 1)
+				{
+					continue;
+				}
+
+				pi.SetValue(target, Convert.ChangeType(value, pi.PropertyType), new object[] { index });
+				return true;
+			}
+			return false;
+		}
+
 		public static void ApplyDifference(ref object target, Dictionary<AccessKeyGroup, object> difference)
 		{
 			var differenceFirst = difference.Where(_ => _.Key.Keys.Last() is AccessKeyListCount).ToArray();
@@ -17,7 +64,7 @@ namespace PrefabLike
 			{
 				var keys = diff.Key.Keys;
 
-				List<object> objects = new List<object>();
+				var objects = new List<object>();
 				objects.Add(target);
 
 				//--------------------
@@ -27,11 +74,10 @@ namespace PrefabLike
 				{
 					var key = keys[i];
 
-					if (key is AccessKeyField)
+					if (key is AccessKeyField akf)
 					{
-						var k = key as AccessKeyField;
 						var obj = objects[objects.Count - 1];
-						var field = obj.GetType().GetField(k.Name);
+						var field = obj.GetType().GetField(akf.Name);
 
 						// not found because a data structure was changed
 						if (field == null)
@@ -68,36 +114,29 @@ namespace PrefabLike
 
 						objects.Add(o);
 					}
-					else if (key is AccessKeyListCount)
+					else if (key is AccessKeyListCount aklc)
 					{
 						var o = objects[objects.Count - 1];
-						if (o is IList)
+						if (o is IList list)
 						{
-							var list = (IList)o;
 							var count = (Int64)diff.Value;
 							while (list.Count < count)
 							{
 								var type = o.GetType().GetGenericArguments()[0];
-								if (type.IsValueType)
-								{
-									var newValue = Activator.CreateInstance(type);  // default(T)
-									list.Add(newValue);
-								}
-								else
-								{
-									var newValue = type.GetConstructor(null).Invoke(null);
-									list.Add(newValue);
-								}
+								var newValue = CreateDefaultValue(type);
+								list.Add(newValue);
 							}
 						}
+
+						objects.Add(new object());
 					}
-					else if (key is AccessKeyListElement)
+					else if (key is AccessKeyListElement akle)
 					{
-						var k = key as AccessKeyListElement;
-						var list = objects[objects.Count - 1] as IList;
-
-						// TODO: List 要素が Object 型である場合、ここでインスタンスを作っておく必要がある
-
+						if (objects[objects.Count - 1] is IList list)
+						{
+							var value = GetValueWithIndex(list, akle.Index);
+							objects.Add(value);
+						}
 					}
 					else
 					{
@@ -107,7 +146,7 @@ namespace PrefabLike
 
 				System.Diagnostics.Debug.Assert(objects.Count - 1 == keys.Length);
 
-				//objects[objects.Count - 1] = diff.Value;
+				objects[objects.Count - 1] = diff.Value;
 
 				//--------------------
 				// 2. Set Values
@@ -144,21 +183,7 @@ namespace PrefabLike
 					else if (key is AccessKeyListElement)
 					{
 						var k = key as AccessKeyListElement;
-						//var list = objects[i] as IList;
-						//list[k.Index] = diff.Value;
-
-						foreach (var pi in objects[i].GetType().GetProperties())
-						{
-							if (pi.GetIndexParameters().Length != 1)
-							{
-								continue;
-							}
-
-							var o = objects[i];
-							pi.SetValue(o, Convert.ChangeType(diff.Value, pi.PropertyType), new object[] { k.Index });
-							objects[i] = o;
-							break;
-						}
+						SetValueToIndex(objects[i], objects[i + 1], k.Index);
 					}
 					else
 					{
