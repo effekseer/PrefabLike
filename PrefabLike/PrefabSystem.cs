@@ -34,7 +34,7 @@ namespace PrefabLike
 				baseNode = CreateNodeFromNodeTreeGroup(nodeTreeBase.Template);
 			}
 
-			baseNode.GUID = nodeTreeBase.GUID;
+			baseNode.InternalName = nodeTreeBase.InternalName;
 
 			return baseNode;
 		}
@@ -59,7 +59,7 @@ namespace PrefabLike
 
 				foreach (var guid in modifiedNode.Path)
 				{
-					targetNode = targetNode.Children.FirstOrDefault(_ => _.GUID == guid);
+					targetNode = targetNode.Children.FirstOrDefault(_ => _.InternalName == guid);
 					if (targetNode == null)
 					{
 						break;
