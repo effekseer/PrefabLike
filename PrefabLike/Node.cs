@@ -30,18 +30,18 @@ namespace PrefabLike
 	/// </remarks>
 	public class Node
 	{
-		public Guid GUID;
+		public Guid InternalName;
 		public List<Node> Children = new List<Node>();
 
-		public bool IsChidlrenGUIDValid()
+		public bool IsChidlrenInternalNameValid()
 		{
-			return Children.Select(_ => _.GUID).Distinct().Count() == Children.Count();
+			return Children.Select(_ => _.InternalName).Distinct().Count() == Children.Count();
 		}
 	}
 
 	public class NodeTreeBase
 	{
-		public System.Guid GUID;
+		public System.Guid InternalName;
 
 		/// <summary>
 		/// この Prefab が生成するインスタンスの型。
@@ -72,22 +72,22 @@ namespace PrefabLike
 
 		public void AddChild(Type type)
 		{
-			var treeBase = new NodeTreeBase { GUID = NewId(), BaseType = type };
+			var treeBase = new NodeTreeBase { InternalName = NewName(), BaseType = type };
 			AdditionalChildren.Add(treeBase);
 		}
 
 		public void AddChild(NodeTreeGroup treeGroup)
 		{
-			var treeBase = new NodeTreeBase { GUID = NewId(), Template = treeGroup };
+			var treeBase = new NodeTreeBase { InternalName = NewName(), Template = treeGroup };
 			AdditionalChildren.Add(treeBase);
 		}
 
-		Guid NewId()
+		Guid NewName()
 		{
 			while (true)
 			{
 				var id = Guid.NewGuid();
-				if (AdditionalChildren.Any(_ => _.GUID == id))
+				if (AdditionalChildren.Any(_ => _.InternalName == id))
 				{
 					continue;
 				}
