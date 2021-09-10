@@ -5,81 +5,81 @@ using PrefabLike;
 
 namespace PrefabLikeTest
 {
+	struct TestStruct1
+	{
+		public float A;
+		public float B;
+		public float C;
+		public TestStruct2 St;
+	}
+
+	struct TestStruct2
+	{
+		public float A;
+		public float B;
+		public float C;
+	}
+
+	class TestClass1
+	{
+		public float A;
+		public float B;
+		public float C;
+	}
+
+	class TestList1
+	{
+		public System.Collections.Generic.List<int> Values = new System.Collections.Generic.List<int>();
+	}
+
+	class TestNodePrimitive : Node
+	{
+		public int Value1;
+		public float Value2;
+		public string Value3;
+	}
+
+	class TestNodePrimitive2 : Node
+	{
+		public bool ValueBool;
+		public byte ValueByte;
+		public sbyte ValueSByte;
+		public double ValueDobule;
+		public float ValueFloat;
+		public int ValueInt32;
+		public uint ValueUInt32;
+		public long ValueInt64;
+		public ulong ValueUInt64;
+		public short ValueInt16;
+		public ushort ValueUInt16;
+		public char ValueChar;
+		public string ValueString;
+	}
+
+	class TestNodeStruct : Node
+	{
+		public TestStruct1 Struct1;
+	}
+
+	class TestNodeClass : Node
+	{
+		public TestClass1 Class1_1;
+		public TestClass1 Class1_2;
+	}
+
+	class TestNode_ListValue : Node
+	{
+		public List<int> ValuesInt32;
+	}
+
+	class TestNode_ListClass : Node
+	{
+		public List<TestClass1> Values;
+	}
+
+
 	public class Tests
 	{
-		struct TestStruct1
-		{
-			public float A;
-			public float B;
-			public float C;
-			public TestStruct2 St;
-		}
-
-		struct TestStruct2
-		{
-			public float A;
-			public float B;
-			public float C;
-		}
-
-		class TestClass1
-		{
-			public float A;
-			public float B;
-			public float C;
-		}
-
-		class TestList1
-		{
-			public System.Collections.Generic.List<int> Values = new System.Collections.Generic.List<int>();
-		}
-
-		class TestNodePrimitive : Node
-		{
-			public int Value1;
-			public float Value2;
-			public string Value3;
-		}
-
-		class TestNodePrimitive2 : Node
-		{
-			public bool ValueBool;
-			public byte ValueByte;
-			public sbyte ValueSByte;
-			public double ValueDobule;
-			public float ValueFloat;
-			public int ValueInt32;
-			public uint ValueUInt32;
-			public long ValueInt64;
-			public ulong ValueUInt64;
-			public short ValueInt16;
-			public ushort ValueUInt16;
-			public char ValueChar;
-			public string ValueString;
-		}
-
-		class TestNodeStruct : Node
-		{
-			public TestStruct1 Struct1;
-		}
-
-		class TestNodeClass : Node
-		{
-			public TestClass1 Class1_1;
-			public TestClass1 Class1_2;
-		}
-
-		class TestNode_ListValue : Node
-		{
-			public List<int> ValuesInt32;
-		}
-
-		class TestNode_ListClass : Node
-		{
-			public List<TestClass1> Values;
-		}
-
-
 		[SetUp]
 		public void Setup()
 		{
@@ -205,141 +205,6 @@ namespace PrefabLikeTest
 			// インスタンスを作ってみる
 			var node2 = system.CreateNodeFromNodeTreeGroup(prefab) as TestNodePrimitive;
 			Assert.AreEqual(5, node2.Value1);   // prefab が持っている値が設定されていること
-		}
-
-		[Test]
-		public void SaveLoad()
-		{
-			var system = new PrefabSyatem();
-			string json;
-
-			// Create Prefab from diff. and save to json.
-			{
-				var prefab = new NodeTreeGroup();
-				prefab.Base.BaseType = typeof(TestNodePrimitive2);
-
-				var v = new TestNodePrimitive2();
-
-				var before = new FieldState();
-				before.Store(v);
-
-				v.ValueBool = true;
-				v.ValueByte = 1;
-				v.ValueSByte = 2;
-				v.ValueDobule = 4.0;
-				v.ValueFloat = 5.0f;
-				v.ValueInt32 = 6;
-				v.ValueUInt32 = 7;
-				v.ValueInt64 = 8;
-				v.ValueUInt64 = 9;
-				v.ValueInt16 = 10;
-				v.ValueUInt16 = 11;
-				v.ValueChar = 'A';
-				v.ValueString = "ABC";
-
-				var after = new FieldState();
-				after.Store(v);
-
-				prefab.ModifiedNodes = new NodeTreeGroup.ModifiedNode[1];
-				prefab.ModifiedNodes[0] = new NodeTreeGroup.ModifiedNode();
-				prefab.ModifiedNodes[0].Modified.Difference = after.GenerateDifference(before);
-
-				json = prefab.Serialize();
-			}
-
-			// Load and Instantiate
-			{
-				var prefab = NodeTreeGroup.Deserialize(json);
-
-				var node2 = system.CreateNodeFromNodeTreeGroup(prefab) as TestNodePrimitive2;
-				Assert.AreEqual(true, node2.ValueBool);
-				Assert.AreEqual(1, node2.ValueByte);
-				Assert.AreEqual(2, node2.ValueSByte);
-				Assert.AreEqual(4.0, node2.ValueDobule);
-				Assert.AreEqual(5.0f, node2.ValueFloat);
-				Assert.AreEqual(6, node2.ValueInt32);
-				Assert.AreEqual(7, node2.ValueUInt32);
-				Assert.AreEqual(8, node2.ValueInt64);
-				Assert.AreEqual(9, node2.ValueUInt64);
-				Assert.AreEqual(10, node2.ValueInt16);
-				Assert.AreEqual(11, node2.ValueUInt16);
-				Assert.AreEqual('A', node2.ValueChar);
-				Assert.AreEqual("ABC", node2.ValueString);
-			}
-		}
-
-		[Test]
-		public void SaveLoadList()
-		{
-			var system = new PrefabSyatem();
-			string json;
-
-			// Create Prefab from diff. and save to json.
-			{
-				var prefab = new NodeTreeGroup();
-				prefab.Base.BaseType = typeof(TestNode_ListValue);
-
-				var v = new TestNode_ListValue();
-
-				var before = new FieldState();
-				before.Store(v);
-
-				v.ValuesInt32 = new List<int>() { 1, 2, 3 };
-
-				var after = new FieldState();
-				after.Store(v);
-
-				prefab.ModifiedNodes = new NodeTreeGroup.ModifiedNode[1];
-				prefab.ModifiedNodes[0] = new NodeTreeGroup.ModifiedNode();
-				prefab.ModifiedNodes[0].Modified.Difference = after.GenerateDifference(before);
-
-				json = prefab.Serialize();
-			}
-
-			// Load and Instantiate
-			{
-				var prefab = NodeTreeGroup.Deserialize(json);
-
-				var node2 = system.CreateNodeFromNodeTreeGroup(prefab) as TestNode_ListValue;
-				Assert.AreEqual(true, node2.ValuesInt32.SequenceEqual(new List<int>() { 1, 2, 3 }));
-			}
-		}
-
-		[Test]
-		public void SaveLoadListClass()
-		{
-			var system = new PrefabSyatem();
-			string json;
-
-			// Create Prefab from diff. and save to json.
-			{
-				var prefab = new NodeTreeGroup();
-				prefab.Base.BaseType = typeof(TestNode_ListClass);
-
-				var v = new TestNode_ListClass();
-
-				var before = new FieldState();
-				before.Store(v);
-
-				v.Values = new List<TestClass1>() { new TestClass1 { A = 3 } };
-
-				var after = new FieldState();
-				after.Store(v);
-
-				prefab.ModifiedNodes = new NodeTreeGroup.ModifiedNode[1];
-				prefab.ModifiedNodes[0] = new NodeTreeGroup.ModifiedNode();
-				prefab.ModifiedNodes[0].Modified.Difference = after.GenerateDifference(before);
-
-				json = prefab.Serialize();
-			}
-
-			// Load and Instantiate
-			{
-				var prefab = NodeTreeGroup.Deserialize(json);
-
-				var node2 = system.CreateNodeFromNodeTreeGroup(prefab) as TestNode_ListClass;
-				Assert.AreEqual(3, node2.Values[0].A);
-			}
 		}
 
 		[Test]
