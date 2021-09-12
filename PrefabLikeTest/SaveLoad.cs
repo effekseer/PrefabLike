@@ -16,8 +16,11 @@ namespace PrefabLikeTest
 		[Test]
 		public void SaveLoadBasic()
 		{
+			var random = new System.Random();
 			var system = new PrefabSyatem();
 			string json;
+			Dictionary<System.Reflection.FieldInfo, object> state;
+
 
 			// Create Prefab from diff. and save to json.
 			{
@@ -29,19 +32,7 @@ namespace PrefabLikeTest
 				var before = new FieldState();
 				before.Store(v);
 
-				v.ValueBool = true;
-				v.ValueByte = 1;
-				v.ValueSByte = 2;
-				v.ValueDobule = 4.0;
-				v.ValueFloat = 5.0f;
-				v.ValueInt32 = 6;
-				v.ValueUInt32 = 7;
-				v.ValueInt64 = 8;
-				v.ValueUInt64 = 9;
-				v.ValueInt16 = 10;
-				v.ValueUInt16 = 11;
-				v.ValueChar = 'A';
-				v.ValueString = "ABC";
+				state = UndoRedo.Helper.AssignRandomField(random, ref v);
 
 				var after = new FieldState();
 				after.Store(v);
@@ -58,19 +49,8 @@ namespace PrefabLikeTest
 				var prefab = NodeTreeGroup.Deserialize(json);
 
 				var node2 = system.CreateNodeFromNodeTreeGroup(prefab) as TestNodePrimitive2;
-				Assert.AreEqual(true, node2.ValueBool);
-				Assert.AreEqual(1, node2.ValueByte);
-				Assert.AreEqual(2, node2.ValueSByte);
-				Assert.AreEqual(4.0, node2.ValueDobule);
-				Assert.AreEqual(5.0f, node2.ValueFloat);
-				Assert.AreEqual(6, node2.ValueInt32);
-				Assert.AreEqual(7, node2.ValueUInt32);
-				Assert.AreEqual(8, node2.ValueInt64);
-				Assert.AreEqual(9, node2.ValueUInt64);
-				Assert.AreEqual(10, node2.ValueInt16);
-				Assert.AreEqual(11, node2.ValueUInt16);
-				Assert.AreEqual('A', node2.ValueChar);
-				Assert.AreEqual("ABC", node2.ValueString);
+
+				UndoRedo.Helper.AreEqual(state, ref node2);
 			}
 		}
 

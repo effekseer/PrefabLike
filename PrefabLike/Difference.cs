@@ -172,8 +172,20 @@ namespace PrefabLike
 						}
 						else
 						{
-							field.SetValue(o, Convert.ChangeType(objects[i + 1], field.FieldType));
-							objects[i] = o;
+							// TODO: refactor
+							// 型変換の Helper 組んだ方がよさそう
+							var srcType = objects[i + 1].GetType();
+							if (srcType == typeof(System.Numerics.BigInteger))
+							{
+								var big = (System.Numerics.BigInteger)objects[i + 1];
+								field.SetValue(o, Convert.ChangeType((UInt64)big, field.FieldType));
+								objects[i] = o;
+							}
+							else
+							{
+								field.SetValue(o, Convert.ChangeType(objects[i + 1], field.FieldType));
+								objects[i] = o;
+							}
 						}
 					}
 					else if (key is AccessKeyListCount)
