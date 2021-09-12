@@ -175,21 +175,21 @@ namespace PrefabLike
 
 			Action<AccessKey[], Dictionary<AccessKey, object>> recursive = null;
 			recursive = (AccessKey[] keys, Dictionary<AccessKey, object> a2or) =>
-			 {
-				 foreach (var kv in a2or)
-				 {
-					 var nextKeys = keys.Concat(new[] { kv.Key }).ToArray();
+			{
+				foreach (var kv in a2or)
+				{
+					var nextKeys = keys.Concat(new[] { kv.Key }).ToArray();
 
-					 if (kv.Value is Dictionary<AccessKey, object>)
-					 {
-						 recursive(nextKeys, kv.Value as Dictionary<AccessKey, object>);
-					 }
-					 else
-					 {
-						 dst.Add(new AccessKeyGroup { Keys = nextKeys }, kv.Value);
-					 }
-				 }
-			 };
+					if (kv.Value is Dictionary<AccessKey, object>)
+					{
+						recursive(nextKeys, kv.Value as Dictionary<AccessKey, object>);
+					}
+					else
+					{
+						dst.Add(new AccessKeyGroup { Keys = nextKeys }, kv.Value);
+					}
+				}
+			};
 
 			recursive(new AccessKey[0], a2o);
 
