@@ -115,17 +115,18 @@ namespace PrefabLike
 				{
 					var fs = new FieldState();
 					fs.Store(o);
-					var diff = v.State.GenerateDifference(fs);
+					var diffUndo = v.State.GenerateDifference(fs);
+					var diffRedo = fs.GenerateDifference(v.State);
 
 					var command = new DelegateCommand();
 					command.OnExecute = () =>
 					{
-						// TODO
+						Difference.ApplyDifference(ref o, diffRedo);
 					};
 
 					command.OnUnexecute = () =>
 					{
-						// TODO
+						Difference.ApplyDifference(ref o, diffUndo);
 					};
 
 					AddCommand(command);
