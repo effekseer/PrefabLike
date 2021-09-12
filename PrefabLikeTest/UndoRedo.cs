@@ -57,7 +57,7 @@ namespace PrefabLikeTest
 		{
 			public static void AreEqual<T>(Dictionary<System.Reflection.FieldInfo, object> states, ref T o)
 			{
-				foreach(var kv in states)
+				foreach (var kv in states)
 				{
 					var value = kv.Key.GetValue(o);
 					Assert.AreEqual(value, kv.Value);
