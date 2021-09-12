@@ -32,7 +32,7 @@ namespace PrefabLikeTest
 				var before = new FieldState();
 				before.Store(v);
 
-				state = UndoRedo.Helper.AssignRandomField(random, ref v);
+				state = Helper.AssignRandomField(random, ref v);
 
 				var after = new FieldState();
 				after.Store(v);
@@ -50,7 +50,7 @@ namespace PrefabLikeTest
 
 				var node2 = system.CreateNodeFromNodeTreeGroup(prefab) as TestNodePrimitive2;
 
-				UndoRedo.Helper.AreEqual(state, ref node2);
+				Helper.AreEqual(state, ref node2);
 			}
 		}
 
