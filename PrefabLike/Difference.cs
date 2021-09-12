@@ -97,13 +97,7 @@ namespace PrefabLike
 							}
 							else if (field.FieldType.IsClass)
 							{
-								var constructor = field.FieldType.GetConstructor(new Type[0]);
-								if (constructor != null)
-								{
-									goto Exit;
-								}
-
-								o = constructor.Invoke(null);
+								o = field.FieldType.GetConstructor(new Type[0]).Invoke(null);
 
 								if (o == null)
 								{
@@ -166,8 +160,21 @@ namespace PrefabLike
 						var k = key as AccessKeyField;
 						var field = objects[i].GetType().GetField(k.Name);
 						var o = objects[i];
-						field.SetValue(o, Convert.ChangeType(objects[i + 1], field.FieldType));
-						objects[i] = o;
+
+						if (o is IList)
+						{
+							// List の場合、その Count を表す KeyGroup は次のようになっている。
+							// - [0] AccessKeyField { Name = "List型のフィールド名" }
+							// - [1] AccessKeyListCount {}
+							// このとき [0] の場合はこの if に入ってくる。
+							// プリミティブな値の場合はここでフィールドに値を格納する必要があるが、
+							// そうではないオブジェクト型は ↑ のほうでインスタンス作成済みなので、ここでは何もする必要はない。
+						}
+						else
+						{
+							field.SetValue(o, Convert.ChangeType(objects[i + 1], field.FieldType));
+							objects[i] = o;
+						}
 					}
 					else if (key is AccessKeyListCount)
 					{
