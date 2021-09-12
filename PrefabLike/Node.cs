@@ -561,6 +561,12 @@ namespace PrefabLike
 		}
 
 		Dictionary<AccessKey, object> currentValues = new Dictionary<AccessKey, object>();
+
+		/// <summary>
+		/// Stores the current state of the specified object in this FieldState.
+		/// This state is used as a snapshot of the object to take the change differences.
+		/// </summary>
+		/// <param name="o"></param>
 		public void Store(object o)
 		{
 			currentValues = GetValues(o);
