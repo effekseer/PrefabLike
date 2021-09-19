@@ -70,10 +70,10 @@ namespace PrefabLike
 			}
 		}
 
-		public void AddChild(NodeTreeGroup nodeTreeGroup, Type type)
+		public void AddChild(NodeTreeGroup nodeTreeGroup, List<Guid> path, Type type)
 		{
 			var before = nodeTreeGroup.AdditionalChildren.ToArray();
-			nodeTreeGroup.AddChild(type);
+			nodeTreeGroup.AddChild(path, type);
 			var after = nodeTreeGroup.AdditionalChildren.ToArray();
 
 			var command = new DelegateCommand();

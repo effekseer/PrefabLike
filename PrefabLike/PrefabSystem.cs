@@ -46,7 +46,27 @@ namespace PrefabLike
 
 			foreach (var addCh in nodeTreeGroup.AdditionalChildren)
 			{
-				baseNode.Children.Add(CreateNode(addCh));
+				var newNode = CreateNode(addCh.Base);
+
+				var root = baseNode;
+				if (addCh.Path.Count == 0 || root.InternalName != addCh.Path[0])
+				{
+					break;
+				}
+
+				for (int i = 1; i < addCh.Path.Count; i++)
+				{
+					root = root.Children.FirstOrDefault(_ => _.InternalName == addCh.Path[i]);
+					if (root == null)
+					{
+						break;
+					}
+				}
+
+				if (root != null)
+				{
+					root.Children.Add(newNode);
+				}
 			}
 
 			// TODO : refactor

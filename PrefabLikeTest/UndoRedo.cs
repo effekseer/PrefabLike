@@ -18,8 +18,9 @@ namespace PrefabLikeTest
 		{
 			var commandManager = new CommandManager();
 			var nodeTreeGroup = new NodeTreeGroup();
+			nodeTreeGroup.Init(typeof(Node));
 
-			commandManager.AddChild(nodeTreeGroup, typeof(Node));
+			commandManager.AddChild(nodeTreeGroup, new List<Guid> { nodeTreeGroup.Base.InternalName }, typeof(Node));
 
 			commandManager.Undo();
 			Assert.AreEqual(0, nodeTreeGroup.AdditionalChildren.Count);

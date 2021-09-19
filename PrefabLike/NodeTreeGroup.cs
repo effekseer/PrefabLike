@@ -24,6 +24,12 @@ namespace PrefabLike
 		public NodeTreeGroup Template;
 	}
 
+	public class NodeTreeChildInformation
+	{
+		public NodeTreeBase Base;
+		public List<Guid> Path = new List<Guid>();
+	}
+
 	/// <summary>
 	/// Prefab 情報本体
 	/// </summary>
@@ -36,26 +42,38 @@ namespace PrefabLike
 
 		public NodeTreeBase Base = new NodeTreeBase();
 
-		public List<NodeTreeBase> AdditionalChildren = new List<NodeTreeBase>();
+		public List<NodeTreeChildInformation> AdditionalChildren = new List<NodeTreeChildInformation>();
 
-		public void AddChild(Type type)
+		public void Init(Type type)
 		{
-			var treeBase = new NodeTreeBase { InternalName = NewName(), BaseType = type };
-			AdditionalChildren.Add(treeBase);
+			Base = new NodeTreeBase { InternalName = Guid.NewGuid(), BaseType = type };
 		}
 
-		public void AddChild(NodeTreeGroup treeGroup)
+		public void AddChild(List<Guid> path, Type type)
 		{
-			var treeBase = new NodeTreeBase { InternalName = NewName(), Template = treeGroup };
-			AdditionalChildren.Add(treeBase);
+			var treeBase = new NodeTreeBase { InternalName = NewName(path), BaseType = type };
+			var info = new NodeTreeChildInformation();
+			info.Base = treeBase;
+			info.Path = path.ToList();
+			AdditionalChildren.Add(info);
 		}
 
-		Guid NewName()
+		public void AddChild(List<Guid> path, NodeTreeGroup treeGroup)
+		{
+			var treeBase = new NodeTreeBase { InternalName = NewName(path), Template = treeGroup };
+			var info = new NodeTreeChildInformation();
+			info.Base = treeBase;
+			info.Path = path.ToList();
+			AdditionalChildren.Add(info);
+		}
+
+		Guid NewName(List<Guid> path)
 		{
 			while (true)
 			{
 				var id = Guid.NewGuid();
-				if (AdditionalChildren.Any(_ => _.InternalName == id))
+
+				if (AdditionalChildren.Any(_ => _.Path.SequenceEqual(path) && _.Base.InternalName == id))
 				{
 					continue;
 				}
