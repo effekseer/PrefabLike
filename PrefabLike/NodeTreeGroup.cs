@@ -67,6 +67,11 @@ namespace PrefabLike
 			AdditionalChildren.Add(info);
 		}
 
+		public void RemoveChild(List<Guid> path)
+		{
+			AdditionalChildren.RemoveAll(_ => _.Path.SequenceEqual(path.Take(path.Count - 1)) && _.Base.InternalName == path.Last());
+		}
+
 		Guid NewName(List<Guid> path)
 		{
 			while (true)

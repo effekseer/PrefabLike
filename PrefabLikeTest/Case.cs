@@ -15,7 +15,7 @@ namespace PrefabLikeTest
 		}
 
 		[Test]
-		public void AddChild()
+		public void AddAndRemoveChild()
 		{
 			var prefabSystem = new PrefabSyatem();
 			var commandManager = new CommandManager();
@@ -25,16 +25,75 @@ namespace PrefabLikeTest
 			var instance = prefabSystem.CreateNodeFromNodeTreeGroup(nodeTreeGroup);
 			Assert.AreEqual(instance.Children.Count(), 0);
 
-			commandManager.AddChild(nodeTreeGroup, new List<Guid> { instance.InternalName }, typeof(Node));
+			var nodeTree = ConstructNodeTree(instance);
+
+			commandManager.AddChild(nodeTreeGroup, GetPath(nodeTree, instance), typeof(Node));
 
 			instance = prefabSystem.CreateNodeFromNodeTreeGroup(nodeTreeGroup);
 			Assert.AreEqual(instance.Children.Count(), 1);
+
+			nodeTree = ConstructNodeTree(instance);
+			commandManager.RemoveChild(nodeTreeGroup, GetPath(nodeTree, instance.Children[0]));
+
+			instance = prefabSystem.CreateNodeFromNodeTreeGroup(nodeTreeGroup);
+			Assert.AreEqual(instance.Children.Count(), 0);
 		}
 
-		[Test]
-		public void RemoveChild()
+		public class NodeTree
 		{
-			// TODO
+			public Guid Name;
+			public NodeTree Parent;
+			public List<NodeTree> Children = new List<NodeTree>();
+		}
+
+		public NodeTree ConstructNodeTree(Node rootNode)
+		{
+			var nodeTree = new NodeTree();
+			nodeTree.Name = rootNode.InternalName;
+			nodeTree.Children.AddRange(rootNode.Children.Select(_ => ConstructNodeTree(_)));
+			foreach (var c in nodeTree.Children)
+			{
+				c.Parent = nodeTree;
+			}
+			return nodeTree;
+		}
+
+		public static List<Guid> GetPath(NodeTree nodeTree, Node target)
+		{
+			Func<NodeTree, Node, NodeTree> find = null;
+
+			find = (n1, n2) =>
+			{
+				if (n1.Name == n2.InternalName)
+				{
+					return n1;
+				}
+
+				foreach (var n in n1.Children)
+				{
+					var result = find(n, n2);
+					if (result != null)
+					{
+						return result;
+					}
+				}
+
+				return null;
+			};
+
+			var result = find(nodeTree, target);
+
+			var path = new List<Guid>();
+
+			while (result != null)
+			{
+				path.Add(result.Name);
+				result = result.Parent;
+			}
+
+			path.Reverse();
+
+			return path;
 		}
 	}
 }

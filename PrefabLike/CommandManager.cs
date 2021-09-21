@@ -92,6 +92,28 @@ namespace PrefabLike
 			AddCommand(command);
 		}
 
+		public void RemoveChild(NodeTreeGroup nodeTreeGroup, List<Guid> path)
+		{
+			var before = nodeTreeGroup.AdditionalChildren.ToArray();
+			nodeTreeGroup.RemoveChild(path);
+			var after = nodeTreeGroup.AdditionalChildren.ToArray();
+
+			var command = new DelegateCommand();
+			command.OnExecute = () =>
+			{
+				nodeTreeGroup.AdditionalChildren.Clear();
+				nodeTreeGroup.AdditionalChildren.AddRange(after);
+			};
+
+			command.OnUnexecute = () =>
+			{
+				nodeTreeGroup.AdditionalChildren.Clear();
+				nodeTreeGroup.AdditionalChildren.AddRange(before);
+			};
+
+			AddCommand(command);
+		}
+
 		public void StartEditFields(object o)
 		{
 			var state = new EditFieldState { Target = o };
