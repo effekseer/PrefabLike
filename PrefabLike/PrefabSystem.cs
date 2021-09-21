@@ -14,7 +14,7 @@ namespace PrefabLike
 			return null;
 		}
 
-		Node CreateNode(NodeTreeBase nodeTreeBase)
+		public Node CreateNode(NodeTreeBase nodeTreeBase)
 		{
 			if (nodeTreeBase.BaseType == null && nodeTreeBase.Template == null)
 				throw new Exception();
