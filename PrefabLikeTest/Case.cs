@@ -50,13 +50,23 @@ namespace PrefabLikeTest
 			var original = prefabSystem.CreateNode(nodeTreeGroup.Base);
 			var instance = prefabSystem.CreateNodeFromNodeTreeGroup(nodeTreeGroup);
 
-			// TODO : undo redo
+			commandManager.StartEditFields(instance);
 			(instance as TestNodePrimitive).Value1 = 1;
+			commandManager.NotifyEditFields(instance);
+			commandManager.EndEditFields(instance);
 
-			// TODO : generate difference
+			var stateOriginal = new FieldState();
+			stateOriginal.Store(original);
 
-			// TODO : apply prefab
-			
+			var stateInstance = new FieldState();
+			stateInstance.Store(instance);
+
+			var diff = stateInstance.GenerateDifference(stateOriginal);
+
+			var m = new NodeTreeGroup.ModifiedNode();
+			m.Path = new Guid[] { instance.InternalName };
+			m.Modified.Difference = diff;
+			nodeTreeGroup.ModifiedNodes = nodeTreeGroup.ModifiedNodes.Concat(new[] { m }).ToArray();
 		}
 
 		public class NodeTree
