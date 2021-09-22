@@ -39,6 +39,36 @@ namespace PrefabLikeTest
 			Assert.AreEqual(instance.Children.Count(), 0);
 		}
 
+		[Test]
+		public void ChangeValue()
+		{
+			var prefabSystem = new PrefabSyatem();
+			var commandManager = new CommandManager();
+			var nodeTreeGroup = new NodeTreeGroup();
+			nodeTreeGroup.Init(typeof(TestNodePrimitive));
+
+			var original = prefabSystem.CreateNode(nodeTreeGroup.Base);
+			var instance = prefabSystem.CreateNodeFromNodeTreeGroup(nodeTreeGroup);
+
+			commandManager.StartEditFields(instance);
+			(instance as TestNodePrimitive).Value1 = 1;
+			commandManager.NotifyEditFields(instance);
+			commandManager.EndEditFields(instance);
+
+			var stateOriginal = new FieldState();
+			stateOriginal.Store(original);
+
+			var stateInstance = new FieldState();
+			stateInstance.Store(instance);
+
+			var diff = stateInstance.GenerateDifference(stateOriginal);
+
+			var m = new NodeTreeGroup.ModifiedNode();
+			m.Path = new Guid[] { instance.InternalName };
+			m.Modified.Difference = diff;
+			nodeTreeGroup.ModifiedNodes = nodeTreeGroup.ModifiedNodes.Concat(new[] { m }).ToArray();
+		}
+
 		public class NodeTree
 		{
 			public Guid Name;
