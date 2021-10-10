@@ -129,7 +129,7 @@ namespace PrefabLike
 			}
 		}
 
-		public void EndEditFields(object o)
+		public bool EndEditFields(object o)
 		{
 			if (editFieldStates.TryGetValue(o, out var v))
 			{
@@ -155,7 +155,11 @@ namespace PrefabLike
 				}
 
 				editFieldStates.Remove(o);
+
+				return v.IsEdited;
 			}
+
+			return false;
 		}
 	}
 }
