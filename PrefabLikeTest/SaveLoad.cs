@@ -48,7 +48,7 @@ namespace PrefabLikeTest
 			{
 				var prefab = NodeTreeGroup.Deserialize(json);
 
-				var node2 = system.CreateNodeFromNodeTreeGroup(prefab) as TestNodePrimitive2;
+				var node2 = system.CreateNodeFromNodeTreeGroup(prefab).Root as TestNodePrimitive2;
 
 				Helper.AreEqual(state, ref node2);
 			}
@@ -86,7 +86,7 @@ namespace PrefabLikeTest
 			{
 				var prefab = NodeTreeGroup.Deserialize(json);
 
-				var node2 = system.CreateNodeFromNodeTreeGroup(prefab) as TestNode_ListValue;
+				var node2 = system.CreateNodeFromNodeTreeGroup(prefab).Root as TestNode_ListValue;
 				Assert.AreEqual(true, node2.ValuesInt32.SequenceEqual(new List<int>() { 1, 2, 3 }));
 			}
 		}
@@ -123,7 +123,7 @@ namespace PrefabLikeTest
 			{
 				var prefab = NodeTreeGroup.Deserialize(json);
 
-				var node2 = system.CreateNodeFromNodeTreeGroup(prefab) as TestNode_ListClass;
+				var node2 = system.CreateNodeFromNodeTreeGroup(prefab).Root as TestNode_ListClass;
 				Assert.AreEqual(3, node2.Values[0].A);
 			}
 		}

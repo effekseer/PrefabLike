@@ -22,20 +22,20 @@ namespace PrefabLikeTest
 			var nodeTreeGroup = new NodeTreeGroup();
 			nodeTreeGroup.Init(typeof(Node));
 
-			var instance = prefabSystem.CreateNodeFromNodeTreeGroup(nodeTreeGroup);
+			var instance = prefabSystem.CreateNodeFromNodeTreeGroup(nodeTreeGroup).Root;
 			Assert.AreEqual(instance.Children.Count(), 0);
 
 			var nodeTree = ConstructNodeTree(instance);
 
 			commandManager.AddChild(nodeTreeGroup, GetPath(nodeTree, instance), typeof(Node));
 
-			instance = prefabSystem.CreateNodeFromNodeTreeGroup(nodeTreeGroup);
+			instance = prefabSystem.CreateNodeFromNodeTreeGroup(nodeTreeGroup).Root;
 			Assert.AreEqual(instance.Children.Count(), 1);
 
 			nodeTree = ConstructNodeTree(instance);
 			commandManager.RemoveChild(nodeTreeGroup, GetPath(nodeTree, instance.Children[0]));
 
-			instance = prefabSystem.CreateNodeFromNodeTreeGroup(nodeTreeGroup);
+			instance = prefabSystem.CreateNodeFromNodeTreeGroup(nodeTreeGroup).Root;
 			Assert.AreEqual(instance.Children.Count(), 0);
 		}
 
@@ -48,7 +48,7 @@ namespace PrefabLikeTest
 			nodeTreeGroup.Init(typeof(TestNodePrimitive));
 
 			var original = prefabSystem.CreateNode(nodeTreeGroup.Base);
-			var instance = prefabSystem.CreateNodeFromNodeTreeGroup(nodeTreeGroup);
+			var instance = prefabSystem.CreateNodeFromNodeTreeGroup(nodeTreeGroup).Root;
 
 			commandManager.StartEditFields(instance);
 			(instance as TestNodePrimitive).Value1 = 1;

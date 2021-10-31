@@ -18,6 +18,16 @@ namespace PrefabLike
 		public string RelativePath;
 	}
 
+	public interface IInstanceID
+	{
+		public int InstanceID { get; set; }
+	}
+
+	public interface IAssetInstanceRoot
+	{
+		public IInstanceID? FindInstance(int id);
+	}
+
 	/// <summary>
 	/// Prefab(EditorNodeInformation) のインスタンス。
 	/// </summary>
@@ -28,8 +38,9 @@ namespace PrefabLike
 	/// そういったものはこの Node を継承して持たせる。
 	/// PrefabSystem としては Node には多くの情報は不要。親子関係だけでも足りそう。
 	/// </remarks>
-	public class Node
+	public class Node : IInstanceID
 	{
+		public int InstanceID { get; set; }
 		public Guid InternalName;
 		public List<Node> Children = new List<Node>();
 

@@ -6,6 +6,15 @@ using Newtonsoft.Json.Linq;
 
 namespace PrefabLike
 {
+	public class NodeTree : IAssetInstanceRoot
+	{
+		public Node Root;
+
+		public IInstanceID? FindInstance(int id)
+		{
+			throw new Exception("TODO implement");
+		}
+	}
 
 	public class NodeTreeBase
 	{
@@ -22,6 +31,11 @@ namespace PrefabLike
 		/// BaseType が null の場合、これをもとにインスタンスを作成する。
 		/// </summary>
 		public NodeTreeGroup Template;
+
+		/// <summary>
+		/// IDをリマップする。
+		/// </summary>
+		public Dictionary<int, int> IDRemapper;
 	}
 
 	public class NodeTreeChildInformation
@@ -39,10 +53,23 @@ namespace PrefabLike
 	/// </remarks>
 	public class NodeTreeGroup : Asset
 	{
+		List<NodeTreeBase> bases = new List<NodeTreeBase>();
 
-		public NodeTreeBase Base = new NodeTreeBase();
+		//public NodeTreeBase Base = new NodeTreeBase();
+		//
+		//public List<NodeTreeChildInformation> AdditionalChildren = new List<NodeTreeChildInformation>();
 
-		public List<NodeTreeChildInformation> AdditionalChildren = new List<NodeTreeChildInformation>();
+		internal override Dictionary<AccessKeyGroup, object> GetDifference(int instanceID)
+		{
+			throw new Exception("TODO Implement");
+			return base.GetDifference(instanceID);
+		}
+
+		internal override void SetDifference(int instanceID, Dictionary<AccessKeyGroup, object> difference)
+		{
+			throw new Exception("TODO Implement");
+			base.SetDifference(instanceID, difference);
+		}
 
 		public void Init(Type type)
 		{

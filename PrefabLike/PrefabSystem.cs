@@ -31,7 +31,8 @@ namespace PrefabLike
 			}
 			else
 			{
-				baseNode = CreateNodeFromNodeTreeGroup(nodeTreeBase.Template);
+				var nodeTree = CreateNodeFromNodeTreeGroup(nodeTreeBase.Template);
+				baseNode = nodeTree.Root;
 			}
 
 			baseNode.InternalName = nodeTreeBase.InternalName;
@@ -40,7 +41,7 @@ namespace PrefabLike
 		}
 
 
-		public Node CreateNodeFromNodeTreeGroup(NodeTreeGroup nodeTreeGroup)
+		public NodeTree CreateNodeFromNodeTreeGroup(NodeTreeGroup nodeTreeGroup)
 		{
 			var baseNode = CreateNode(nodeTreeGroup.Base);
 
@@ -95,7 +96,10 @@ namespace PrefabLike
 				Difference.ApplyDifference(ref target, modifiedNode.Modified.Difference);
 			}
 
-			return baseNode;
+			var nodeTree = new NodeTree();
+			nodeTree.Root = baseNode;
+
+			return nodeTree;
 		}
 	}
 

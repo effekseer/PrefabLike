@@ -30,7 +30,9 @@ namespace PrefabLike
 	{
 		class EditFieldState
 		{
-			public object Target;
+			public Asset Asset;
+			public IAssetInstanceRoot Root;
+			public IInstanceID Target;
 			public bool IsEdited = false;
 			public FieldState State = new FieldState();
 		}
@@ -114,14 +116,14 @@ namespace PrefabLike
 			AddCommand(command);
 		}
 
-		public void StartEditFields(object o)
+		public void StartEditFields(Asset asset, IAssetInstanceRoot root, IInstanceID o)
 		{
-			var state = new EditFieldState { Target = o };
+			var state = new EditFieldState { Target = o, Asset = asset, Root = root };
 			state.State.Store(o);
 			editFieldStates.Add(o, state);
 		}
 
-		public void NotifyEditFields(object o)
+		public void NotifyEditFields(IInstanceID o)
 		{
 			if (editFieldStates.TryGetValue(o, out var v))
 			{
@@ -129,7 +131,7 @@ namespace PrefabLike
 			}
 		}
 
-		public bool EndEditFields(object o)
+		public bool EndEditFields(IInstanceID o)
 		{
 			if (editFieldStates.TryGetValue(o, out var v))
 			{
@@ -140,15 +142,47 @@ namespace PrefabLike
 					var diffUndo = v.State.GenerateDifference(fs);
 					var diffRedo = fs.GenerateDifference(v.State);
 
+					var instanceID = v.Target.InstanceID;
+					var asset = v.Asset;
+					var root = v.Root;
+
+					var oldDifference = asset.GetDifference(instanceID);
+
+					var newDifference = new Dictionary<AccessKeyGroup, object>();
+
+					if (oldDifference != null)
+					{
+						foreach (var kv in oldDifference)
+						{
+							newDifference.Add(kv.Key, kv.Value);
+						}
+					}
+
+					throw new Exception("TODO merge difference");
+
 					var command = new DelegateCommand();
 					command.OnExecute = () =>
 					{
-						Difference.ApplyDifference(ref o, diffRedo);
+						var instance = root.FindInstance(instanceID);
+						if (instance != null)
+						{
+							object obj = instance;
+							Difference.ApplyDifference(ref obj, diffRedo);
+						}
+
+						asset.SetDifference(instanceID, newDifference);
 					};
 
 					command.OnUnexecute = () =>
 					{
-						Difference.ApplyDifference(ref o, diffUndo);
+						var instance = root.FindInstance(instanceID);
+						if (instance != null)
+						{
+							object obj = instance;
+							Difference.ApplyDifference(ref obj, diffUndo);
+						}
+
+						asset.SetDifference(instanceID, oldDifference);
 					};
 
 					AddCommand(command);
