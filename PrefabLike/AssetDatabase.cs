@@ -4,12 +4,6 @@ using System.Text;
 
 namespace PrefabLike
 {
-	public class Asset
-	{
-		internal virtual Dictionary<AccessKeyGroup, object> GetDifference(int instanceID) { return null; }
-		internal virtual void SetDifference(int instanceID, Dictionary<AccessKeyGroup, object> difference) { }
-	}
-
 	public class AssetDatabase
 	{
 		Dictionary<string, WeakReference<Asset>> assets = new Dictionary<string, WeakReference<Asset>>();

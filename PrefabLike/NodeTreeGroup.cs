@@ -18,8 +18,6 @@ namespace PrefabLike
 
 	public class NodeTreeBase
 	{
-		public System.Guid InternalName;
-
 		/// <summary>
 		/// この Prefab が生成するインスタンスの型。
 		/// Template と同時に使うことはできない。BaseType を持つなら、Template は null でなければならない。
@@ -36,12 +34,12 @@ namespace PrefabLike
 		/// IDをリマップする。
 		/// </summary>
 		public Dictionary<int, int> IDRemapper;
-	}
 
-	public class NodeTreeChildInformation
-	{
-		public NodeTreeBase Base;
-		public List<Guid> Path = new List<Guid>();
+		/// <summary>
+		/// IDとそのIDのインスタンスの変更
+		/// </summary>
+		public Dictionary<int, Dictionary<AccessKeyGroup, object>> Difference = new Dictionary<int, Dictionary<AccessKeyGroup, object>>();
+
 	}
 
 	/// <summary>
@@ -55,9 +53,24 @@ namespace PrefabLike
 	{
 		List<NodeTreeBase> bases = new List<NodeTreeBase>();
 
-		//public NodeTreeBase Base = new NodeTreeBase();
-		//
-		//public List<NodeTreeChildInformation> AdditionalChildren = new List<NodeTreeChildInformation>();
+		public int AddNode(int parentInstanceID, Type node)
+		{
+			// TODO リマップのID生成する
+			// TODO rootのノードのIDを返す
+		}
+
+		public int AddNodeTreeGroup(int parentInstanceID, NodeTreeGroup nodeTreeGroup)
+		{
+			// TODO リマップのID生成する
+			// TODO rootのノードのIDを返す
+		}
+
+		public void RemoveNode(int instanceID)
+		{
+			// RemoveのUndo難しくない？
+			// 関連するDiffごと消す必要がある
+			// UndoRedoに使用するデータも出力したい
+		}
 
 		internal override Dictionary<AccessKeyGroup, object> GetDifference(int instanceID)
 		{
