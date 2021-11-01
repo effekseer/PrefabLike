@@ -22,21 +22,21 @@ namespace PrefabLikeTest
 			var nodeTreeGroup = new NodeTreeGroup();
 			nodeTreeGroup.Init(typeof(Node));
 
-			var instance = prefabSystem.CreateNodeFromNodeTreeGroup(nodeTreeGroup).Root;
-			Assert.AreEqual(instance.Children.Count(), 0);
+			var instance = prefabSystem.CreateNodeFromNodeTreeGroup(nodeTreeGroup);
+			var root = instance.Root;
+			Assert.AreEqual(root.Children.Count(), 0);
 
-			var nodeTree = ConstructNodeTree(instance);
+			commandManager.AddChild(nodeTreeGroup, instance, root.InstanceID, typeof(Node));
 
-			commandManager.AddChild(nodeTreeGroup, GetPath(nodeTree, instance), typeof(Node));
+			instance = prefabSystem.CreateNodeFromNodeTreeGroup(nodeTreeGroup);
+			root = instance.Root;
+			Assert.AreEqual(root.Children.Count(), 1);
 
-			instance = prefabSystem.CreateNodeFromNodeTreeGroup(nodeTreeGroup).Root;
-			Assert.AreEqual(instance.Children.Count(), 1);
+			commandManager.RemoveChild(nodeTreeGroup, instance, root.Children[0].InstanceID);
 
-			nodeTree = ConstructNodeTree(instance);
-			commandManager.RemoveChild(nodeTreeGroup, GetPath(nodeTree, instance.Children[0]));
-
-			instance = prefabSystem.CreateNodeFromNodeTreeGroup(nodeTreeGroup).Root;
-			Assert.AreEqual(instance.Children.Count(), 0);
+			instance = prefabSystem.CreateNodeFromNodeTreeGroup(nodeTreeGroup);
+			root = instance.Root;
+			Assert.AreEqual(root.Children.Count(), 0);
 		}
 
 		[Test]
