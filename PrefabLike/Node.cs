@@ -41,53 +41,7 @@ namespace PrefabLike
 	public class Node : IInstanceID
 	{
 		public int InstanceID { get; set; }
-		public Guid InternalName;
 		public List<Node> Children = new List<Node>();
-
-		public bool IsChidlrenInternalNameValid()
-		{
-			return Children.Select(_ => _.InternalName).Distinct().Count() == Children.Count();
-		}
-	}
-
-	/// <summary>
-	/// A class to contain differences
-	/// </summary>
-	public class Modified
-	{
-		/// <summary>
-		/// </summary>
-		/// <remarks>
-		/// e.g.)
-		/// ```
-		/// obj.Pos.X = 1;
-		/// obj.Pos.Y = 2;
-		/// ```
-		/// ```
-		/// Difference: {
-		///		{ ["Pos", "X"], 1 },	// { AccessKeyGroup, value }
-		///		{ ["Pos", "Y"], 2 },	// { AccessKeyGroup, value }
-		///	}
-		/// ```
-		/// </remarks>
-		public Dictionary<AccessKeyGroup, object> Difference = new Dictionary<AccessKeyGroup, object>();
-
-		public JObject Serialize()
-		{
-			var o = new JObject();
-			var difference = new JArray();
-			foreach (var pair in Difference)
-			{
-				var d = new JObject();
-			}
-			o["Difference"] = difference;
-			return o;
-		}
-
-		public static void Deserialize(JObject o)
-		{
-			throw new NotImplementedException();
-		}
 	}
 
 	public class FieldState

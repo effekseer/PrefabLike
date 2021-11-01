@@ -72,45 +72,47 @@ namespace PrefabLike
 			}
 		}
 
-		public void AddChild(NodeTreeGroup nodeTreeGroup, List<Guid> path, Type type)
+		public void AddChild(NodeTreeGroup nodeTreeGroup, NodeTree nodeTree, int parentID, Type type)
 		{
-			var before = nodeTreeGroup.AdditionalChildren.ToArray();
-			nodeTreeGroup.AddChild(path, type);
-			var after = nodeTreeGroup.AdditionalChildren.ToArray();
+			throw new Exception("nodeTreeも書き換える");
+
+			var before = nodeTreeGroup.InternalData.Serialize();
+			nodeTreeGroup.AddNode(parentID, type);
+			var after = nodeTreeGroup.InternalData.Serialize();
+
 
 			var command = new DelegateCommand();
 			command.OnExecute = () =>
 			{
-				nodeTreeGroup.AdditionalChildren.Clear();
-				nodeTreeGroup.AdditionalChildren.AddRange(after);
+				nodeTreeGroup.InternalData = NodeTreeGroupInternalData.Deserialize(after);
 			};
 
 			command.OnUnexecute = () =>
 			{
-				nodeTreeGroup.AdditionalChildren.Clear();
-				nodeTreeGroup.AdditionalChildren.AddRange(before);
+				nodeTreeGroup.InternalData = NodeTreeGroupInternalData.Deserialize(before);
 			};
 
 			AddCommand(command);
 		}
 
-		public void RemoveChild(NodeTreeGroup nodeTreeGroup, List<Guid> path)
+		public void RemoveChild(NodeTreeGroup nodeTreeGroup, NodeTree nodeTree, int nodeID)
 		{
-			var before = nodeTreeGroup.AdditionalChildren.ToArray();
-			nodeTreeGroup.RemoveChild(path);
-			var after = nodeTreeGroup.AdditionalChildren.ToArray();
+			throw new Exception("nodeTreeも書き換える");
+
+			var before = nodeTreeGroup.InternalData.Serialize();
+			nodeTreeGroup.RemoveNode(nodeID);
+			var after = nodeTreeGroup.InternalData.Serialize();
+
 
 			var command = new DelegateCommand();
 			command.OnExecute = () =>
 			{
-				nodeTreeGroup.AdditionalChildren.Clear();
-				nodeTreeGroup.AdditionalChildren.AddRange(after);
+				nodeTreeGroup.InternalData = NodeTreeGroupInternalData.Deserialize(after);
 			};
 
 			command.OnUnexecute = () =>
 			{
-				nodeTreeGroup.AdditionalChildren.Clear();
-				nodeTreeGroup.AdditionalChildren.AddRange(before);
+				nodeTreeGroup.InternalData = NodeTreeGroupInternalData.Deserialize(before);
 			};
 
 			AddCommand(command);

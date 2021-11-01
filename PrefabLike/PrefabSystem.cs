@@ -14,92 +14,96 @@ namespace PrefabLike
 			return null;
 		}
 
-		public Node CreateNode(NodeTreeBase nodeTreeBase)
-		{
-			if (nodeTreeBase.BaseType == null && nodeTreeBase.Template == null)
-				throw new Exception();
-
-			if (nodeTreeBase.BaseType != null && nodeTreeBase.Template != null)
-				throw new Exception();
-
-			Node baseNode = null;
-
-			if (nodeTreeBase.BaseType != null)
-			{
-				var constructor = nodeTreeBase.BaseType.GetConstructor(Type.EmptyTypes);
-				baseNode = (Node)constructor.Invoke(null);
-			}
-			else
-			{
-				var nodeTree = CreateNodeFromNodeTreeGroup(nodeTreeBase.Template);
-				baseNode = nodeTree.Root;
-			}
-
-			baseNode.InternalName = nodeTreeBase.InternalName;
-
-			return baseNode;
-		}
-
-
 		public NodeTree CreateNodeFromNodeTreeGroup(NodeTreeGroup nodeTreeGroup)
 		{
-			var baseNode = CreateNode(nodeTreeGroup.Base);
+			var idToNode = new Dictionary<int, Node>();
 
-			foreach (var addCh in nodeTreeGroup.AdditionalChildren)
+			var parentIdToChild = new List<Tuple<int, Node>>();
+
+			foreach (var b in nodeTreeGroup.InternalData.Bases)
 			{
-				var newNode = CreateNode(addCh.Base);
+				Node node = null;
 
-				var root = baseNode;
-				if (addCh.Path.Count == 0 || root.InternalName != addCh.Path[0])
+				if (b.BaseType != null)
 				{
-					break;
+					var constructor = b.BaseType.GetConstructor(Type.EmptyTypes);
+					node = (Node)constructor.Invoke(null);
+				}
+				else if (b.Template != null)
+				{
+					var nodeTree = CreateNodeFromNodeTreeGroup(nodeTreeGroup);
+					node = nodeTree.Root;
+				}
+				else
+				{
+					throw new InvalidOperationException();
 				}
 
-				for (int i = 1; i < addCh.Path.Count; i++)
+				Action<Node> applyID = null;
+
+				applyID = (n) =>
 				{
-					root = root.Children.FirstOrDefault(_ => _.InternalName == addCh.Path[i]);
-					if (root == null)
+					n.InstanceID = b.IDRemapper[n.InstanceID];
+
+					idToNode.Add(n.InstanceID, n);
+
+					foreach (var child in n.Children)
 					{
-						break;
+						applyID(child);
 					}
+				};
+
+				applyID(node);
+
+				foreach (var difference in b.Differences)
+				{
+					Func<int, Node, Node> findNode = null;
+
+					findNode = (int id, Node n) =>
+					{
+						if (n.InstanceID == id)
+						{
+							return n;
+						}
+
+						foreach (var child in n.Children)
+						{
+							var ret = findNode(id, child);
+							if (ret != null)
+							{
+								return ret;
+							}
+						}
+
+						return null;
+					};
+
+					var targetNode = findNode(difference.Key, node);
+					var target = (object)targetNode;
+					Difference.ApplyDifference(ref target, difference.Value);
 				}
 
-				if (root != null)
+				parentIdToChild.Add(Tuple.Create(b.ParentID, node));
+			}
+
+			Node rootNode = null;
+
+			foreach (var pc in parentIdToChild)
+			{
+				if (idToNode.ContainsKey(pc.Item1))
 				{
-					root.Children.Add(newNode);
+					var parent = idToNode[pc.Item1];
+					parent.Children.Add(pc.Item2);
+				}
+				else
+				{
+					rootNode = pc.Item2;
 				}
 			}
 
-			// TODO : refactor
-			foreach (var modifiedNode in nodeTreeGroup.ModifiedNodes)
-			{
-				var differenceFirst = modifiedNode.Modified.Difference.Where(_ => _.Key.Keys.Last() is AccessKeyListCount).ToArray();
-				var differenceSecond = modifiedNode.Modified.Difference.Where(_ => !(_.Key.Keys.Last() is AccessKeyListCount)).ToArray();
-
-				var targetNode = baseNode;
-
-				foreach (var guid in modifiedNode.Path)
-				{
-					targetNode = targetNode.Children.FirstOrDefault(_ => _.InternalName == guid);
-					if (targetNode == null)
-					{
-						break;
-					}
-				}
-
-				if (targetNode == null)
-				{
-					continue;
-				}
-
-				var target = (object)targetNode;
-				Difference.ApplyDifference(ref target, modifiedNode.Modified.Difference);
-			}
-
-			var nodeTree = new NodeTree();
-			nodeTree.Root = baseNode;
-
-			return nodeTree;
+			var ret = new NodeTree();
+			ret.Root = rootNode;
+			return ret;
 		}
 	}
 
