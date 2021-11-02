@@ -132,7 +132,7 @@ namespace PrefabLike
 					}
 
 					kv["Value"] = difference;
-
+					differences.Add(kv);
 				}
 
 				jnode["Differences"] = differences;
@@ -140,6 +140,14 @@ namespace PrefabLike
 				jnode["RootID"] = b.RootID;
 
 				jnode["ParentID"] = b.ParentID;
+
+				var idRemapper = new JObject();
+				foreach (var kv in b.IDRemapper)
+				{
+					idRemapper[kv.Key.ToString()] = kv.Value;
+				}
+
+				jnode["IDRemapper"] = idRemapper;
 
 				basesArray.Add(jnode);
 			}
@@ -184,6 +192,11 @@ namespace PrefabLike
 				nb.RootID = (int)b["RootID"];
 
 				nb.ParentID = (int)b["ParentID"];
+
+				foreach (var kv in b["IDRemapper"] as JObject)
+				{
+					nb.IDRemapper.Add(int.Parse(kv.Key), (int)kv.Value);
+				}
 
 				internalData.Bases.Add(nb);
 			}
@@ -343,7 +356,7 @@ namespace PrefabLike
 		{
 			foreach (var b in InternalData.Bases)
 			{
-				if(b.IDRemapper.Values.Contains(instanceID))
+				if (b.IDRemapper.Values.Contains(instanceID))
 				{
 					if (b.Differences.ContainsKey(instanceID))
 					{
