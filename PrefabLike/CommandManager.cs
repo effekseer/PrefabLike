@@ -116,7 +116,11 @@ namespace PrefabLike
 			var parentNodeID = parentNode.InstanceID;
 
 			var before = nodeTreeGroup.InternalData.Serialize();
-			nodeTreeGroup.RemoveNode(nodeID);
+			if (!nodeTreeGroup.RemoveNode(nodeID))
+			{
+				return;
+			}
+
 			var after = nodeTreeGroup.InternalData.Serialize();
 
 			Action execute = () =>
