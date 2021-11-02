@@ -18,114 +18,77 @@ namespace PrefabLikeTest
 		{
 			var random = new System.Random();
 			var system = new PrefabSyatem();
-			string json;
-			Dictionary<System.Reflection.FieldInfo, object> state;
+			var commandManager = new CommandManager();
+			var nodeTreeGroup = new NodeTreeGroup();
+			nodeTreeGroup.Init(typeof(TestNodePrimitive2));
 
+			var instance = system.CreateNodeFromNodeTreeGroup(nodeTreeGroup);
 
-			// Create Prefab from diff. and save to json.
-			{
-				var prefab = new NodeTreeGroup();
-				prefab.Base.BaseType = typeof(TestNodePrimitive2);
+			commandManager.StartEditFields(nodeTreeGroup, instance, instance.Root);
 
-				var v = new TestNodePrimitive2();
+			var state = Helper.AssignRandomField(random, ref instance.Root);
 
-				var before = new FieldState();
-				before.Store(v);
+			commandManager.NotifyEditFields(instance.Root);
+			commandManager.EndEditFields(instance.Root);
 
-				state = Helper.AssignRandomField(random, ref v);
+			var json = nodeTreeGroup.Serialize();
 
-				var after = new FieldState();
-				after.Store(v);
+			var nodeTreeGroup2 = NodeTreeGroup.Deserialize(json);
+			var instance2 = system.CreateNodeFromNodeTreeGroup(nodeTreeGroup2);
 
-				prefab.ModifiedNodes = new NodeTreeGroup.ModifiedNode[1];
-				prefab.ModifiedNodes[0] = new NodeTreeGroup.ModifiedNode();
-				prefab.ModifiedNodes[0].Modified.Difference = after.GenerateDifference(before);
-
-				json = prefab.Serialize();
-			}
-
-			// Load and Instantiate
-			{
-				var prefab = NodeTreeGroup.Deserialize(json);
-
-				var node2 = system.CreateNodeFromNodeTreeGroup(prefab).Root as TestNodePrimitive2;
-
-				Helper.AreEqual(state, ref node2);
-			}
+			Helper.AreEqual(state, ref instance2.Root);
 		}
 
 		[Test]
 		public void SaveLoadList()
 		{
 			var system = new PrefabSyatem();
-			string json;
+			var commandManager = new CommandManager();
+			var nodeTreeGroup = new NodeTreeGroup();
+			nodeTreeGroup.Init(typeof(TestNode_ListValue));
 
-			// Create Prefab from diff. and save to json.
-			{
-				var prefab = new NodeTreeGroup();
-				prefab.Base.BaseType = typeof(TestNode_ListValue);
+			var instance = system.CreateNodeFromNodeTreeGroup(nodeTreeGroup);
 
-				var v = new TestNode_ListValue();
+			commandManager.StartEditFields(nodeTreeGroup, instance, instance.Root);
 
-				var before = new FieldState();
-				before.Store(v);
+			var v = instance.Root as TestNode_ListValue;
+			v.ValuesInt32 = new List<int>() { 1, 2, 3 };
 
-				v.ValuesInt32 = new List<int>() { 1, 2, 3 };
+			commandManager.NotifyEditFields(instance.Root);
+			commandManager.EndEditFields(instance.Root);
 
-				var after = new FieldState();
-				after.Store(v);
+			var json = nodeTreeGroup.Serialize();
 
-				prefab.ModifiedNodes = new NodeTreeGroup.ModifiedNode[1];
-				prefab.ModifiedNodes[0] = new NodeTreeGroup.ModifiedNode();
-				prefab.ModifiedNodes[0].Modified.Difference = after.GenerateDifference(before);
+			var nodeTreeGroup2 = NodeTreeGroup.Deserialize(json);
+			var instance2 = system.CreateNodeFromNodeTreeGroup(nodeTreeGroup2);
 
-				json = prefab.Serialize();
-			}
-
-			// Load and Instantiate
-			{
-				var prefab = NodeTreeGroup.Deserialize(json);
-
-				var node2 = system.CreateNodeFromNodeTreeGroup(prefab).Root as TestNode_ListValue;
-				Assert.AreEqual(true, node2.ValuesInt32.SequenceEqual(new List<int>() { 1, 2, 3 }));
-			}
+			Assert.AreEqual(true, (instance2.Root as TestNode_ListValue).ValuesInt32.SequenceEqual(new List<int>() { 1, 2, 3 }));
 		}
 
 		[Test]
 		public void SaveLoadListClass()
 		{
 			var system = new PrefabSyatem();
-			string json;
+			var commandManager = new CommandManager();
+			var nodeTreeGroup = new NodeTreeGroup();
+			nodeTreeGroup.Init(typeof(TestNode_ListClass));
 
-			// Create Prefab from diff. and save to json.
-			{
-				var prefab = new NodeTreeGroup();
-				prefab.Base.BaseType = typeof(TestNode_ListClass);
+			var instance = system.CreateNodeFromNodeTreeGroup(nodeTreeGroup);
 
-				var v = new TestNode_ListClass();
+			commandManager.StartEditFields(nodeTreeGroup, instance, instance.Root);
 
-				var before = new FieldState();
-				before.Store(v);
+			var v = instance.Root as TestNode_ListClass;
+			v.Values = new List<TestClass1>() { new TestClass1 { A = 3 } };
 
-				v.Values = new List<TestClass1>() { new TestClass1 { A = 3 } };
+			commandManager.NotifyEditFields(instance.Root);
+			commandManager.EndEditFields(instance.Root);
 
-				var after = new FieldState();
-				after.Store(v);
+			var json = nodeTreeGroup.Serialize();
 
-				prefab.ModifiedNodes = new NodeTreeGroup.ModifiedNode[1];
-				prefab.ModifiedNodes[0] = new NodeTreeGroup.ModifiedNode();
-				prefab.ModifiedNodes[0].Modified.Difference = after.GenerateDifference(before);
+			var nodeTreeGroup2 = NodeTreeGroup.Deserialize(json);
+			var instance2 = system.CreateNodeFromNodeTreeGroup(nodeTreeGroup2);
 
-				json = prefab.Serialize();
-			}
-
-			// Load and Instantiate
-			{
-				var prefab = NodeTreeGroup.Deserialize(json);
-
-				var node2 = system.CreateNodeFromNodeTreeGroup(prefab).Root as TestNode_ListClass;
-				Assert.AreEqual(3, node2.Values[0].A);
-			}
+			Assert.AreEqual(true, (instance2.Root as TestNode_ListClass).Values[0].A == 3);
 		}
 	}
 }

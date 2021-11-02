@@ -16,43 +16,55 @@ namespace PrefabLikeTest
 		[Test]
 		public void AddChild()
 		{
+			var prefabSystem = new PrefabSyatem();
 			var commandManager = new CommandManager();
 			var nodeTreeGroup = new NodeTreeGroup();
 			nodeTreeGroup.Init(typeof(Node));
+			var instance = prefabSystem.CreateNodeFromNodeTreeGroup(nodeTreeGroup);
 
-			commandManager.AddChild(nodeTreeGroup, new List<Guid> { nodeTreeGroup.Base.InternalName }, typeof(Node));
+			commandManager.AddChild(nodeTreeGroup, instance, instance.Root.InstanceID, typeof(Node));
 
 			commandManager.Undo();
-			Assert.AreEqual(0, nodeTreeGroup.AdditionalChildren.Count);
+			Assert.AreEqual(0, instance.Root.Children.Count);
 
 			commandManager.Redo();
-			Assert.AreEqual(1, nodeTreeGroup.AdditionalChildren.Count);
+			Assert.AreEqual(1, instance.Root.Children.Count);
 		}
 
 		[Test]
 		public void EditField()
 		{
 			var random = new System.Random();
+			var prefabSystem = new PrefabSyatem();
 			var commandManager = new CommandManager();
-			var node = new TestNodePrimitive();
+			var nodeTreeGroup = new NodeTreeGroup();
+			nodeTreeGroup.Init(typeof(TestNodePrimitive));
+			var instance = prefabSystem.CreateNodeFromNodeTreeGroup(nodeTreeGroup);
 
-			var assignedUnedit = Helper.AssignRandomField(random, ref node);
 
-			commandManager.StartEditFields(node);
+			commandManager.StartEditFields(nodeTreeGroup, instance, instance.Root);
 
-			var assignedEdit = Helper.AssignRandomField(random, ref node);
+			var assignedUnedit = Helper.AssignRandomField(random, ref instance.Root);
 
-			commandManager.NotifyEditFields(node);
+			commandManager.NotifyEditFields(instance.Root);
 
-			commandManager.EndEditFields(node);
+			commandManager.EndEditFields(instance.Root);
+
+			commandManager.StartEditFields(nodeTreeGroup, instance, instance.Root);
+
+			var assignedEdit = Helper.AssignRandomField(random, ref instance.Root);
+
+			commandManager.NotifyEditFields(instance.Root);
+
+			commandManager.EndEditFields(instance.Root);
 
 			commandManager.Undo();
 
-			Helper.AreEqual(assignedUnedit, ref node);
+			Helper.AreEqual(assignedUnedit, ref instance.Root);
 
 			commandManager.Redo();
 
-			Helper.AreEqual(assignedEdit, ref node);
+			Helper.AreEqual(assignedEdit, ref instance.Root);
 		}
 	}
 }

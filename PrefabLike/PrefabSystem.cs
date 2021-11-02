@@ -10,7 +10,7 @@ namespace PrefabLike
 	{
 		public Node MakePrefab(Node node)
 		{
-			// TODO
+			throw new NotImplementedException();
 			return null;
 		}
 

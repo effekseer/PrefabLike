@@ -74,21 +74,36 @@ namespace PrefabLike
 
 		public void AddChild(NodeTreeGroup nodeTreeGroup, NodeTree nodeTree, int parentID, Type type)
 		{
-			throw new Exception("nodeTreeも書き換える");
-
 			var before = nodeTreeGroup.InternalData.Serialize();
-			nodeTreeGroup.AddNode(parentID, type);
+			var newNodeID = nodeTreeGroup.AddNode(parentID, type);
 			var after = nodeTreeGroup.InternalData.Serialize();
 
+			Action execute = () =>
+			{
+				var parentNode = nodeTree.FindInstance(parentID) as Node;
+				var prefabSystem = new PrefabSyatem();
+				var newNodeTree = prefabSystem.CreateNodeFromNodeTreeGroup(nodeTreeGroup);
+				var newNode = newNodeTree.FindInstance(newNodeID);
+				parentNode.Children.Add(newNode as Node);
+			};
+
+			execute();
 
 			var command = new DelegateCommand();
 			command.OnExecute = () =>
 			{
+				execute();
 				nodeTreeGroup.InternalData = NodeTreeGroupInternalData.Deserialize(after);
 			};
 
 			command.OnUnexecute = () =>
 			{
+				var parent = nodeTree.FindParent(newNodeID);
+				if (parent != null)
+				{
+					parent.Children.RemoveAll(_ => _.InstanceID == newNodeID);
+				}
+
 				nodeTreeGroup.InternalData = NodeTreeGroupInternalData.Deserialize(before);
 			};
 
@@ -97,7 +112,7 @@ namespace PrefabLike
 
 		public void RemoveChild(NodeTreeGroup nodeTreeGroup, NodeTree nodeTree, int nodeID)
 		{
-			throw new Exception("nodeTreeも書き換える");
+			throw new NotImplementedException("nodeTreeも書き換える");
 
 			var before = nodeTreeGroup.InternalData.Serialize();
 			nodeTreeGroup.RemoveNode(nodeID);
@@ -160,7 +175,7 @@ namespace PrefabLike
 						}
 					}
 
-					throw new Exception("TODO merge difference");
+					throw new NotImplementedException("TODO merge difference");
 
 					var command = new DelegateCommand();
 					command.OnExecute = () =>

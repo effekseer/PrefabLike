@@ -12,7 +12,51 @@ namespace PrefabLike
 
 		public IInstanceID? FindInstance(int id)
 		{
-			throw new Exception("TODO implement");
+			return FindInstance(Root, id);
+		}
+
+		public Node FindParent(int id)
+		{
+			return FindParent(Root, id);
+		}
+
+		IInstanceID? FindInstance(Node node, int id)
+		{
+			if(node.InstanceID == id)
+			{
+				return node;
+			}
+
+			foreach (var child in node.Children)
+			{
+				var result = FindInstance(child, id);
+				if (result != null)
+				{
+					return result;
+				}
+			}
+
+			return null;
+
+		}
+
+		Node FindParent(Node parent, int id)
+		{
+			if(parent.Children.Any(_=>_.InstanceID == id))
+			{
+				return parent;
+			}
+
+			foreach(var child in parent.Children)
+			{
+				var result = FindParent(child, id);
+				if(result != null)
+				{
+					return result;
+				}
+			}
+
+			return null;
 		}
 	}
 
@@ -33,7 +77,7 @@ namespace PrefabLike
 		/// <summary>
 		/// IDをリマップする。
 		/// </summary>
-		public Dictionary<int, int> IDRemapper;
+		public Dictionary<int, int> IDRemapper = new Dictionary<int, int>();
 
 		/// <summary>
 		/// IDとそのIDのインスタンスの変更
@@ -143,23 +187,23 @@ namespace PrefabLike
 	/// </remarks>
 	public class NodeTreeGroup : Asset
 	{
-		List<NodeTreeBase> bases = new List<NodeTreeBase>();
-
 		internal NodeTreeGroupInternalData InternalData = new NodeTreeGroupInternalData();
-
 		int GenerateGUID()
 		{
-			throw new Exception("グループ内唯一のIDを生成する。");
-			return 0;
+			var rand = new Random();
+			while (true)
+			{
+				var id = rand.Next(0, int.MaxValue);
+
+				if (InternalData.Bases.Find(_ => _.IDRemapper.Values.Contains(id)) == null)
+				{
+					return id;
+				}
+			}
 		}
 
-		public int AddNode(int parentInstanceID, Type nodeType)
+		void AssignID(NodeTreeBase nodeTreeBase, Node node)
 		{
-			var constructor = nodeType.BaseType.GetConstructor(Type.EmptyTypes);
-			var node = (Node)constructor.Invoke(null);
-
-			var nodeTreeBase = new NodeTreeBase();
-
 			Action<Node> assignID = null;
 
 			assignID = (n) =>
@@ -174,6 +218,17 @@ namespace PrefabLike
 			};
 
 			assignID(node);
+		}
+
+		public int AddNodeInternal(int parentInstanceID, Type nodeType)
+		{
+			var constructor = nodeType.GetConstructor(Type.EmptyTypes);
+			var node = (Node)constructor.Invoke(null);
+
+			var nodeTreeBase = new NodeTreeBase();
+			nodeTreeBase.BaseType = nodeType;
+
+			AssignID(nodeTreeBase, node);
 
 			nodeTreeBase.ParentID = parentInstanceID;
 
@@ -182,28 +237,43 @@ namespace PrefabLike
 			return nodeTreeBase.IDRemapper[node.InstanceID];
 		}
 
+		public int Init(Type nodeType)
+		{
+			return AddNodeInternal(-1, nodeType);
+		}
+
+		public int AddNode(int parentInstanceID, Type nodeType)
+		{
+			if (parentInstanceID < 0)
+			{
+				return -1;
+			}
+
+			return AddNodeInternal(parentInstanceID, nodeType);
+		}
+
 		public int AddNodeTreeGroup(int parentInstanceID, NodeTreeGroup nodeTreeGroup)
 		{
-			throw new Exception("AddNodeと同じようにインスタンスを実際に生成してリマップする");
+			throw new NotImplementedException("AddNodeと同じようにインスタンスを実際に生成してリマップする");
 			// TODO リマップのID生成する
 			// TODO rootのノードのIDを返す
 		}
 
 		public void RemoveNode(int instanceID)
 		{
-			throw new Exception("ノード削除を実装する。");
+			throw new NotImplementedException("ノード削除を実装する。");
 			// とりあえず全部シリアライズしてUONODRedoを実装する。
 		}
 
 		internal override Dictionary<AccessKeyGroup, object> GetDifference(int instanceID)
 		{
-			throw new Exception("TODO Implement");
+			throw new NotImplementedException("TODO Implement");
 			return base.GetDifference(instanceID);
 		}
 
 		internal override void SetDifference(int instanceID, Dictionary<AccessKeyGroup, object> difference)
 		{
-			throw new Exception("TODO Implement");
+			throw new NotImplementedException("TODO Implement");
 			base.SetDifference(instanceID, difference);
 		}
 
