@@ -29,6 +29,7 @@ namespace PrefabLikeTest
 
 			commandManager.Redo();
 			Assert.AreEqual(1, instance.Root.Children.Count);
+			Assert.IsTrue(instance.Root.Children[0] != null);
 		}
 
 		[Test]

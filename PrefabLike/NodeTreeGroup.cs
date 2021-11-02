@@ -205,13 +205,6 @@ namespace PrefabLike
 		}
 	}
 
-	/// <summary>
-	/// Prefab 情報本体
-	/// </summary>
-	/// <remarks>
-	/// ランタイムには含まれない。.efkefc ファイルに含まれるエディタ用の情報となる。
-	/// .efk をエクスポートするときにすべての Prefab はインスタンス化する想定。
-	/// </remarks>
 	public class NodeTreeGroup : Asset
 	{
 		internal NodeTreeGroupInternalData InternalData = new NodeTreeGroupInternalData();
