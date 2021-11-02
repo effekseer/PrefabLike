@@ -112,22 +112,37 @@ namespace PrefabLike
 
 		public void RemoveChild(NodeTreeGroup nodeTreeGroup, NodeTree nodeTree, int nodeID)
 		{
-			throw new NotImplementedException("nodeTreeも書き換える");
+			var parentNode = nodeTree.FindInstance(nodeID) as Node;
+			var parentNodeID = parentNode.InstanceID;
 
 			var before = nodeTreeGroup.InternalData.Serialize();
 			nodeTreeGroup.RemoveNode(nodeID);
 			var after = nodeTreeGroup.InternalData.Serialize();
 
+			Action execute = () =>
+			{
+				var currentParentNode = nodeTree.FindInstance(parentNodeID) as Node;
+				currentParentNode.Children.RemoveAll(_ => _.InstanceID == nodeID);
+			};
+
+			execute();
 
 			var command = new DelegateCommand();
 			command.OnExecute = () =>
 			{
+				execute();
 				nodeTreeGroup.InternalData = NodeTreeGroupInternalData.Deserialize(after);
 			};
 
 			command.OnUnexecute = () =>
 			{
 				nodeTreeGroup.InternalData = NodeTreeGroupInternalData.Deserialize(before);
+
+				var parentNode = nodeTree.FindInstance(parentNodeID) as Node;
+				var prefabSystem = new PrefabSyatem();
+				var newNodeTree = prefabSystem.CreateNodeFromNodeTreeGroup(nodeTreeGroup);
+				var newNode = newNodeTree.FindInstance(nodeID);
+				parentNode.Children.Add(newNode as Node);
 			};
 
 			AddCommand(command);
@@ -175,7 +190,17 @@ namespace PrefabLike
 						}
 					}
 
-					throw new NotImplementedException("TODO merge difference");
+					foreach (var diff in diffRedo)
+					{
+						if (newDifference.ContainsKey(diff.Key))
+						{
+							newDifference[diff.Key] = diff.Value;
+						}
+						else
+						{
+							newDifference.Add(diff.Key, diff.Value);
+						}
+					}
 
 					var command = new DelegateCommand();
 					command.OnExecute = () =>

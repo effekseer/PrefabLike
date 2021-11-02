@@ -22,7 +22,7 @@ namespace PrefabLike
 
 		IInstanceID? FindInstance(Node node, int id)
 		{
-			if(node.InstanceID == id)
+			if (node.InstanceID == id)
 			{
 				return node;
 			}
@@ -42,15 +42,15 @@ namespace PrefabLike
 
 		Node FindParent(Node parent, int id)
 		{
-			if(parent.Children.Any(_=>_.InstanceID == id))
+			if (parent.Children.Any(_ => _.InstanceID == id))
 			{
 				return parent;
 			}
 
-			foreach(var child in parent.Children)
+			foreach (var child in parent.Children)
 			{
 				var result = FindParent(child, id);
-				if(result != null)
+				if (result != null)
 				{
 					return result;
 				}
