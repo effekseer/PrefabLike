@@ -88,6 +88,11 @@ namespace PrefabLike
 		/// 親のID
 		/// </summary>
 		public int ParentID;
+
+		/// <summary>
+		/// ルートのID
+		/// </summary>
+		public int RootID = -1;
 	}
 
 	class NodeTreeGroupInternalData
@@ -131,6 +136,11 @@ namespace PrefabLike
 				}
 
 				jnode["Differences"] = differences;
+
+				jnode["RootID"] = b.RootID;
+
+				jnode["ParentID"] = b.ParentID;
+
 				basesArray.Add(jnode);
 			}
 
@@ -170,6 +180,10 @@ namespace PrefabLike
 
 					nb.Differences.Add(targetID, diff);
 				}
+
+				nb.RootID = (int)b["RootID"];
+
+				nb.ParentID = (int)b["ParentID"];
 
 				internalData.Bases.Add(nb);
 			}
@@ -254,27 +268,84 @@ namespace PrefabLike
 
 		public int AddNodeTreeGroup(int parentInstanceID, NodeTreeGroup nodeTreeGroup)
 		{
-			throw new NotImplementedException("AddNodeと同じようにインスタンスを実際に生成してリマップする");
-			// TODO リマップのID生成する
-			// TODO rootのノードのIDを返す
+			var prefabSystem = new PrefabSyatem();
+			var node = prefabSystem.CreateNodeFromNodeTreeGroup(nodeTreeGroup);
+
+			var nodeTreeBase = new NodeTreeBase();
+			nodeTreeBase.Template = nodeTreeGroup;
+
+			AssignID(nodeTreeBase, node.Root);
+
+			nodeTreeBase.ParentID = parentInstanceID;
+
+			InternalData.Bases.Add(nodeTreeBase);
+
+			return nodeTreeBase.IDRemapper[node.Root.InstanceID];
 		}
 
-		public void RemoveNode(int instanceID)
+		public bool RemoveNode(int instanceID)
 		{
-			throw new NotImplementedException("ノード削除を実装する。");
-			// とりあえず全部シリアライズしてUONODRedoを実装する。
+			var removed = InternalData.Bases.Where(_ => _.RootID == instanceID).FirstOrDefault();
+			if (removed == null)
+			{
+				return false;
+			}
+
+			var removingNodes = new List<NodeTreeBase>();
+			removingNodes.Add(removed);
+
+			bool changing = true;
+
+			while (changing)
+			{
+				changing = false;
+
+				foreach (var b in InternalData.Bases)
+				{
+					if (removingNodes.Contains(b))
+					{
+						continue;
+					}
+
+					if (removingNodes.Any(_ => _.IDRemapper.ContainsKey(b.ParentID)))
+					{
+						changing = true;
+						removingNodes.Add(b);
+					}
+				}
+			}
+
+			foreach (var r in removingNodes)
+			{
+				InternalData.Bases.Remove(r);
+			}
+
+			return true;
 		}
 
 		internal override Dictionary<AccessKeyGroup, object> GetDifference(int instanceID)
 		{
-			throw new NotImplementedException("TODO Implement");
-			return base.GetDifference(instanceID);
+			foreach (var b in InternalData.Bases)
+			{
+				if (b.Differences.ContainsKey(instanceID))
+				{
+					return b.Differences[instanceID];
+				}
+			}
+
+			return null;
 		}
 
 		internal override void SetDifference(int instanceID, Dictionary<AccessKeyGroup, object> difference)
 		{
-			throw new NotImplementedException("TODO Implement");
-			base.SetDifference(instanceID, difference);
+			foreach (var b in InternalData.Bases)
+			{
+				if (b.Differences.ContainsKey(instanceID))
+				{
+					b.Differences[instanceID] = difference;
+					return;
+				}
+			}
 		}
 
 		public string Serialize()
