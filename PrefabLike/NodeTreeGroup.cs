@@ -224,6 +224,7 @@ namespace PrefabLike
 			{
 				var newID = GenerateGUID();
 				nodeTreeBase.IDRemapper.Add(n.InstanceID, newID);
+				n.InstanceID = newID;
 
 				foreach (var child in n.Children)
 				{
@@ -245,10 +246,11 @@ namespace PrefabLike
 			AssignID(nodeTreeBase, node);
 
 			nodeTreeBase.ParentID = parentInstanceID;
+			nodeTreeBase.RootID = node.InstanceID;
 
 			InternalData.Bases.Add(nodeTreeBase);
 
-			return nodeTreeBase.IDRemapper[node.InstanceID];
+			return node.InstanceID;
 		}
 
 		public int Init(Type nodeType)
@@ -277,10 +279,11 @@ namespace PrefabLike
 			AssignID(nodeTreeBase, node.Root);
 
 			nodeTreeBase.ParentID = parentInstanceID;
+			nodeTreeBase.RootID = node.Root.InstanceID;
 
 			InternalData.Bases.Add(nodeTreeBase);
 
-			return nodeTreeBase.IDRemapper[node.Root.InstanceID];
+			return node.Root.InstanceID;
 		}
 
 		public bool RemoveNode(int instanceID)
@@ -340,10 +343,16 @@ namespace PrefabLike
 		{
 			foreach (var b in InternalData.Bases)
 			{
-				if (b.Differences.ContainsKey(instanceID))
+				if(b.IDRemapper.Values.Contains(instanceID))
 				{
-					b.Differences[instanceID] = difference;
-					return;
+					if (b.Differences.ContainsKey(instanceID))
+					{
+						b.Differences[instanceID] = difference;
+					}
+					else
+					{
+						b.Differences.Add(instanceID, difference);
+					}
 				}
 			}
 		}

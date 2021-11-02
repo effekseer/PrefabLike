@@ -202,6 +202,8 @@ namespace PrefabLike
 						}
 					}
 
+					asset.SetDifference(instanceID, newDifference);
+
 					var command = new DelegateCommand();
 					command.OnExecute = () =>
 					{
