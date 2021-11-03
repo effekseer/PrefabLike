@@ -60,7 +60,7 @@ namespace PrefabLike
 		}
 	}
 
-	public class NodeTreeBase
+	class NodeTreeBase
 	{
 		/// <summary>
 		/// この Prefab が生成するインスタンスの型。
