@@ -92,8 +92,8 @@ namespace PrefabLike
 			var command = new DelegateCommand();
 			command.OnExecute = () =>
 			{
-				execute();
 				nodeTreeGroup.InternalData = NodeTreeGroupInternalData.Deserialize(after);
+				execute();
 			};
 
 			command.OnUnexecute = () =>
