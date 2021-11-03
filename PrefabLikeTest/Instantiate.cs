@@ -34,86 +34,64 @@ namespace PrefabLikeTest
 		public void Instantiate1()
 		{
 			var system = new PrefabSyatem();
-			var prefab = new NodeTreeGroup();
+			var commandManager = new CommandManager();
+			var nodeTreeGroup = new NodeTreeGroup();
+			nodeTreeGroup.Init(typeof(TestNodePrimitive));
 
-			// Create Prefab from diff.
-			{
-				prefab.Base.BaseType = typeof(TestNodePrimitive);
 
-				var v = new TestNodePrimitive();
+			var instance = system.CreateNodeFromNodeTreeGroup(nodeTreeGroup);
 
-				var before = new FieldState();
-				before.Store(v);
+			commandManager.StartEditFields(nodeTreeGroup, instance, instance.Root);
+			(instance.Root as TestNodePrimitive).Value1 = 5;
+			commandManager.NotifyEditFields(instance.Root);
+			commandManager.EndEditFields(instance.Root);
 
-				v.Value1 = 5;
+			instance = system.CreateNodeFromNodeTreeGroup(nodeTreeGroup);
 
-				var after = new FieldState();
-				after.Store(v);
-
-				prefab.ModifiedNodes = new NodeTreeGroup.ModifiedNode[1];
-				prefab.ModifiedNodes[0] = new NodeTreeGroup.ModifiedNode();
-				prefab.ModifiedNodes[0].Modified.Difference = after.GenerateDifference(before);
-			}
-
-			var node2 = system.CreateNodeFromNodeTreeGroup(prefab) as TestNodePrimitive;
-			Assert.AreEqual(5, node2.Value1);
+			Assert.AreEqual((instance.Root as TestNodePrimitive).Value1, 5);
 		}
 
 		[Test]
 		public void InstantiateStruct()
 		{
 			var system = new PrefabSyatem();
-			var prefab = new NodeTreeGroup();
+			var commandManager = new CommandManager();
+			var nodeTreeGroup = new NodeTreeGroup();
+			nodeTreeGroup.Init(typeof(TestNodeStruct));
 
-			{
-				prefab.Base.BaseType = typeof(TestNodeStruct);
 
-				var v = new TestNodeStruct();
+			var instance = system.CreateNodeFromNodeTreeGroup(nodeTreeGroup);
 
-				var before = new FieldState();
-				before.Store(v);
+			commandManager.StartEditFields(nodeTreeGroup, instance, instance.Root);
+			(instance.Root as TestNodeStruct).Struct1.A = 5;
+			commandManager.NotifyEditFields(instance.Root);
+			commandManager.EndEditFields(instance.Root);
 
-				v.Struct1.A = 2.0f;
+			instance = system.CreateNodeFromNodeTreeGroup(nodeTreeGroup);
 
-				var after = new FieldState();
-				after.Store(v);
-
-				prefab.ModifiedNodes = new NodeTreeGroup.ModifiedNode[1];
-				prefab.ModifiedNodes[0] = new NodeTreeGroup.ModifiedNode();
-				prefab.ModifiedNodes[0].Modified.Difference = after.GenerateDifference(before);
-			}
-
-			var node2 = system.CreateNodeFromNodeTreeGroup(prefab) as TestNodeStruct;
-			Assert.AreEqual(2, node2.Struct1.A);
+			Assert.AreEqual((instance.Root as TestNodeStruct).Struct1.A, 5);
 		}
 
 		[Test]
 		public void InstantiateClass()
 		{
 			var system = new PrefabSyatem();
-			var prefab = new NodeTreeGroup();
+			var commandManager = new CommandManager();
+			var nodeTreeGroup = new NodeTreeGroup();
+			nodeTreeGroup.Init(typeof(TestNodeClass));
 
-			{
-				prefab.Base.BaseType = typeof(TestNodeClass);
 
-				var v = new TestNodeClass();
+			var instance = system.CreateNodeFromNodeTreeGroup(nodeTreeGroup);
 
-				var before = new FieldState();
-				before.Store(v);
+			commandManager.StartEditFields(nodeTreeGroup, instance, instance.Root);
+			(instance.Root as TestNodeClass).Class1_1 = new TestClass1();
+			(instance.Root as TestNodeClass).Class1_1.A = 2.0f;
+			commandManager.NotifyEditFields(instance.Root);
+			commandManager.EndEditFields(instance.Root);
 
-				v.Class1_1 = new TestClass1();
-				v.Class1_1.A = 2.0f;
+			instance = system.CreateNodeFromNodeTreeGroup(nodeTreeGroup);
 
-				var after = new FieldState();
-				after.Store(v);
-
-				prefab.ModifiedNodes = new NodeTreeGroup.ModifiedNode[1];
-				prefab.ModifiedNodes[0] = new NodeTreeGroup.ModifiedNode();
-				prefab.ModifiedNodes[0].Modified.Difference = after.GenerateDifference(before);
-			}
-
-			var node2 = system.CreateNodeFromNodeTreeGroup(prefab) as TestNodeClass;
-			Assert.AreEqual(2.0f, node2.Class1_1.A);
+			Assert.AreEqual((instance.Root as TestNodeClass).Class1_1.A, 2);
 		}
 	}
 }

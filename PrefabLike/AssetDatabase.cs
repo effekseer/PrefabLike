@@ -4,11 +4,6 @@ using System.Text;
 
 namespace PrefabLike
 {
-	public class Asset
-	{
-
-	}
-
 	public class AssetDatabase
 	{
 		Dictionary<string, WeakReference<Asset>> assets = new Dictionary<string, WeakReference<Asset>>();

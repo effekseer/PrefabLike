@@ -6,11 +6,62 @@ using Newtonsoft.Json.Linq;
 
 namespace PrefabLike
 {
-
-	public class NodeTreeBase
+	public class NodeTree : IAssetInstanceRoot
 	{
-		public System.Guid InternalName;
+		public Node Root;
 
+		public IInstanceID? FindInstance(int id)
+		{
+			return FindInstance(Root, id);
+		}
+
+		public Node FindParent(int id)
+		{
+			return FindParent(Root, id);
+		}
+
+		IInstanceID? FindInstance(Node node, int id)
+		{
+			if (node.InstanceID == id)
+			{
+				return node;
+			}
+
+			foreach (var child in node.Children)
+			{
+				var result = FindInstance(child, id);
+				if (result != null)
+				{
+					return result;
+				}
+			}
+
+			return null;
+
+		}
+
+		Node FindParent(Node parent, int id)
+		{
+			if (parent.Children.Any(_ => _.InstanceID == id))
+			{
+				return parent;
+			}
+
+			foreach (var child in parent.Children)
+			{
+				var result = FindParent(child, id);
+				if (result != null)
+				{
+					return result;
+				}
+			}
+
+			return null;
+		}
+	}
+
+	class NodeTreeBase
+	{
 		/// <summary>
 		/// この Prefab が生成するインスタンスの型。
 		/// Template と同時に使うことはできない。BaseType を持つなら、Template は null でなければならない。
@@ -22,158 +73,309 @@ namespace PrefabLike
 		/// BaseType が null の場合、これをもとにインスタンスを作成する。
 		/// </summary>
 		public NodeTreeGroup Template;
+
+		/// <summary>
+		/// IDをリマップする。
+		/// </summary>
+		public Dictionary<int, int> IDRemapper = new Dictionary<int, int>();
+
+		/// <summary>
+		/// IDとそのIDのインスタンスの変更
+		/// </summary>
+		public Dictionary<int, Dictionary<AccessKeyGroup, object>> Differences = new Dictionary<int, Dictionary<AccessKeyGroup, object>>();
+
+		/// <summary>
+		/// 親のID
+		/// </summary>
+		public int ParentID;
+
+		/// <summary>
+		/// ルートのID
+		/// </summary>
+		public int RootID = -1;
 	}
 
-	public class NodeTreeChildInformation
+	class NodeTreeGroupInternalData
 	{
-		public NodeTreeBase Base;
-		public List<Guid> Path = new List<Guid>();
-	}
-
-	/// <summary>
-	/// Prefab 情報本体
-	/// </summary>
-	/// <remarks>
-	/// ランタイムには含まれない。.efkefc ファイルに含まれるエディタ用の情報となる。
-	/// .efk をエクスポートするときにすべての Prefab はインスタンス化する想定。
-	/// </remarks>
-	public class NodeTreeGroup : Asset
-	{
-
-		public NodeTreeBase Base = new NodeTreeBase();
-
-		public List<NodeTreeChildInformation> AdditionalChildren = new List<NodeTreeChildInformation>();
-
-		public void Init(Type type)
-		{
-			Base = new NodeTreeBase { InternalName = Guid.NewGuid(), BaseType = type };
-		}
-
-		public void AddChild(List<Guid> path, Type type)
-		{
-			var treeBase = new NodeTreeBase { InternalName = NewName(path), BaseType = type };
-			var info = new NodeTreeChildInformation();
-			info.Base = treeBase;
-			info.Path = path.ToList();
-			AdditionalChildren.Add(info);
-		}
-
-		public void AddChild(List<Guid> path, NodeTreeGroup treeGroup)
-		{
-			var treeBase = new NodeTreeBase { InternalName = NewName(path), Template = treeGroup };
-			var info = new NodeTreeChildInformation();
-			info.Base = treeBase;
-			info.Path = path.ToList();
-			AdditionalChildren.Add(info);
-		}
-
-		public void RemoveChild(List<Guid> path)
-		{
-			AdditionalChildren.RemoveAll(_ => _.Path.SequenceEqual(path.Take(path.Count - 1)) && _.Base.InternalName == path.Last());
-		}
-
-		Guid NewName(List<Guid> path)
-		{
-			while (true)
-			{
-				var id = Guid.NewGuid();
-
-				if (AdditionalChildren.Any(_ => _.Path.SequenceEqual(path) && _.Base.InternalName == id))
-				{
-					continue;
-				}
-
-				return id;
-			}
-		}
-
-		// 子の情報が必要
-
-		public class ModifiedNode
-		{
-			public System.Guid[] Path = new Guid[0];
-
-			/// <summary>
-			/// 差分情報。
-			/// この Prefab が生成するインスタンスに対して set するフィールドのセット。
-			/// これを使って GUI で変更箇所を太文字にしたりする。
-			/// </summary>
-			public Modified Modified = new Modified();
-		}
-
-		public ModifiedNode[] ModifiedNodes = new ModifiedNode[0];
+		public List<NodeTreeBase> Bases = new List<NodeTreeBase>();
 
 		public string Serialize()
 		{
-			// TODO:
-			if (Base.Template != null) throw new NotImplementedException();
-			if (AdditionalChildren.Count > 0) throw new NotImplementedException();
+			var root = new JObject();
+			var basesArray = new JArray();
 
-			var o = new JObject();
-			o["BaseType"] = Base.BaseType.AssemblyQualifiedName;
-
-			var nodeArray = new JArray();
-
-			foreach (var node in ModifiedNodes)
+			foreach (var b in Bases)
 			{
 				var jnode = new JObject();
+				jnode["BaseType"] = b.BaseType.AssemblyQualifiedName;
 
-				var jpath = new JArray();
-				foreach (var id in node.Path)
+				if (b.Template != null)
 				{
-					jpath.Add(id.ToString());
+					throw new NotImplementedException("TODO");
 				}
 
-				var difference = new JArray();
-				foreach (var pair in node.Modified.Difference)
+				var differences = new JArray();
+
+				foreach (var ds in b.Differences)
 				{
-					var p = new JObject();
-					p["Key"] = pair.Key.Serialize();
-					p["Value"] = JToken.FromObject(pair.Value);
-					difference.Add(p);
+					var kv = new JObject();
+					kv["Key"] = ds.Key;
+
+					var difference = new JArray();
+
+					foreach (var pair in ds.Value)
+					{
+						var p = new JObject();
+						p["Key"] = pair.Key.Serialize();
+						p["Value"] = JToken.FromObject(pair.Value);
+						difference.Add(p);
+					}
+
+					kv["Value"] = difference;
+					differences.Add(kv);
 				}
 
-				jnode["Path"] = jpath;
-				jnode["Difference"] = difference;
-				nodeArray.Add(jnode);
+				jnode["Differences"] = differences;
+
+				jnode["RootID"] = b.RootID;
+
+				jnode["ParentID"] = b.ParentID;
+
+				var idRemapper = new JObject();
+				foreach (var kv in b.IDRemapper)
+				{
+					idRemapper[kv.Key.ToString()] = kv.Value;
+				}
+
+				jnode["IDRemapper"] = idRemapper;
+
+				basesArray.Add(jnode);
 			}
 
-			o["ModifiedNodes"] = nodeArray;
+			root["Bases"] = basesArray;
+			return root.ToString();
+		}
 
+		public static NodeTreeGroupInternalData Deserialize(string json)
+		{
+			var internalData = new NodeTreeGroupInternalData();
+
+			var o = JObject.Parse(json);
+			var bases = o["Bases"] as JArray;
+
+			foreach (var b in bases)
+			{
+				var nb = new NodeTreeBase();
+
+				var typeName = (string)b["BaseType"];
+				nb.BaseType = Type.GetType(typeName);
+
+				var differences = b["Differences"];
+
+				foreach (var ds in differences)
+				{
+					var targetID = (int)ds["Key"];
+
+					var difference = ds["Value"] as JArray;
+					var diff = new Dictionary<AccessKeyGroup, object>();
+
+					foreach (var pair in difference)
+					{
+						var key = AccessKeyGroup.Deserialize((JObject)pair["Key"]); //AccessKey.FromJson((JObject)pair["Key"]);
+						var value = pair["Value"].ToObject<object>();
+						diff.Add(key, value);
+					}
+
+					nb.Differences.Add(targetID, diff);
+				}
+
+				nb.RootID = (int)b["RootID"];
+
+				nb.ParentID = (int)b["ParentID"];
+
+				foreach (var kv in b["IDRemapper"] as JObject)
+				{
+					nb.IDRemapper.Add(int.Parse(kv.Key), (int)kv.Value);
+				}
+
+				internalData.Bases.Add(nb);
+			}
+
+			return internalData;
+		}
+	}
+
+	public class NodeTreeGroup : Asset
+	{
+		internal NodeTreeGroupInternalData InternalData = new NodeTreeGroupInternalData();
+		int GenerateGUID()
+		{
+			var rand = new Random();
+			while (true)
+			{
+				var id = rand.Next(0, int.MaxValue);
+
+				if (InternalData.Bases.Find(_ => _.IDRemapper.Values.Contains(id)) == null)
+				{
+					return id;
+				}
+			}
+		}
+
+		void AssignID(NodeTreeBase nodeTreeBase, Node node)
+		{
+			Action<Node> assignID = null;
+
+			assignID = (n) =>
+			{
+				var newID = GenerateGUID();
+				nodeTreeBase.IDRemapper.Add(n.InstanceID, newID);
+				n.InstanceID = newID;
+
+				foreach (var child in n.Children)
+				{
+					assignID(child);
+				}
+			};
+
+			assignID(node);
+		}
+
+		public int AddNodeInternal(int parentInstanceID, Type nodeType)
+		{
+			var constructor = nodeType.GetConstructor(Type.EmptyTypes);
+			var node = (Node)constructor.Invoke(null);
+
+			var nodeTreeBase = new NodeTreeBase();
+			nodeTreeBase.BaseType = nodeType;
+
+			AssignID(nodeTreeBase, node);
+
+			nodeTreeBase.ParentID = parentInstanceID;
+			nodeTreeBase.RootID = node.InstanceID;
+
+			InternalData.Bases.Add(nodeTreeBase);
+
+			return node.InstanceID;
+		}
+
+		public int Init(Type nodeType)
+		{
+			return AddNodeInternal(-1, nodeType);
+		}
+
+		public int AddNode(int parentInstanceID, Type nodeType)
+		{
+			if (parentInstanceID < 0)
+			{
+				return -1;
+			}
+
+			return AddNodeInternal(parentInstanceID, nodeType);
+		}
+
+		public int AddNodeTreeGroup(int parentInstanceID, NodeTreeGroup nodeTreeGroup)
+		{
+			var prefabSystem = new PrefabSyatem();
+			var node = prefabSystem.CreateNodeFromNodeTreeGroup(nodeTreeGroup);
+
+			var nodeTreeBase = new NodeTreeBase();
+			nodeTreeBase.Template = nodeTreeGroup;
+
+			AssignID(nodeTreeBase, node.Root);
+
+			nodeTreeBase.ParentID = parentInstanceID;
+			nodeTreeBase.RootID = node.Root.InstanceID;
+
+			InternalData.Bases.Add(nodeTreeBase);
+
+			return node.Root.InstanceID;
+		}
+
+		public bool RemoveNode(int instanceID)
+		{
+			var removed = InternalData.Bases.Where(_ => _.RootID == instanceID).FirstOrDefault();
+			if (removed == null)
+			{
+				return false;
+			}
+
+			var removingNodes = new List<NodeTreeBase>();
+			removingNodes.Add(removed);
+
+			bool changing = true;
+
+			while (changing)
+			{
+				changing = false;
+
+				foreach (var b in InternalData.Bases)
+				{
+					if (removingNodes.Contains(b))
+					{
+						continue;
+					}
+
+					if (removingNodes.Any(_ => _.IDRemapper.ContainsKey(b.ParentID)))
+					{
+						changing = true;
+						removingNodes.Add(b);
+					}
+				}
+			}
+
+			foreach (var r in removingNodes)
+			{
+				InternalData.Bases.Remove(r);
+			}
+
+			return true;
+		}
+
+		internal override Dictionary<AccessKeyGroup, object> GetDifference(int instanceID)
+		{
+			foreach (var b in InternalData.Bases)
+			{
+				if (b.Differences.ContainsKey(instanceID))
+				{
+					return b.Differences[instanceID];
+				}
+			}
+
+			return null;
+		}
+
+		internal override void SetDifference(int instanceID, Dictionary<AccessKeyGroup, object> difference)
+		{
+			foreach (var b in InternalData.Bases)
+			{
+				if (b.IDRemapper.Values.Contains(instanceID))
+				{
+					if (b.Differences.ContainsKey(instanceID))
+					{
+						b.Differences[instanceID] = difference;
+					}
+					else
+					{
+						b.Differences.Add(instanceID, difference);
+					}
+				}
+			}
+		}
+
+		public string Serialize()
+		{
+			var o = new JObject();
+			o["InternalData"] = InternalData.Serialize();
 			string json = o.ToString();
 			return json;
 		}
 
 		public static NodeTreeGroup Deserialize(string json)
 		{
-			var prefab = new NodeTreeGroup();
-
 			var o = JObject.Parse(json);
-			var typeName = (string)o["BaseType"];
-			prefab.Base.BaseType = Type.GetType(typeName);
-
-			var modifiedNodes = (JArray)o["ModifiedNodes"];
-
-			Func<JObject, ModifiedNode> deserializeModifiedNode = (o) =>
-			{
-				var mn = new ModifiedNode();
-
-				var jpath = (JArray)o["Path"];
-				mn.Path = jpath.Select(_ => System.Guid.Parse(_.ToObject<string>())).ToArray();
-
-				var difference = (JArray)o["Difference"];//.Values<JObject>();
-				foreach (var pair in difference)
-				{
-					var key = AccessKeyGroup.Deserialize((JObject)pair["Key"]); //AccessKey.FromJson((JObject)pair["Key"]);
-					var value = pair["Value"].ToObject<object>();
-					mn.Modified.Difference.Add(key, value);
-				}
-
-				return mn;
-			};
-
-			prefab.ModifiedNodes = modifiedNodes.Select(_ => deserializeModifiedNode((JObject)_)).ToArray();
-
+			var prefab = new NodeTreeGroup();
+			prefab.InternalData = NodeTreeGroupInternalData.Deserialize((string)o["InternalData"]);
 			return prefab;
 		}
 	}

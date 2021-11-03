@@ -30,7 +30,9 @@ namespace PrefabLike
 	{
 		class EditFieldState
 		{
-			public object Target;
+			public Asset Asset;
+			public IAssetInstanceRoot Root;
+			public IInstanceID Target;
 			public bool IsEdited = false;
 			public FieldState State = new FieldState();
 		}
@@ -70,58 +72,94 @@ namespace PrefabLike
 			}
 		}
 
-		public void AddChild(NodeTreeGroup nodeTreeGroup, List<Guid> path, Type type)
+		public void AddChild(NodeTreeGroup nodeTreeGroup, NodeTree nodeTree, int parentID, Type type)
 		{
-			var before = nodeTreeGroup.AdditionalChildren.ToArray();
-			nodeTreeGroup.AddChild(path, type);
-			var after = nodeTreeGroup.AdditionalChildren.ToArray();
+			var before = nodeTreeGroup.InternalData.Serialize();
+			var newNodeID = nodeTreeGroup.AddNode(parentID, type);
+			var after = nodeTreeGroup.InternalData.Serialize();
+
+			Action execute = () =>
+			{
+				var parentNode = nodeTree.FindInstance(parentID) as Node;
+				var prefabSystem = new PrefabSyatem();
+				var newNodeTree = prefabSystem.CreateNodeFromNodeTreeGroup(nodeTreeGroup);
+				var newNode = newNodeTree.FindInstance(newNodeID);
+				parentNode.Children.Add(newNode as Node);
+			};
+
+			execute();
 
 			var command = new DelegateCommand();
 			command.OnExecute = () =>
 			{
-				nodeTreeGroup.AdditionalChildren.Clear();
-				nodeTreeGroup.AdditionalChildren.AddRange(after);
+				nodeTreeGroup.InternalData = NodeTreeGroupInternalData.Deserialize(after);
+				execute();
 			};
 
 			command.OnUnexecute = () =>
 			{
-				nodeTreeGroup.AdditionalChildren.Clear();
-				nodeTreeGroup.AdditionalChildren.AddRange(before);
+				var parent = nodeTree.FindParent(newNodeID);
+				if (parent != null)
+				{
+					parent.Children.RemoveAll(_ => _.InstanceID == newNodeID);
+				}
+
+				nodeTreeGroup.InternalData = NodeTreeGroupInternalData.Deserialize(before);
 			};
 
 			AddCommand(command);
 		}
 
-		public void RemoveChild(NodeTreeGroup nodeTreeGroup, List<Guid> path)
+		public void RemoveChild(NodeTreeGroup nodeTreeGroup, NodeTree nodeTree, int nodeID)
 		{
-			var before = nodeTreeGroup.AdditionalChildren.ToArray();
-			nodeTreeGroup.RemoveChild(path);
-			var after = nodeTreeGroup.AdditionalChildren.ToArray();
+			var parentNode = nodeTree.FindInstance(nodeID) as Node;
+			var parentNodeID = parentNode.InstanceID;
+
+			var before = nodeTreeGroup.InternalData.Serialize();
+			if (!nodeTreeGroup.RemoveNode(nodeID))
+			{
+				return;
+			}
+
+			var after = nodeTreeGroup.InternalData.Serialize();
+
+			Action execute = () =>
+			{
+				var currentParentNode = nodeTree.FindInstance(parentNodeID) as Node;
+				currentParentNode.Children.RemoveAll(_ => _.InstanceID == nodeID);
+			};
+
+			execute();
 
 			var command = new DelegateCommand();
 			command.OnExecute = () =>
 			{
-				nodeTreeGroup.AdditionalChildren.Clear();
-				nodeTreeGroup.AdditionalChildren.AddRange(after);
+				execute();
+				nodeTreeGroup.InternalData = NodeTreeGroupInternalData.Deserialize(after);
 			};
 
 			command.OnUnexecute = () =>
 			{
-				nodeTreeGroup.AdditionalChildren.Clear();
-				nodeTreeGroup.AdditionalChildren.AddRange(before);
+				nodeTreeGroup.InternalData = NodeTreeGroupInternalData.Deserialize(before);
+
+				var parentNode = nodeTree.FindInstance(parentNodeID) as Node;
+				var prefabSystem = new PrefabSyatem();
+				var newNodeTree = prefabSystem.CreateNodeFromNodeTreeGroup(nodeTreeGroup);
+				var newNode = newNodeTree.FindInstance(nodeID);
+				parentNode.Children.Add(newNode as Node);
 			};
 
 			AddCommand(command);
 		}
 
-		public void StartEditFields(object o)
+		public void StartEditFields(Asset asset, IAssetInstanceRoot root, IInstanceID o)
 		{
-			var state = new EditFieldState { Target = o };
+			var state = new EditFieldState { Target = o, Asset = asset, Root = root };
 			state.State.Store(o);
 			editFieldStates.Add(o, state);
 		}
 
-		public void NotifyEditFields(object o)
+		public void NotifyEditFields(IInstanceID o)
 		{
 			if (editFieldStates.TryGetValue(o, out var v))
 			{
@@ -129,7 +167,7 @@ namespace PrefabLike
 			}
 		}
 
-		public bool EndEditFields(object o)
+		public bool EndEditFields(IInstanceID o)
 		{
 			if (editFieldStates.TryGetValue(o, out var v))
 			{
@@ -140,15 +178,59 @@ namespace PrefabLike
 					var diffUndo = v.State.GenerateDifference(fs);
 					var diffRedo = fs.GenerateDifference(v.State);
 
+					var instanceID = v.Target.InstanceID;
+					var asset = v.Asset;
+					var root = v.Root;
+
+					var oldDifference = asset.GetDifference(instanceID);
+
+					var newDifference = new Dictionary<AccessKeyGroup, object>();
+
+					if (oldDifference != null)
+					{
+						foreach (var kv in oldDifference)
+						{
+							newDifference.Add(kv.Key, kv.Value);
+						}
+					}
+
+					foreach (var diff in diffRedo)
+					{
+						if (newDifference.ContainsKey(diff.Key))
+						{
+							newDifference[diff.Key] = diff.Value;
+						}
+						else
+						{
+							newDifference.Add(diff.Key, diff.Value);
+						}
+					}
+
+					asset.SetDifference(instanceID, newDifference);
+
 					var command = new DelegateCommand();
 					command.OnExecute = () =>
 					{
-						Difference.ApplyDifference(ref o, diffRedo);
+						var instance = root.FindInstance(instanceID);
+						if (instance != null)
+						{
+							object obj = instance;
+							Difference.ApplyDifference(ref obj, diffRedo);
+						}
+
+						asset.SetDifference(instanceID, newDifference);
 					};
 
 					command.OnUnexecute = () =>
 					{
-						Difference.ApplyDifference(ref o, diffUndo);
+						var instance = root.FindInstance(instanceID);
+						if (instance != null)
+						{
+							object obj = instance;
+							Difference.ApplyDifference(ref obj, diffUndo);
+						}
+
+						asset.SetDifference(instanceID, oldDifference);
 					};
 
 					AddCommand(command);
