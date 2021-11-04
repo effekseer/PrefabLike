@@ -72,17 +72,17 @@ namespace PrefabLike
 			}
 		}
 
-		public void AddChild(NodeTreeGroup nodeTreeGroup, NodeTree nodeTree, int parentID, Type type)
+		public void AddNode(NodeTreeGroup nodeTreeGroup, NodeTree nodeTree, int parentID, Type type, Environment env)
 		{
 			var before = nodeTreeGroup.InternalData.Serialize();
-			var newNodeID = nodeTreeGroup.AddNode(parentID, type);
+			var newNodeID = nodeTreeGroup.AddNode(parentID, type, env);
 			var after = nodeTreeGroup.InternalData.Serialize();
 
 			Action execute = () =>
 			{
 				var parentNode = nodeTree.FindInstance(parentID) as Node;
 				var prefabSystem = new PrefabSyatem();
-				var newNodeTree = prefabSystem.CreateNodeFromNodeTreeGroup(nodeTreeGroup);
+				var newNodeTree = prefabSystem.CreateNodeFromNodeTreeGroup(nodeTreeGroup, env);
 				var newNode = newNodeTree.FindInstance(newNodeID);
 				parentNode.Children.Add(newNode as Node);
 			};
@@ -110,9 +110,9 @@ namespace PrefabLike
 			AddCommand(command);
 		}
 
-		public void RemoveChild(NodeTreeGroup nodeTreeGroup, NodeTree nodeTree, int nodeID)
+		public void RemoveNode(NodeTreeGroup nodeTreeGroup, NodeTree nodeTree, int nodeID, Environment env)
 		{
-			var parentNode = nodeTree.FindInstance(nodeID) as Node;
+			var parentNode = nodeTree.FindParent(nodeID) as Node;
 			var parentNodeID = parentNode.InstanceID;
 
 			var before = nodeTreeGroup.InternalData.Serialize();
@@ -144,7 +144,7 @@ namespace PrefabLike
 
 				var parentNode = nodeTree.FindInstance(parentNodeID) as Node;
 				var prefabSystem = new PrefabSyatem();
-				var newNodeTree = prefabSystem.CreateNodeFromNodeTreeGroup(nodeTreeGroup);
+				var newNodeTree = prefabSystem.CreateNodeFromNodeTreeGroup(nodeTreeGroup, env);
 				var newNode = newNodeTree.FindInstance(nodeID);
 				parentNode.Children.Add(newNode as Node);
 			};

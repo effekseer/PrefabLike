@@ -16,13 +16,14 @@ namespace PrefabLikeTest
 		[Test]
 		public void AddChild()
 		{
+			var env = new PrefabLike.Environment();
 			var prefabSystem = new PrefabSyatem();
 			var commandManager = new CommandManager();
 			var nodeTreeGroup = new NodeTreeGroup();
-			nodeTreeGroup.Init(typeof(Node));
-			var instance = prefabSystem.CreateNodeFromNodeTreeGroup(nodeTreeGroup);
+			nodeTreeGroup.Init(typeof(Node), env);
+			var instance = prefabSystem.CreateNodeFromNodeTreeGroup(nodeTreeGroup, env);
 
-			commandManager.AddChild(nodeTreeGroup, instance, instance.Root.InstanceID, typeof(Node));
+			commandManager.AddNode(nodeTreeGroup, instance, instance.Root.InstanceID, typeof(Node), env);
 
 			commandManager.Undo();
 			Assert.AreEqual(0, instance.Root.Children.Count);
@@ -35,12 +36,13 @@ namespace PrefabLikeTest
 		[Test]
 		public void EditField()
 		{
+			var env = new PrefabLike.Environment();
 			var random = new System.Random();
 			var prefabSystem = new PrefabSyatem();
 			var commandManager = new CommandManager();
 			var nodeTreeGroup = new NodeTreeGroup();
-			nodeTreeGroup.Init(typeof(TestNodePrimitive));
-			var instance = prefabSystem.CreateNodeFromNodeTreeGroup(nodeTreeGroup);
+			nodeTreeGroup.Init(typeof(TestNodePrimitive), env);
+			var instance = prefabSystem.CreateNodeFromNodeTreeGroup(nodeTreeGroup, env);
 
 
 			commandManager.StartEditFields(nodeTreeGroup, instance, instance.Root);

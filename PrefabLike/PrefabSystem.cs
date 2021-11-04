@@ -6,6 +6,19 @@ using System.Text;
 
 namespace PrefabLike
 {
+	public class Environment
+	{
+		public virtual Type GetType(string typeName)
+		{
+			return Type.GetType(typeName);
+		}
+
+		public virtual string GetTypeName(Type type)
+		{
+			return type.AssemblyQualifiedName;
+		}
+	}
+
 	public class PrefabSyatem
 	{
 		public Node MakePrefab(Node node)
@@ -14,7 +27,7 @@ namespace PrefabLike
 			return null;
 		}
 
-		public NodeTree CreateNodeFromNodeTreeGroup(NodeTreeGroup nodeTreeGroup)
+		public NodeTree CreateNodeFromNodeTreeGroup(NodeTreeGroup nodeTreeGroup, Environment env)
 		{
 			var idToNode = new Dictionary<int, Node>();
 
@@ -26,12 +39,14 @@ namespace PrefabLike
 
 				if (b.BaseType != null)
 				{
-					var constructor = b.BaseType.GetConstructor(Type.EmptyTypes);
+					var nodeType = env.GetType(b.BaseType);
+
+					var constructor = nodeType.GetConstructor(Type.EmptyTypes);
 					node = (Node)constructor.Invoke(null);
 				}
 				else if (b.Template != null)
 				{
-					var nodeTree = CreateNodeFromNodeTreeGroup(nodeTreeGroup);
+					var nodeTree = CreateNodeFromNodeTreeGroup(nodeTreeGroup, env);
 					node = nodeTree.Root;
 				}
 				else
@@ -43,7 +58,14 @@ namespace PrefabLike
 
 				applyID = (n) =>
 				{
-					n.InstanceID = b.IDRemapper[n.InstanceID];
+					if (b.IDRemapper.ContainsKey(n.InstanceID))
+					{
+						n.InstanceID = b.IDRemapper[n.InstanceID];
+					}
+					else
+					{
+						throw new NotImplementedException("TODO");
+					}
 
 					idToNode.Add(n.InstanceID, n);
 
