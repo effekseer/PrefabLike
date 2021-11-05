@@ -7,17 +7,6 @@ using Newtonsoft.Json.Linq;
 
 namespace PrefabLike
 {
-	public class NodeReference
-	{
-
-	}
-
-	class ResourceReference
-	{
-		public int ID;
-		public string RelativePath;
-	}
-
 	public interface IInstanceID
 	{
 		public int InstanceID { get; set; }

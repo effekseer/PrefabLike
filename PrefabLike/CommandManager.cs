@@ -81,8 +81,7 @@ namespace PrefabLike
 			Action execute = () =>
 			{
 				var parentNode = nodeTree.FindInstance(parentID) as Node;
-				var prefabSystem = new PrefabSyatem();
-				var newNodeTree = prefabSystem.CreateNodeFromNodeTreeGroup(nodeTreeGroup, env);
+				var newNodeTree = Utility.CreateNodeFromNodeTreeGroup(nodeTreeGroup, env);
 				var newNode = newNodeTree.FindInstance(newNodeID);
 				parentNode.Children.Add(newNode as Node);
 			};
@@ -143,8 +142,7 @@ namespace PrefabLike
 				nodeTreeGroup.InternalData = NodeTreeGroupInternalData.Deserialize(before);
 
 				var parentNode = nodeTree.FindInstance(parentNodeID) as Node;
-				var prefabSystem = new PrefabSyatem();
-				var newNodeTree = prefabSystem.CreateNodeFromNodeTreeGroup(nodeTreeGroup, env);
+				var newNodeTree = Utility.CreateNodeFromNodeTreeGroup(nodeTreeGroup, env);
 				var newNode = newNodeTree.FindInstance(nodeID);
 				parentNode.Children.Add(newNode as Node);
 			};
