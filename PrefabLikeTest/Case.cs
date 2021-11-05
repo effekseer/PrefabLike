@@ -36,6 +36,21 @@ namespace PrefabLikeTest
 			}
 		}
 
+		class MultiNodeTreeEnvironment : PrefabLike.Environment
+		{
+			public Dictionary<string, NodeTreeGroup> NodeTrees = new Dictionary<string, NodeTreeGroup>();
+
+			public override Asset GetAsset(string path)
+			{
+				return NodeTrees[path];
+			}
+
+			public override string GetAssetPath(Asset asset)
+			{
+				return NodeTrees.FirstOrDefault(_ => _.Value == asset).Key;
+			}
+		}
+
 		[SetUp]
 		public void Setup()
 		{
@@ -162,6 +177,22 @@ namespace PrefabLikeTest
 			commandManager.Undo();
 
 			Assert.AreEqual((instance.Root as NodeChange1).Value1, 0);
+		}
+
+		[Test]
+		public void MultiNodeTree()
+		{
+			var env = new MultiNodeTreeEnvironment();
+			var nodeTreeGroup1 = new NodeTreeGroup();
+			var nodeTreeGroup2 = new NodeTreeGroup();
+
+			env.NodeTrees.Add("Tree1", nodeTreeGroup1);
+			env.NodeTrees.Add("Tree2", nodeTreeGroup2);
+
+			var id = nodeTreeGroup1.Init(typeof(Node), env);
+			nodeTreeGroup2.Init(typeof(Node), env);
+
+			nodeTreeGroup1.AddNodeTreeGroup(id, nodeTreeGroup2, env);
 		}
 	}
 }
