@@ -221,12 +221,17 @@ namespace PrefabLike
 			}
 		}
 
-		void AssignID(NodeTreeBase nodeTreeBase, Node node)
+		internal void AssignID(NodeTreeBase nodeTreeBase, Node node)
 		{
 			Action<Node> assignID = null;
 
 			assignID = (n) =>
 			{
+				if (nodeTreeBase.IDRemapper.ContainsKey(n.InstanceID))
+				{
+					return;
+				}
+
 				var newID = GenerateGUID();
 				nodeTreeBase.IDRemapper.Add(n.InstanceID, newID);
 				n.InstanceID = newID;

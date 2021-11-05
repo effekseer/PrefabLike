@@ -6,6 +6,16 @@ using System.Text;
 
 namespace PrefabLike
 {
+	public class Utility
+	{
+		public static void RebuildNodeTree(NodeTreeGroup nodeTreeGroup, NodeTree nodeTree, Environment env)
+		{
+			var prefabSystem = new PrefabSyatem();
+			var nt = prefabSystem.CreateNodeFromNodeTreeGroup(nodeTreeGroup, env);
+			nodeTree.Root = nt.Root;
+		}
+	}
+
 	public class Environment
 	{
 		public virtual Type GetType(string typeName)
@@ -64,7 +74,7 @@ namespace PrefabLike
 					}
 					else
 					{
-						throw new NotImplementedException("TODO");
+						nodeTreeGroup.AssignID(b, n);
 					}
 
 					idToNode.Add(n.InstanceID, n);

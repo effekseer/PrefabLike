@@ -98,6 +98,7 @@ namespace PrefabLikeTest
 		[Test]
 		public void ChangeNodeAddDefinition()
 		{
+			var rand = new Random();
 			var env = new NodeChangeEnvironment();
 			var prefabSystem = new PrefabSyatem();
 			var nodeTreeGroup = new NodeTreeGroup();
@@ -105,28 +106,36 @@ namespace PrefabLikeTest
 			env.ReturnType = typeof(NodeChange1);
 			nodeTreeGroup.Init(typeof(Node), env);
 
+			var intValue = rand.Next();
+
 			var commandManager = new CommandManager();
 			var instance = prefabSystem.CreateNodeFromNodeTreeGroup(nodeTreeGroup, env);
 			commandManager.StartEditFields(nodeTreeGroup, instance, instance.Root);
-			(instance.Root as NodeChange1).Value1 = 1;
+			(instance.Root as NodeChange1).Value1 = intValue;
 			commandManager.NotifyEditFields(instance.Root);
 			commandManager.EndEditFields(instance.Root);
 
 			env.ReturnType = typeof(NodeChange2);
 			{
 				var instanceTemp = prefabSystem.CreateNodeFromNodeTreeGroup(nodeTreeGroup, env);
-				Assert.AreEqual((instanceTemp.Root as NodeChange2).Value1, 1);
+				Assert.AreEqual((instanceTemp.Root as NodeChange2).Value1, intValue);
 				Assert.AreEqual(instanceTemp.Root.Children.Count, 1);
 			}
 
-			// TODO : Rebuuild nodes
+			PrefabLike.Utility.RebuildNodeTree(nodeTreeGroup, instance, env);
+			Assert.AreEqual((instance.Root as NodeChange2).Value1, intValue);
 			Assert.AreEqual(instance.Root.Children.Count, 1);
+
+			commandManager.Undo();
+
+			Assert.AreEqual((instance.Root as NodeChange2).Value1, 0);
 		}
 
 
 		[Test]
 		public void ChangeNodeRemoveDefinition()
 		{
+			var rand = new Random();
 			var env = new NodeChangeEnvironment();
 			var prefabSystem = new PrefabSyatem();
 			var nodeTreeGroup = new NodeTreeGroup();
@@ -134,22 +143,29 @@ namespace PrefabLikeTest
 			env.ReturnType = typeof(NodeChange2);
 			nodeTreeGroup.Init(typeof(Node), env);
 
+			var intValue = rand.Next();
+
 			var commandManager = new CommandManager();
 			var instance = prefabSystem.CreateNodeFromNodeTreeGroup(nodeTreeGroup, env);
 			commandManager.StartEditFields(nodeTreeGroup, instance, instance.Root);
-			(instance.Root as NodeChange2).Value1 = 1;
+			(instance.Root as NodeChange2).Value1 = intValue;
 			commandManager.NotifyEditFields(instance.Root);
 			commandManager.EndEditFields(instance.Root);
 
 			env.ReturnType = typeof(NodeChange1);
 			{
 				var instanceTemp = prefabSystem.CreateNodeFromNodeTreeGroup(nodeTreeGroup, env);
-				Assert.AreEqual((instanceTemp.Root as NodeChange1).Value1, 1);
+				Assert.AreEqual((instanceTemp.Root as NodeChange1).Value1, intValue);
 				Assert.AreEqual(instanceTemp.Root.Children.Count, 0);
 			}
 
-			// TODO : Rebuuild nodes
+			PrefabLike.Utility.RebuildNodeTree(nodeTreeGroup, instance, env);
+			Assert.AreEqual((instance.Root as NodeChange1).Value1, intValue);
 			Assert.AreEqual(instance.Root.Children.Count, 0);
+
+			commandManager.Undo();
+
+			Assert.AreEqual((instance.Root as NodeChange1).Value1, 0);
 		}
 	}
 }
