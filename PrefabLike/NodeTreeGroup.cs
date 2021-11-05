@@ -72,7 +72,7 @@ namespace PrefabLike
 		/// 継承元。Prefab は別の Prefab を元に作成することができる。
 		/// BaseType が null の場合、これをもとにインスタンスを作成する。
 		/// </summary>
-		public NodeTreeGroup Template;
+		public string Template;
 
 		/// <summary>
 		/// IDをリマップする。
@@ -107,11 +107,15 @@ namespace PrefabLike
 			foreach (var b in Bases)
 			{
 				var jnode = new JObject();
-				jnode["BaseType"] = b.BaseType;
 
-				if (b.Template != null)
+				if (!string.IsNullOrEmpty(b.BaseType))
 				{
-					throw new NotImplementedException("TODO");
+					jnode["BaseType"] = b.BaseType;
+				}
+
+				if (!string.IsNullOrEmpty(b.Template))
+				{
+					jnode["Template"] = b.Template;
 				}
 
 				var differences = new JArray();
@@ -163,11 +167,19 @@ namespace PrefabLike
 			var o = JObject.Parse(json);
 			var bases = o["Bases"] as JArray;
 
-			foreach (var b in bases)
+			foreach (var b in bases.Cast<JObject>())
 			{
 				var nb = new NodeTreeBase();
 
-				nb.BaseType = (string)b["BaseType"];
+				if (b.ContainsKey("BaseType"))
+				{
+					nb.BaseType = (string)b["BaseType"];
+				}
+
+				if (b.ContainsKey("Template"))
+				{
+					nb.Template = (string)b["Template"];
+				}
 
 				var differences = b["Differences"];
 
@@ -281,11 +293,11 @@ namespace PrefabLike
 
 		public int AddNodeTreeGroup(int parentInstanceID, NodeTreeGroup nodeTreeGroup, Environment env)
 		{
-			var prefabSystem = new PrefabSyatem();
-			var node = prefabSystem.CreateNodeFromNodeTreeGroup(nodeTreeGroup, env);
+			var node = Utility.CreateNodeFromNodeTreeGroup(nodeTreeGroup, env);
 
 			var nodeTreeBase = new NodeTreeBase();
-			nodeTreeBase.Template = nodeTreeGroup;
+
+			nodeTreeBase.Template = Utility.GetRelativePath(env.GetAssetPath(this), env.GetAssetPath(nodeTreeGroup));
 
 			AssignID(nodeTreeBase, node.Root);
 

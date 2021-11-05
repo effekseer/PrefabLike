@@ -17,11 +17,10 @@ namespace PrefabLikeTest
 		public void AddChild()
 		{
 			var env = new PrefabLike.Environment();
-			var prefabSystem = new PrefabSyatem();
 			var commandManager = new CommandManager();
 			var nodeTreeGroup = new NodeTreeGroup();
 			nodeTreeGroup.Init(typeof(Node), env);
-			var instance = prefabSystem.CreateNodeFromNodeTreeGroup(nodeTreeGroup, env);
+			var instance = Utility.CreateNodeFromNodeTreeGroup(nodeTreeGroup, env);
 
 			commandManager.AddNode(nodeTreeGroup, instance, instance.Root.InstanceID, typeof(Node), env);
 
@@ -38,11 +37,10 @@ namespace PrefabLikeTest
 		{
 			var env = new PrefabLike.Environment();
 			var random = new System.Random();
-			var prefabSystem = new PrefabSyatem();
 			var commandManager = new CommandManager();
 			var nodeTreeGroup = new NodeTreeGroup();
 			nodeTreeGroup.Init(typeof(TestNodePrimitive), env);
-			var instance = prefabSystem.CreateNodeFromNodeTreeGroup(nodeTreeGroup, env);
+			var instance = Utility.CreateNodeFromNodeTreeGroup(nodeTreeGroup, env);
 
 
 			commandManager.StartEditFields(nodeTreeGroup, instance, instance.Root);

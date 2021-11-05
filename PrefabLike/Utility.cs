@@ -1,43 +1,56 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 
 namespace PrefabLike
 {
 	public class Utility
 	{
+		public static string GetRelativePath(string basePath, string path)
+		{
+			Func<string, string> escape = (string s) =>
+			{
+				return s.Replace("%", "%25");
+			};
+
+			Func<string, string> unescape = (string s) =>
+			{
+				return s.Replace("%25", "%");
+			};
+
+			Uri basepath = new Uri(escape(basePath));
+			Uri targetPath = new Uri(escape(path));
+			return unescape(Uri.UnescapeDataString(basepath.MakeRelativeUri(targetPath).ToString()));
+		}
+		public static string GetAbsolutePath(string basePath, string path)
+		{
+			if (string.IsNullOrEmpty(path))
+			{
+				return string.Empty;
+			}
+
+			var basePath_ecs = new Uri(basePath, UriKind.Relative);
+			var path_ecs = new Uri(path, UriKind.Relative);
+			var basePath_slash = BackSlashToSlash(basePath_ecs.ToString());
+			var basePath_uri = new Uri(basePath_slash, UriKind.Absolute);
+			var path_uri = new Uri(path_ecs.ToString(), UriKind.Relative);
+			var targetPath = new Uri(basePath_uri, path_uri);
+			var ret = targetPath.LocalPath.ToString();
+			return ret;
+		}
+
+		public static string BackSlashToSlash(string input)
+		{
+			return input.Replace("\\", "/");
+		}
+
 		public static void RebuildNodeTree(NodeTreeGroup nodeTreeGroup, NodeTree nodeTree, Environment env)
 		{
-			var prefabSystem = new PrefabSyatem();
-			var nt = prefabSystem.CreateNodeFromNodeTreeGroup(nodeTreeGroup, env);
+			var nt = CreateNodeFromNodeTreeGroup(nodeTreeGroup, env);
 			nodeTree.Root = nt.Root;
 		}
-	}
 
-	public class Environment
-	{
-		public virtual Type GetType(string typeName)
-		{
-			return Type.GetType(typeName);
-		}
-
-		public virtual string GetTypeName(Type type)
-		{
-			return type.AssemblyQualifiedName;
-		}
-	}
-
-	public class PrefabSyatem
-	{
-		public Node MakePrefab(Node node)
-		{
-			throw new NotImplementedException();
-			return null;
-		}
-
-		public NodeTree CreateNodeFromNodeTreeGroup(NodeTreeGroup nodeTreeGroup, Environment env)
+		public static NodeTree CreateNodeFromNodeTreeGroup(NodeTreeGroup nodeTreeGroup, Environment env)
 		{
 			var idToNode = new Dictionary<int, Node>();
 
@@ -56,7 +69,9 @@ namespace PrefabLike
 				}
 				else if (b.Template != null)
 				{
-					var nodeTree = CreateNodeFromNodeTreeGroup(nodeTreeGroup, env);
+					var baseNodeTreeGroup = env.GetAsset(b.Template) as NodeTreeGroup;
+
+					var nodeTree = CreateNodeFromNodeTreeGroup(baseNodeTreeGroup, env);
 					node = nodeTree.Root;
 				}
 				else

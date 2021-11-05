@@ -18,12 +18,11 @@ namespace PrefabLikeTest
 		{
 			var env = new PrefabLike.Environment();
 			var random = new System.Random();
-			var system = new PrefabSyatem();
 			var commandManager = new CommandManager();
 			var nodeTreeGroup = new NodeTreeGroup();
 			nodeTreeGroup.Init(typeof(TestNodePrimitive2), env);
 
-			var instance = system.CreateNodeFromNodeTreeGroup(nodeTreeGroup, env);
+			var instance = Utility.CreateNodeFromNodeTreeGroup(nodeTreeGroup, env);
 
 			commandManager.StartEditFields(nodeTreeGroup, instance, instance.Root);
 
@@ -35,7 +34,7 @@ namespace PrefabLikeTest
 			var json = nodeTreeGroup.Serialize();
 
 			var nodeTreeGroup2 = NodeTreeGroup.Deserialize(json);
-			var instance2 = system.CreateNodeFromNodeTreeGroup(nodeTreeGroup2, env);
+			var instance2 = Utility.CreateNodeFromNodeTreeGroup(nodeTreeGroup2, env);
 
 			Helper.AreEqual(state, ref instance2.Root);
 		}
@@ -44,12 +43,11 @@ namespace PrefabLikeTest
 		public void SaveLoadList()
 		{
 			var env = new PrefabLike.Environment();
-			var system = new PrefabSyatem();
 			var commandManager = new CommandManager();
 			var nodeTreeGroup = new NodeTreeGroup();
 			nodeTreeGroup.Init(typeof(TestNode_ListValue), env);
 
-			var instance = system.CreateNodeFromNodeTreeGroup(nodeTreeGroup, env);
+			var instance = Utility.CreateNodeFromNodeTreeGroup(nodeTreeGroup, env);
 
 			commandManager.StartEditFields(nodeTreeGroup, instance, instance.Root);
 
@@ -62,7 +60,7 @@ namespace PrefabLikeTest
 			var json = nodeTreeGroup.Serialize();
 
 			var nodeTreeGroup2 = NodeTreeGroup.Deserialize(json);
-			var instance2 = system.CreateNodeFromNodeTreeGroup(nodeTreeGroup2, env);
+			var instance2 = Utility.CreateNodeFromNodeTreeGroup(nodeTreeGroup2, env);
 
 			Assert.AreEqual(true, (instance2.Root as TestNode_ListValue).ValuesInt32.SequenceEqual(new List<int>() { 1, 2, 3 }));
 		}
@@ -71,12 +69,11 @@ namespace PrefabLikeTest
 		public void SaveLoadListClass()
 		{
 			var env = new PrefabLike.Environment();
-			var system = new PrefabSyatem();
 			var commandManager = new CommandManager();
 			var nodeTreeGroup = new NodeTreeGroup();
 			nodeTreeGroup.Init(typeof(TestNode_ListClass), env);
 
-			var instance = system.CreateNodeFromNodeTreeGroup(nodeTreeGroup, env);
+			var instance = Utility.CreateNodeFromNodeTreeGroup(nodeTreeGroup, env);
 
 			commandManager.StartEditFields(nodeTreeGroup, instance, instance.Root);
 
@@ -89,7 +86,7 @@ namespace PrefabLikeTest
 			var json = nodeTreeGroup.Serialize();
 
 			var nodeTreeGroup2 = NodeTreeGroup.Deserialize(json);
-			var instance2 = system.CreateNodeFromNodeTreeGroup(nodeTreeGroup2, env);
+			var instance2 = Utility.CreateNodeFromNodeTreeGroup(nodeTreeGroup2, env);
 
 			Assert.AreEqual(true, (instance2.Root as TestNode_ListClass).Values[0].A == 3);
 		}

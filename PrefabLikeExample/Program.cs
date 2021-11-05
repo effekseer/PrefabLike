@@ -10,13 +10,12 @@ namespace PrefabLikeExample
 		static void Main(string[] args)
 		{
 			var env = new PrefabLike.Environment();
-			var prefabSystem = new PrefabLike.PrefabSyatem();
 			var commandManager = new PrefabLike.CommandManager();
 
 			PrefabLike.NodeTreeGroup nodeTreeGroup = new PrefabLike.NodeTreeGroup();
 			nodeTreeGroup.Init(typeof(NodeStruct), env);
 
-			var nodeTree = prefabSystem.CreateNodeFromNodeTreeGroup(nodeTreeGroup, env);
+			var nodeTree = PrefabLike.Utility.CreateNodeFromNodeTreeGroup(nodeTreeGroup, env);
 
 			Altseed2.Configuration configuration = new Altseed2.Configuration();
 			configuration.EnabledCoreModules = Altseed2.CoreModules.Default | Altseed2.CoreModules.Tool;
@@ -59,7 +58,7 @@ namespace PrefabLikeExample
 						{
 							var text = System.IO.File.ReadAllText(path);
 							nodeTreeGroup = PrefabLike.NodeTreeGroup.Deserialize(text);
-							nodeTree = prefabSystem.CreateNodeFromNodeTreeGroup(nodeTreeGroup, env);
+							nodeTree = PrefabLike.Utility.CreateNodeFromNodeTreeGroup(nodeTreeGroup, env);
 							commandManager = new PrefabLike.CommandManager();
 						}
 					}
