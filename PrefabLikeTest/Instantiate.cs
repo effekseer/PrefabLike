@@ -33,20 +33,21 @@ namespace PrefabLikeTest
 		[Test]
 		public void Instantiate1()
 		{
+			var env = new PrefabLike.Environment();
 			var system = new PrefabSyatem();
 			var commandManager = new CommandManager();
 			var nodeTreeGroup = new NodeTreeGroup();
-			nodeTreeGroup.Init(typeof(TestNodePrimitive));
+			nodeTreeGroup.Init(typeof(TestNodePrimitive), env);
 
 
-			var instance = system.CreateNodeFromNodeTreeGroup(nodeTreeGroup);
+			var instance = system.CreateNodeFromNodeTreeGroup(nodeTreeGroup, env);
 
 			commandManager.StartEditFields(nodeTreeGroup, instance, instance.Root);
 			(instance.Root as TestNodePrimitive).Value1 = 5;
 			commandManager.NotifyEditFields(instance.Root);
 			commandManager.EndEditFields(instance.Root);
 
-			instance = system.CreateNodeFromNodeTreeGroup(nodeTreeGroup);
+			instance = system.CreateNodeFromNodeTreeGroup(nodeTreeGroup, env);
 
 			Assert.AreEqual((instance.Root as TestNodePrimitive).Value1, 5);
 		}
@@ -54,20 +55,21 @@ namespace PrefabLikeTest
 		[Test]
 		public void InstantiateStruct()
 		{
+			var env = new PrefabLike.Environment();
 			var system = new PrefabSyatem();
 			var commandManager = new CommandManager();
 			var nodeTreeGroup = new NodeTreeGroup();
-			nodeTreeGroup.Init(typeof(TestNodeStruct));
+			nodeTreeGroup.Init(typeof(TestNodeStruct), env);
 
 
-			var instance = system.CreateNodeFromNodeTreeGroup(nodeTreeGroup);
+			var instance = system.CreateNodeFromNodeTreeGroup(nodeTreeGroup, env);
 
 			commandManager.StartEditFields(nodeTreeGroup, instance, instance.Root);
 			(instance.Root as TestNodeStruct).Struct1.A = 5;
 			commandManager.NotifyEditFields(instance.Root);
 			commandManager.EndEditFields(instance.Root);
 
-			instance = system.CreateNodeFromNodeTreeGroup(nodeTreeGroup);
+			instance = system.CreateNodeFromNodeTreeGroup(nodeTreeGroup, env);
 
 			Assert.AreEqual((instance.Root as TestNodeStruct).Struct1.A, 5);
 		}
@@ -75,13 +77,13 @@ namespace PrefabLikeTest
 		[Test]
 		public void InstantiateClass()
 		{
+			var env = new PrefabLike.Environment();
 			var system = new PrefabSyatem();
 			var commandManager = new CommandManager();
 			var nodeTreeGroup = new NodeTreeGroup();
-			nodeTreeGroup.Init(typeof(TestNodeClass));
+			nodeTreeGroup.Init(typeof(TestNodeClass), env);
 
-
-			var instance = system.CreateNodeFromNodeTreeGroup(nodeTreeGroup);
+			var instance = system.CreateNodeFromNodeTreeGroup(nodeTreeGroup, env);
 
 			commandManager.StartEditFields(nodeTreeGroup, instance, instance.Root);
 			(instance.Root as TestNodeClass).Class1_1 = new TestClass1();
@@ -89,7 +91,7 @@ namespace PrefabLikeTest
 			commandManager.NotifyEditFields(instance.Root);
 			commandManager.EndEditFields(instance.Root);
 
-			instance = system.CreateNodeFromNodeTreeGroup(nodeTreeGroup);
+			instance = system.CreateNodeFromNodeTreeGroup(nodeTreeGroup, env);
 
 			Assert.AreEqual((instance.Root as TestNodeClass).Class1_1.A, 2);
 		}

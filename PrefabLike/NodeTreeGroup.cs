@@ -66,7 +66,7 @@ namespace PrefabLike
 		/// この Prefab が生成するインスタンスの型。
 		/// Template と同時に使うことはできない。BaseType を持つなら、Template は null でなければならない。
 		/// </summary>
-		public Type BaseType;
+		public string BaseType;
 
 		/// <summary>
 		/// 継承元。Prefab は別の Prefab を元に作成することができる。
@@ -107,7 +107,7 @@ namespace PrefabLike
 			foreach (var b in Bases)
 			{
 				var jnode = new JObject();
-				jnode["BaseType"] = b.BaseType.AssemblyQualifiedName;
+				jnode["BaseType"] = b.BaseType;
 
 				if (b.Template != null)
 				{
@@ -167,8 +167,7 @@ namespace PrefabLike
 			{
 				var nb = new NodeTreeBase();
 
-				var typeName = (string)b["BaseType"];
-				nb.BaseType = Type.GetType(typeName);
+				nb.BaseType = (string)b["BaseType"];
 
 				var differences = b["Differences"];
 
@@ -222,12 +221,17 @@ namespace PrefabLike
 			}
 		}
 
-		void AssignID(NodeTreeBase nodeTreeBase, Node node)
+		internal void AssignID(NodeTreeBase nodeTreeBase, Node node)
 		{
 			Action<Node> assignID = null;
 
 			assignID = (n) =>
 			{
+				if (nodeTreeBase.IDRemapper.ContainsKey(n.InstanceID))
+				{
+					return;
+				}
+
 				var newID = GenerateGUID();
 				nodeTreeBase.IDRemapper.Add(n.InstanceID, newID);
 				n.InstanceID = newID;
@@ -241,13 +245,14 @@ namespace PrefabLike
 			assignID(node);
 		}
 
-		public int AddNodeInternal(int parentInstanceID, Type nodeType)
+		int AddNodeInternal(int parentInstanceID, string typeName, Environment env)
 		{
+			var nodeType = env.GetType(typeName);
 			var constructor = nodeType.GetConstructor(Type.EmptyTypes);
 			var node = (Node)constructor.Invoke(null);
 
 			var nodeTreeBase = new NodeTreeBase();
-			nodeTreeBase.BaseType = nodeType;
+			nodeTreeBase.BaseType = typeName;
 
 			AssignID(nodeTreeBase, node);
 
@@ -259,25 +264,25 @@ namespace PrefabLike
 			return node.InstanceID;
 		}
 
-		public int Init(Type nodeType)
+		public int Init(Type nodeType, Environment env)
 		{
-			return AddNodeInternal(-1, nodeType);
+			return AddNodeInternal(-1, env.GetTypeName(nodeType), env);
 		}
 
-		public int AddNode(int parentInstanceID, Type nodeType)
+		public int AddNode(int parentInstanceID, Type nodeType, Environment env)
 		{
 			if (parentInstanceID < 0)
 			{
 				return -1;
 			}
 
-			return AddNodeInternal(parentInstanceID, nodeType);
+			return AddNodeInternal(parentInstanceID, env.GetTypeName(nodeType), env);
 		}
 
-		public int AddNodeTreeGroup(int parentInstanceID, NodeTreeGroup nodeTreeGroup)
+		public int AddNodeTreeGroup(int parentInstanceID, NodeTreeGroup nodeTreeGroup, Environment env)
 		{
 			var prefabSystem = new PrefabSyatem();
-			var node = prefabSystem.CreateNodeFromNodeTreeGroup(nodeTreeGroup);
+			var node = prefabSystem.CreateNodeFromNodeTreeGroup(nodeTreeGroup, env);
 
 			var nodeTreeBase = new NodeTreeBase();
 			nodeTreeBase.Template = nodeTreeGroup;
