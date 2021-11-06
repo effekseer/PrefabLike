@@ -69,7 +69,8 @@ namespace PrefabLike
 				}
 				else if (b.Template != null)
 				{
-					var baseNodeTreeGroup = env.GetAsset(b.Template) as NodeTreeGroup;
+					var path = Utility.GetAbsolutePath(env.GetAssetPath(nodeTreeGroup), b.Template);
+					var baseNodeTreeGroup = env.GetAsset(path) as NodeTreeGroup;
 
 					var nodeTree = CreateNodeFromNodeTreeGroup(baseNodeTreeGroup, env);
 					node = nodeTree.Root;

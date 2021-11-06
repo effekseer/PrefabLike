@@ -42,7 +42,7 @@ namespace PrefabLikeTest
 
 			public override Asset GetAsset(string path)
 			{
-				return NodeTrees[path];
+				return NodeTrees[Utility.BackSlashToSlash(path)];
 			}
 
 			public override string GetAssetPath(Asset asset)
@@ -186,13 +186,27 @@ namespace PrefabLikeTest
 			var nodeTreeGroup1 = new NodeTreeGroup();
 			var nodeTreeGroup2 = new NodeTreeGroup();
 
-			env.NodeTrees.Add("Tree1", nodeTreeGroup1);
-			env.NodeTrees.Add("Tree2", nodeTreeGroup2);
+			env.NodeTrees.Add("C:/test/Tree1", nodeTreeGroup1);
+			env.NodeTrees.Add("C:/test/Tree2", nodeTreeGroup2);
 
-			var id = nodeTreeGroup1.Init(typeof(Node), env);
-			nodeTreeGroup2.Init(typeof(Node), env);
+			var id1 = nodeTreeGroup1.Init(typeof(Node), env);
+			var id2 = nodeTreeGroup2.Init(typeof(Node), env);
 
-			nodeTreeGroup1.AddNodeTreeGroup(id, nodeTreeGroup2, env);
+			var instance = Utility.CreateNodeFromNodeTreeGroup(nodeTreeGroup1, env);
+
+			nodeTreeGroup1.AddNodeTreeGroup(id1, nodeTreeGroup2, env);
+
+			PrefabLike.Utility.RebuildNodeTree(nodeTreeGroup1, instance, env);
+
+			Assert.AreEqual(instance.Root.Children.Count(), 1);
+			Assert.AreEqual(instance.Root.Children[0].Children.Count(), 0);
+
+			nodeTreeGroup2.AddNode(id2, typeof(Node), env);
+
+			PrefabLike.Utility.RebuildNodeTree(nodeTreeGroup1, instance, env);
+
+			Assert.AreEqual(instance.Root.Children.Count(), 1);
+			Assert.AreEqual(instance.Root.Children[0].Children.Count(), 1);
 		}
 	}
 }
