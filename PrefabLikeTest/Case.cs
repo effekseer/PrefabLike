@@ -36,6 +36,21 @@ namespace PrefabLikeTest
 			}
 		}
 
+		class MultiNodeTreeEnvironment : PrefabLike.Environment
+		{
+			public Dictionary<string, NodeTreeGroup> NodeTrees = new Dictionary<string, NodeTreeGroup>();
+
+			public override Asset GetAsset(string path)
+			{
+				return NodeTrees[Utility.BackSlashToSlash(path)];
+			}
+
+			public override string GetAssetPath(Asset asset)
+			{
+				return NodeTrees.FirstOrDefault(_ => _.Value == asset).Key;
+			}
+		}
+
 		[SetUp]
 		public void Setup()
 		{
@@ -162,6 +177,36 @@ namespace PrefabLikeTest
 			commandManager.Undo();
 
 			Assert.AreEqual((instance.Root as NodeChange1).Value1, 0);
+		}
+
+		[Test]
+		public void MultiNodeTree()
+		{
+			var env = new MultiNodeTreeEnvironment();
+			var nodeTreeGroup1 = new NodeTreeGroup();
+			var nodeTreeGroup2 = new NodeTreeGroup();
+
+			env.NodeTrees.Add("C:/test/Tree1", nodeTreeGroup1);
+			env.NodeTrees.Add("C:/test/Tree2", nodeTreeGroup2);
+
+			var id1 = nodeTreeGroup1.Init(typeof(Node), env);
+			var id2 = nodeTreeGroup2.Init(typeof(Node), env);
+
+			var instance = Utility.CreateNodeFromNodeTreeGroup(nodeTreeGroup1, env);
+
+			nodeTreeGroup1.AddNodeTreeGroup(id1, nodeTreeGroup2, env);
+
+			PrefabLike.Utility.RebuildNodeTree(nodeTreeGroup1, instance, env);
+
+			Assert.AreEqual(instance.Root.Children.Count(), 1);
+			Assert.AreEqual(instance.Root.Children[0].Children.Count(), 0);
+
+			nodeTreeGroup2.AddNode(id2, typeof(Node), env);
+
+			PrefabLike.Utility.RebuildNodeTree(nodeTreeGroup1, instance, env);
+
+			Assert.AreEqual(instance.Root.Children.Count(), 1);
+			Assert.AreEqual(instance.Root.Children[0].Children.Count(), 1);
 		}
 	}
 }
