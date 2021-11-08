@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Linq;
 
 namespace PrefabLike
 {
@@ -23,6 +24,70 @@ namespace PrefabLike
 		public override void Unexecute()
 		{
 			OnUnexecute?.Invoke();
+		}
+	}
+
+	class ValueChangeCommand : Command
+	{
+		public Asset Asset;
+		public IAssetInstanceRoot Root;
+		public int InstanceID { get; set; }
+
+		public Dictionary<AccessKeyGroup, object> DiffRedo;
+
+		public Dictionary<AccessKeyGroup, object> DiffUndo;
+
+		public Dictionary<AccessKeyGroup, object> NewDifference;
+
+		public Dictionary<AccessKeyGroup, object> OldDifference;
+
+		public override void Execute()
+		{
+			var instance = Root.FindInstance(InstanceID);
+			if (instance != null)
+			{
+				object obj = instance;
+				Difference.ApplyDifference(ref obj, DiffRedo);
+			}
+
+			Asset.SetDifference(InstanceID, NewDifference);
+		}
+		public override void Unexecute()
+		{
+			var instance = Root.FindInstance(InstanceID);
+			if (instance != null)
+			{
+				object obj = instance;
+				Difference.ApplyDifference(ref obj, DiffUndo);
+			}
+
+			Asset.SetDifference(InstanceID, OldDifference);
+		}
+
+		public ValueChangeCommand Merge(ValueChangeCommand first, ValueChangeCommand second)
+		{
+			if (first.Asset != second.Asset ||
+			first.Root != second.Root ||
+			first.InstanceID != second.InstanceID)
+			{
+				return null;
+			}
+
+			if(first.OldDifference.Keys.SequenceEqual(second.NewDifference.Values))
+			{
+				var cmd = new ValueChangeCommand();
+
+				cmd.Root = first.Root;
+				cmd.InstanceID = first.InstanceID;
+				cmd.Asset = first.Asset;
+				cmd.DiffRedo = second.DiffRedo;
+				cmd.DiffUndo = first.DiffUndo;
+				cmd.OldDifference = first.OldDifference;
+				cmd.NewDifference = second.NewDifference;
+				return cmd;
+			}
+
+			return null;
 		}
 	}
 
@@ -52,6 +117,11 @@ namespace PrefabLike
 			}
 			commands.Add(command);
 			currentCommand += 1;
+		}
+
+		Command GetLastCommand()
+		{
+			return commands[currentCommand];
 		}
 
 		public void Undo()
@@ -206,31 +276,12 @@ namespace PrefabLike
 
 					asset.SetDifference(instanceID, newDifference);
 
-					var command = new DelegateCommand();
-					command.OnExecute = () =>
-					{
-						var instance = root.FindInstance(instanceID);
-						if (instance != null)
-						{
-							object obj = instance;
-							Difference.ApplyDifference(ref obj, diffRedo);
-						}
 
-						asset.SetDifference(instanceID, newDifference);
-					};
-
-					command.OnUnexecute = () =>
-					{
-						var instance = root.FindInstance(instanceID);
-						if (instance != null)
-						{
-							object obj = instance;
-							Difference.ApplyDifference(ref obj, diffUndo);
-						}
-
-						asset.SetDifference(instanceID, oldDifference);
-					};
-
+					var command = new ValueChangeCommand();
+					command.DiffRedo = diffRedo;
+					command.DiffUndo = diffUndo;
+					command.NewDifference = newDifference;
+					command.OldDifference = oldDifference;
 					AddCommand(command);
 				}
 
