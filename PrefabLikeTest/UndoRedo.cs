@@ -42,7 +42,6 @@ namespace PrefabLikeTest
 			nodeTreeGroup.Init(typeof(TestNodePrimitive), env);
 			var instance = Utility.CreateNodeFromNodeTreeGroup(nodeTreeGroup, env);
 
-
 			commandManager.StartEditFields(nodeTreeGroup, instance, instance.Root);
 
 			var assignedUnedit = Helper.AssignRandomField(random, ref instance.Root);
@@ -51,9 +50,11 @@ namespace PrefabLikeTest
 
 			commandManager.EndEditFields(instance.Root);
 
+			commandManager.SetFlagToBlockMergeCommands();
+
 			commandManager.StartEditFields(nodeTreeGroup, instance, instance.Root);
 
-			var assignedEdit = Helper.AssignRandomField(random, ref instance.Root);
+			var assignedEdit1 = Helper.AssignRandomField(random, ref instance.Root);
 
 			commandManager.NotifyEditFields(instance.Root);
 
@@ -65,7 +66,32 @@ namespace PrefabLikeTest
 
 			commandManager.Redo();
 
-			Helper.AreEqual(assignedEdit, ref instance.Root);
+			Helper.AreEqual(assignedEdit1, ref instance.Root);
+
+			commandManager.StartEditFields(nodeTreeGroup, instance, instance.Root);
+
+			var assignedEdit2 = Helper.AssignRandomField(random, ref instance.Root);
+
+			commandManager.NotifyEditFields(instance.Root);
+
+			commandManager.EndEditFields(instance.Root);
+
+			commandManager.StartEditFields(nodeTreeGroup, instance, instance.Root);
+
+			var assignedEdit3 = Helper.AssignRandomField(random, ref instance.Root);
+
+			commandManager.NotifyEditFields(instance.Root);
+
+			commandManager.EndEditFields(instance.Root);
+
+			commandManager.Undo();
+
+			Helper.AreEqual(assignedEdit1, ref instance.Root);
+
+			commandManager.Redo();
+
+			Helper.AreEqual(assignedEdit3, ref instance.Root);
+
 		}
 	}
 }

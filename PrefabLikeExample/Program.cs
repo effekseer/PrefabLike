@@ -183,6 +183,11 @@ namespace PrefabLikeExample
 
 						commandManager.EndEditFields(selectedNode);
 					}
+
+					if(!Altseed2.Engine.Tool.IsAnyItemActive())
+					{
+						commandManager.SetFlagToBlockMergeCommands();
+					}
 				}
 
 				Altseed2.Engine.Tool.End();

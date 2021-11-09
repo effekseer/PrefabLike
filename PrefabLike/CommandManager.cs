@@ -64,7 +64,7 @@ namespace PrefabLike
 			Asset.SetDifference(InstanceID, OldDifference);
 		}
 
-		public ValueChangeCommand Merge(ValueChangeCommand first, ValueChangeCommand second)
+		public static ValueChangeCommand Merge(ValueChangeCommand first, ValueChangeCommand second)
 		{
 			if (first.Asset != second.Asset ||
 			first.Root != second.Root ||
@@ -73,7 +73,7 @@ namespace PrefabLike
 				return null;
 			}
 
-			if(first.OldDifference.Keys.SequenceEqual(second.NewDifference.Values))
+			if (first.DiffRedo.Keys.SequenceEqual(second.DiffRedo.Keys))
 			{
 				var cmd = new ValueChangeCommand();
 
@@ -104,12 +104,19 @@ namespace PrefabLike
 
 		Dictionary<object, EditFieldState> editFieldStates = new Dictionary<object, EditFieldState>();
 
+		bool blockMerge = false;
+
 		int currentCommand = -1;
 
 		List<Command> commands = new List<Command>();
 
 		public void AddCommand(Command command)
 		{
+			if (TryMergeCommand(command))
+			{
+				return;
+			}
+
 			var count = commands.Count - (currentCommand + 1);
 			if (count > 0)
 			{
@@ -117,12 +124,44 @@ namespace PrefabLike
 			}
 			commands.Add(command);
 			currentCommand += 1;
+			blockMerge = false;
 		}
 
-		Command GetLastCommand()
+		bool TryMergeCommand(Command command)
 		{
-			return commands[currentCommand];
+			if (blockMerge || currentCommand < 0)
+			{
+				return false;
+			}
+
+			if (command is ValueChangeCommand vc && commands[currentCommand] is ValueChangeCommand lastCommand)
+			{
+				var newCommand = ValueChangeCommand.Merge(lastCommand, vc);
+				if (newCommand != null)
+				{
+					ReplaceLastCommand(newCommand);
+					return true;
+				}
+			}
+
+			return false;
 		}
+
+		void ReplaceLastCommand(Command command)
+		{
+			if (commands.Count == 0 || currentCommand < 0)
+			{
+				throw new InvalidOperationException();
+			}
+
+			var count = commands.Count - (currentCommand);
+			if (count > 0)
+			{
+				commands.RemoveRange(currentCommand, count);
+			}
+			commands.Add(command);
+		}
+
 
 		public void Undo()
 		{
@@ -131,6 +170,8 @@ namespace PrefabLike
 				commands[currentCommand].Unexecute();
 				currentCommand--;
 			}
+
+			SetFlagToBlockMergeCommands();
 		}
 
 		public void Redo()
@@ -140,6 +181,8 @@ namespace PrefabLike
 				commands[currentCommand + 1].Execute();
 				currentCommand++;
 			}
+
+			SetFlagToBlockMergeCommands();
 		}
 
 		public void AddNode(NodeTreeGroup nodeTreeGroup, NodeTree nodeTree, int parentID, Type type, Environment env)
@@ -277,7 +320,12 @@ namespace PrefabLike
 					asset.SetDifference(instanceID, newDifference);
 
 
+
 					var command = new ValueChangeCommand();
+
+					command.Asset = asset;
+					command.Root = root;
+					command.InstanceID = instanceID;
 					command.DiffRedo = diffRedo;
 					command.DiffUndo = diffUndo;
 					command.NewDifference = newDifference;
@@ -291,6 +339,11 @@ namespace PrefabLike
 			}
 
 			return false;
+		}
+
+		public void SetFlagToBlockMergeCommands()
+		{
+			blockMerge = true;
 		}
 	}
 }
