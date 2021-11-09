@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Linq;
 
 namespace PrefabLike
 {
@@ -26,6 +27,70 @@ namespace PrefabLike
 		}
 	}
 
+	class ValueChangeCommand : Command
+	{
+		public Asset Asset;
+		public IAssetInstanceRoot Root;
+		public int InstanceID { get; set; }
+
+		public Dictionary<AccessKeyGroup, object> DiffRedo;
+
+		public Dictionary<AccessKeyGroup, object> DiffUndo;
+
+		public Dictionary<AccessKeyGroup, object> NewDifference;
+
+		public Dictionary<AccessKeyGroup, object> OldDifference;
+
+		public override void Execute()
+		{
+			var instance = Root.FindInstance(InstanceID);
+			if (instance != null)
+			{
+				object obj = instance;
+				Difference.ApplyDifference(ref obj, DiffRedo);
+			}
+
+			Asset.SetDifference(InstanceID, NewDifference);
+		}
+		public override void Unexecute()
+		{
+			var instance = Root.FindInstance(InstanceID);
+			if (instance != null)
+			{
+				object obj = instance;
+				Difference.ApplyDifference(ref obj, DiffUndo);
+			}
+
+			Asset.SetDifference(InstanceID, OldDifference);
+		}
+
+		public static ValueChangeCommand Merge(ValueChangeCommand first, ValueChangeCommand second)
+		{
+			if (first.Asset != second.Asset ||
+			first.Root != second.Root ||
+			first.InstanceID != second.InstanceID)
+			{
+				return null;
+			}
+
+			if (first.DiffRedo.Keys.SequenceEqual(second.DiffRedo.Keys))
+			{
+				var cmd = new ValueChangeCommand();
+
+				cmd.Root = first.Root;
+				cmd.InstanceID = first.InstanceID;
+				cmd.Asset = first.Asset;
+				cmd.DiffRedo = second.DiffRedo;
+				cmd.DiffUndo = first.DiffUndo;
+				cmd.OldDifference = first.OldDifference;
+				cmd.NewDifference = second.NewDifference;
+				return cmd;
+			}
+
+			return null;
+		}
+	}
+
 	public class CommandManager
 	{
 		class EditFieldState
@@ -39,12 +104,19 @@ namespace PrefabLike
 
 		Dictionary<object, EditFieldState> editFieldStates = new Dictionary<object, EditFieldState>();
 
+		bool blockMerge = false;
+
 		int currentCommand = -1;
 
 		List<Command> commands = new List<Command>();
 
 		public void AddCommand(Command command)
 		{
+			if (TryMergeCommand(command))
+			{
+				return;
+			}
+
 			var count = commands.Count - (currentCommand + 1);
 			if (count > 0)
 			{
@@ -52,7 +124,44 @@ namespace PrefabLike
 			}
 			commands.Add(command);
 			currentCommand += 1;
+			blockMerge = false;
 		}
+
+		bool TryMergeCommand(Command command)
+		{
+			if (blockMerge || currentCommand < 0)
+			{
+				return false;
+			}
+
+			if (command is ValueChangeCommand vc && commands[currentCommand] is ValueChangeCommand lastCommand)
+			{
+				var newCommand = ValueChangeCommand.Merge(lastCommand, vc);
+				if (newCommand != null)
+				{
+					ReplaceLastCommand(newCommand);
+					return true;
+				}
+			}
+
+			return false;
+		}
+
+		void ReplaceLastCommand(Command command)
+		{
+			if (commands.Count == 0 || currentCommand < 0)
+			{
+				throw new InvalidOperationException();
+			}
+
+			var count = commands.Count - (currentCommand);
+			if (count > 0)
+			{
+				commands.RemoveRange(currentCommand, count);
+			}
+			commands.Add(command);
+		}
+
 
 		public void Undo()
 		{
@@ -61,6 +170,8 @@ namespace PrefabLike
 				commands[currentCommand].Unexecute();
 				currentCommand--;
 			}
+
+			SetFlagToBlockMergeCommands();
 		}
 
 		public void Redo()
@@ -70,6 +181,8 @@ namespace PrefabLike
 				commands[currentCommand + 1].Execute();
 				currentCommand++;
 			}
+
+			SetFlagToBlockMergeCommands();
 		}
 
 		public void AddNode(NodeTreeGroup nodeTreeGroup, NodeTree nodeTree, int parentID, Type type, Environment env)
@@ -206,31 +319,17 @@ namespace PrefabLike
 
 					asset.SetDifference(instanceID, newDifference);
 
-					var command = new DelegateCommand();
-					command.OnExecute = () =>
-					{
-						var instance = root.FindInstance(instanceID);
-						if (instance != null)
-						{
-							object obj = instance;
-							Difference.ApplyDifference(ref obj, diffRedo);
-						}
 
-						asset.SetDifference(instanceID, newDifference);
-					};
 
-					command.OnUnexecute = () =>
-					{
-						var instance = root.FindInstance(instanceID);
-						if (instance != null)
-						{
-							object obj = instance;
-							Difference.ApplyDifference(ref obj, diffUndo);
-						}
+					var command = new ValueChangeCommand();
 
-						asset.SetDifference(instanceID, oldDifference);
-					};
-
+					command.Asset = asset;
+					command.Root = root;
+					command.InstanceID = instanceID;
+					command.DiffRedo = diffRedo;
+					command.DiffUndo = diffUndo;
+					command.NewDifference = newDifference;
+					command.OldDifference = oldDifference;
 					AddCommand(command);
 				}
 
@@ -240,6 +339,11 @@ namespace PrefabLike
 			}
 
 			return false;
+		}
+
+		public void SetFlagToBlockMergeCommands()
+		{
+			blockMerge = true;
 		}
 	}
 }
