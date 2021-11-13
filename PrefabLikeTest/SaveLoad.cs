@@ -43,6 +43,7 @@ namespace PrefabLikeTest
 		public void SaveLoadList()
 		{
 			var env = new PrefabLike.Environment();
+			var random = new System.Random();
 			var commandManager = new CommandManager();
 			var nodeTreeGroup = new NodeTreeGroup();
 			nodeTreeGroup.Init(typeof(TestNode_ListValue), env);
@@ -51,8 +52,7 @@ namespace PrefabLikeTest
 
 			commandManager.StartEditFields(nodeTreeGroup, instance, instance.Root);
 
-			var v = instance.Root as TestNode_ListValue;
-			v.ValuesInt32 = new List<int>() { 1, 2, 3 };
+			var state = Helper.AssignRandomField(random, ref instance.Root);
 
 			commandManager.NotifyEditFields(instance.Root);
 			commandManager.EndEditFields(instance.Root);
@@ -62,7 +62,7 @@ namespace PrefabLikeTest
 			var nodeTreeGroup2 = NodeTreeGroup.Deserialize(json);
 			var instance2 = Utility.CreateNodeFromNodeTreeGroup(nodeTreeGroup2, env);
 
-			Assert.AreEqual(true, (instance2.Root as TestNode_ListValue).ValuesInt32.SequenceEqual(new List<int>() { 1, 2, 3 }));
+			Assert.True(Helper.IsValueEqual(instance, instance2));
 		}
 
 		[Test]

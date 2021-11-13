@@ -271,6 +271,10 @@ namespace PrefabLikeTest
 					if (field.FieldType.IsGenericType && field.FieldType.GetGenericTypeDefinition() == typeof(List<>))
 					{
 						var dst = field.GetValue(o) as IList;
+						if(dst == null)
+						{
+							dst = field.FieldType.GetConstructor(new System.Type[0]).Invoke(null) as IList;
+						}
 						dst.Clear();
 						var src = value as IList;
 						for (int i = 0; i < src.Count; i++)
