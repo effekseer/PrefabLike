@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
 using NUnit.Framework;
@@ -259,6 +260,11 @@ namespace PrefabLikeTest
 
 			foreach (var field in o.GetType().GetFields())
 			{
+				if (field.GetCustomAttributes(true).OfType<System.NonSerializedAttribute>().Any())
+				{
+					continue;
+				}
+
 				var value = CreateRandomData(random, field.FieldType);
 				if (value != null)
 				{

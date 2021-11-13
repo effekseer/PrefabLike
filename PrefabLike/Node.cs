@@ -20,6 +20,8 @@ namespace PrefabLike
 	public class Node : IInstanceID
 	{
 		public int InstanceID { get; set; }
+
+		[System.NonSerialized]
 		public List<Node> Children = new List<Node>();
 	}
 }
