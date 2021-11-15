@@ -7,12 +7,53 @@ using Newtonsoft.Json.Linq;
 
 namespace PrefabLike
 {
+	class FieldStateUtils
+	{
+		public static void RemoveInvalidElements(Dictionary<AccessKeyGroup, object> values)
+		{
+			List<KeyValuePair<AccessKeyGroup, object>> listElementLengthes = new List<KeyValuePair<AccessKeyGroup, object>>();
+			foreach (var a in values)
+			{
+				if (a.Key.Keys.OfType<AccessKeyListCount>().Any())
+				{
+					listElementLengthes.Add(a);
+				}
+			}
+
+			var removing = new List<AccessKeyGroup>();
+			foreach (var a in values)
+			{
+				if (!(a.Key.Keys.Last() is AccessKeyListElement))
+				{
+					continue;
+				}
+
+				var length = listElementLengthes.FirstOrDefault(_ => _.Key.Keys.Take(_.Key.Keys.Count() - 1).SequenceEqual(a.Key.Keys.Take(a.Key.Keys.Count() - 1)));
+
+				if (Convert.ToInt64(a.Key.Keys.OfType<AccessKeyListElement>().First().Index) >= Convert.ToInt64(length.Value))
+				{
+					removing.Add(a.Key);
+				}
+			}
+
+			foreach (var a in removing)
+			{
+				values.Remove(a);
+			}
+		}
+	}
 
 	public class FieldState
 	{
 		object ConvertValue(object o)
 		{
+			if (o is null)
+			{
+				return null;
+			}
+
 			var type = o.GetType();
+
 
 			if (type.IsPrimitive)
 			{
@@ -137,14 +178,14 @@ namespace PrefabLike
 			currentValues = GetValues(o);
 		}
 
-		public Dictionary<AccessKeyGroup, object> GenerateDifference(FieldState state)
+		public Dictionary<AccessKeyGroup, object> GenerateDifference(FieldState baseState)
 		{
 			var ret = new Dictionary<AccessKeyGroup, object>();
 
-			var stateValues = MakeGroup(state.currentValues);
+			var baseValues = MakeGroup(baseState.currentValues);
 			var current = MakeGroup(currentValues);
 
-			foreach (var value in stateValues)
+			foreach (var value in baseValues)
 			{
 				if (!current.ContainsKey(value.Key))
 				{
@@ -161,11 +202,13 @@ namespace PrefabLike
 
 			foreach (var value in current)
 			{
-				if (!stateValues.ContainsKey(value.Key))
+				if (!baseValues.ContainsKey(value.Key))
 				{
 					ret.Add(value.Key, value.Value);
 				}
 			}
+
+			FieldStateUtils.RemoveInvalidElements(ret);
 
 			return ret;
 		}

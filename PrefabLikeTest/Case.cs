@@ -99,13 +99,13 @@ namespace PrefabLikeTest
 			var instance = Utility.CreateNodeFromNodeTreeGroup(nodeTreeGroup, env);
 
 			commandManager.StartEditFields(nodeTreeGroup, instance, instance.Root);
-			(instance.Root as TestNodePrimitive).Value1 = 1;
+			(instance.Root as TestNodePrimitive).ValueInt32 = 1;
 			commandManager.NotifyEditFields(instance.Root);
 			commandManager.EndEditFields(instance.Root);
 
 			instance = Utility.CreateNodeFromNodeTreeGroup(nodeTreeGroup, env);
 
-			Assert.AreEqual((instance.Root as TestNodePrimitive).Value1, 1);
+			Assert.AreEqual((instance.Root as TestNodePrimitive).ValueInt32, 1);
 		}
 
 		[Test]

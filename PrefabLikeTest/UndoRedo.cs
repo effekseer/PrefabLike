@@ -33,13 +33,37 @@ namespace PrefabLikeTest
 		}
 
 		[Test]
-		public void EditField()
+		public void EditFieldPrimitive()
+		{
+			EditFieldTest<TestNodePrimitive>(true);
+		}
+
+		[Test]
+		public void EditFieldList()
+		{
+			EditFieldTest<TestNode_ListValue>(false);
+		}
+
+		[Test]
+		public void EditFieldListClass()
+		{
+			EditFieldTest<TestNode_ListClass>(false);
+		}
+
+		[Test]
+		public void EditFieldListClassNotSerializable()
+		{
+			EditFieldTest<TestNode_List<TestClassNotSerializable>>(false);
+		}
+
+
+		void EditFieldTest<T>(bool canMergeChanges)
 		{
 			var env = new PrefabLike.Environment();
 			var random = new System.Random();
 			var commandManager = new CommandManager();
 			var nodeTreeGroup = new NodeTreeGroup();
-			nodeTreeGroup.Init(typeof(TestNodePrimitive), env);
+			nodeTreeGroup.Init(typeof(T), env);
 			var instance = Utility.CreateNodeFromNodeTreeGroup(nodeTreeGroup, env);
 
 			commandManager.StartEditFields(nodeTreeGroup, instance, instance.Root);
@@ -86,12 +110,20 @@ namespace PrefabLikeTest
 
 			commandManager.Undo();
 
-			Helper.AreEqual(assignedEdit1, ref instance.Root);
+			if(canMergeChanges)
+			{
+				Helper.AreEqual(assignedEdit1, ref instance.Root);
 
-			commandManager.Redo();
+				commandManager.Redo();
+			}
+			else
+			{
+				Helper.AreEqual(assignedEdit2, ref instance.Root);
+
+				commandManager.Redo();
+			}
 
 			Helper.AreEqual(assignedEdit3, ref instance.Root);
-
 		}
 	}
 }

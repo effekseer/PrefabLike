@@ -126,6 +126,8 @@ namespace PrefabLikeTest
 			return true;
 		}
 
+
+
 		public static bool IsValueEqual(object v1, object v2)
 		{
 			return IsValueEqual(v1, v2, new Visitor());
@@ -135,8 +137,26 @@ namespace PrefabLikeTest
 		{
 			foreach (var kv in states)
 			{
-				var value = kv.Key.GetValue(o);
-				Assert.AreEqual(value, kv.Value);
+				if (kv.Key.FieldType.IsPrimitive)
+				{
+					var value = kv.Key.GetValue(o);
+					Assert.AreEqual(value, kv.Value);
+				}
+				else if (kv.Value is IList kvvl)
+				{
+					var value = kv.Key.GetValue(o) as IList;
+					Assert.AreEqual(value.Count, kvvl.Count);
+
+					for (int i = 0; i < value.Count; i++)
+					{
+						IsValueEqual(value[i], kvvl[i]);
+					}
+				}
+				else
+				{
+					var value = kv.Key.GetValue(o);
+					IsValueEqual(value, kv.Value);
+				}
 			}
 		}
 
@@ -250,7 +270,16 @@ namespace PrefabLikeTest
 					ret.SetValue(CreateRandomData(random, type.GetElementType()), i);
 				}
 			}
-
+			else if (type.GetCustomAttributes(true).OfType<System.SerializableAttribute>().Any())
+			{
+				var constructor = type.GetConstructor(new System.Type[0]);
+				if (constructor != null)
+				{
+					var inst = constructor.Invoke(null);
+					AssignRandomField(random, ref inst);
+					return inst;
+				}
+			}
 			return null;
 		}
 
@@ -271,9 +300,10 @@ namespace PrefabLikeTest
 					if (field.FieldType.IsGenericType && field.FieldType.GetGenericTypeDefinition() == typeof(List<>))
 					{
 						var dst = field.GetValue(o) as IList;
-						if(dst == null)
+						if (dst == null)
 						{
 							dst = field.FieldType.GetConstructor(new System.Type[0]).Invoke(null) as IList;
+							field.SetValue(o, dst);
 						}
 						dst.Clear();
 						var src = value as IList;
