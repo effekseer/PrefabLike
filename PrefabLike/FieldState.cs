@@ -9,6 +9,16 @@ namespace PrefabLike
 {
 	class FieldStateUtils
 	{
+		static bool StartWith(IEnumerable<AccessKey> data, IEnumerable<AccessKey> prefix)
+		{
+			if (data.Count() < prefix.Count())
+			{
+				return false;
+			}
+
+			return prefix.SequenceEqual(data.Take(prefix.Count()));
+		}
+
 		public static void RemoveInvalidElements(Dictionary<AccessKeyGroup, object> values)
 		{
 			List<KeyValuePair<AccessKeyGroup, object>> listElementLengthes = new List<KeyValuePair<AccessKeyGroup, object>>();
@@ -23,14 +33,14 @@ namespace PrefabLike
 			var removing = new List<AccessKeyGroup>();
 			foreach (var a in values)
 			{
-				if (!(a.Key.Keys.Last() is AccessKeyListElement))
+				if (!(a.Key.Keys.OfType<AccessKeyListElement>().Any()))
 				{
 					continue;
 				}
 
-				var length = listElementLengthes.FirstOrDefault(_ => _.Key.Keys.Take(_.Key.Keys.Count() - 1).SequenceEqual(a.Key.Keys.Take(a.Key.Keys.Count() - 1)));
+				var length = listElementLengthes.FirstOrDefault(_ => StartWith(a.Key.Keys, _.Key.Keys.Take(_.Key.Keys.Length - 1)));
 
-				if (Convert.ToInt64(a.Key.Keys.OfType<AccessKeyListElement>().First().Index) >= Convert.ToInt64(length.Value))
+				if (Convert.ToInt64(a.Key.Keys.Skip(length.Key.Keys.Length - 2).OfType<AccessKeyListElement>().First().Index) >= Convert.ToInt64(length.Value))
 				{
 					removing.Add(a.Key);
 				}
