@@ -14,71 +14,42 @@ namespace PrefabLikeTest
 		}
 
 		[Test]
-		public void SaveLoadBasic()
+		public void SaveLoadPrimitive()
 		{
-			var env = new PrefabLike.Environment();
-			var random = new System.Random();
-			var commandManager = new CommandManager();
-			var nodeTreeGroup = new NodeTreeGroup();
-			nodeTreeGroup.Init(typeof(TestNodePrimitive2), env);
-
-			var instance = Utility.CreateNodeFromNodeTreeGroup(nodeTreeGroup, env);
-
-			commandManager.StartEditFields(nodeTreeGroup, instance, instance.Root);
-
-			var state = Helper.AssignRandomField(random, ref instance.Root);
-
-			commandManager.NotifyEditFields(instance.Root);
-			commandManager.EndEditFields(instance.Root);
-
-			var json = nodeTreeGroup.Serialize();
-
-			var nodeTreeGroup2 = NodeTreeGroup.Deserialize(json);
-			var instance2 = Utility.CreateNodeFromNodeTreeGroup(nodeTreeGroup2, env);
-
-			Helper.AreEqual(state, ref instance2.Root);
+			SaveLoadTest<TestNodePrimitive>();
 		}
 
 		[Test]
 		public void SaveLoadList()
 		{
-			var env = new PrefabLike.Environment();
-			var commandManager = new CommandManager();
-			var nodeTreeGroup = new NodeTreeGroup();
-			nodeTreeGroup.Init(typeof(TestNode_ListValue), env);
-
-			var instance = Utility.CreateNodeFromNodeTreeGroup(nodeTreeGroup, env);
-
-			commandManager.StartEditFields(nodeTreeGroup, instance, instance.Root);
-
-			var v = instance.Root as TestNode_ListValue;
-			v.ValuesInt32 = new List<int>() { 1, 2, 3 };
-
-			commandManager.NotifyEditFields(instance.Root);
-			commandManager.EndEditFields(instance.Root);
-
-			var json = nodeTreeGroup.Serialize();
-
-			var nodeTreeGroup2 = NodeTreeGroup.Deserialize(json);
-			var instance2 = Utility.CreateNodeFromNodeTreeGroup(nodeTreeGroup2, env);
-
-			Assert.AreEqual(true, (instance2.Root as TestNode_ListValue).ValuesInt32.SequenceEqual(new List<int>() { 1, 2, 3 }));
+			SaveLoadTest<TestNode_ListValue>();
 		}
 
 		[Test]
 		public void SaveLoadListClass()
 		{
+			SaveLoadTest<TestNode_ListClass>();
+		}
+
+		[Test]
+		public void SaveLoadListClassNotSerializable()
+		{
+			SaveLoadTest<TestNode_List<TestClassNotSerializable>>();
+		}
+
+		void SaveLoadTest<T>()
+		{
 			var env = new PrefabLike.Environment();
+			var random = new System.Random();
 			var commandManager = new CommandManager();
 			var nodeTreeGroup = new NodeTreeGroup();
-			nodeTreeGroup.Init(typeof(TestNode_ListClass), env);
+			nodeTreeGroup.Init(typeof(T), env);
 
 			var instance = Utility.CreateNodeFromNodeTreeGroup(nodeTreeGroup, env);
 
 			commandManager.StartEditFields(nodeTreeGroup, instance, instance.Root);
 
-			var v = instance.Root as TestNode_ListClass;
-			v.Values = new List<TestClass1>() { new TestClass1 { A = 3 } };
+			var state = Helper.AssignRandomField(random, false, ref instance.Root);
 
 			commandManager.NotifyEditFields(instance.Root);
 			commandManager.EndEditFields(instance.Root);
@@ -88,7 +59,7 @@ namespace PrefabLikeTest
 			var nodeTreeGroup2 = NodeTreeGroup.Deserialize(json);
 			var instance2 = Utility.CreateNodeFromNodeTreeGroup(nodeTreeGroup2, env);
 
-			Assert.AreEqual(true, (instance2.Root as TestNode_ListClass).Values[0].A == 3);
+			Assert.True(Helper.IsValueEqual(instance, instance2));
 		}
 	}
 }

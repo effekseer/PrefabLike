@@ -119,7 +119,12 @@ namespace PrefabLike
 						var o = objects[objects.Count - 1];
 						if (o is IList list)
 						{
-							var count = (Int64)diff.Value;
+							var count = Convert.ToInt64(diff.Value);
+							if (list.Count > count)
+							{
+								list.Clear();
+							}
+
 							while (list.Count < count)
 							{
 								var type = o.GetType().GetGenericArguments()[0];

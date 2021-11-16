@@ -21,6 +21,10 @@ namespace PrefabLikeTest
 		public List<TestClass1> Values;
 	}
 
+	class TestNode_List<T> : Node
+	{
+		public List<T> Values;
+	}
 
 	public class Instantiate
 	{
@@ -42,13 +46,13 @@ namespace PrefabLikeTest
 			var instance = Utility.CreateNodeFromNodeTreeGroup(nodeTreeGroup, env);
 
 			commandManager.StartEditFields(nodeTreeGroup, instance, instance.Root);
-			(instance.Root as TestNodePrimitive).Value1 = 5;
+			(instance.Root as TestNodePrimitive).ValueInt32 = 5;
 			commandManager.NotifyEditFields(instance.Root);
 			commandManager.EndEditFields(instance.Root);
 
 			instance = Utility.CreateNodeFromNodeTreeGroup(nodeTreeGroup, env);
 
-			Assert.AreEqual((instance.Root as TestNodePrimitive).Value1, 5);
+			Assert.AreEqual((instance.Root as TestNodePrimitive).ValueInt32, 5);
 		}
 
 		[Test]

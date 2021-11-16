@@ -73,7 +73,11 @@ namespace PrefabLike
 				return null;
 			}
 
-			if (first.DiffRedo.Keys.SequenceEqual(second.DiffRedo.Keys))
+			var keys1 = first.DiffRedo.Keys;
+			var keys2 = second.DiffRedo.Keys;
+
+
+			if (keys1.Count == keys2.Count && keys1.Union(keys2).Count() == keys2.Count())
 			{
 				var cmd = new ValueChangeCommand();
 
@@ -317,9 +321,9 @@ namespace PrefabLike
 						}
 					}
 
+					FieldStateUtils.RemoveInvalidElements(newDifference);
+
 					asset.SetDifference(instanceID, newDifference);
-
-
 
 					var command = new ValueChangeCommand();
 

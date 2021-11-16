@@ -20,7 +20,15 @@ namespace PrefabLikeTest
 		public float C;
 	}
 
+	[System.Serializable]
 	class TestClass1
+	{
+		public float A;
+		public float B;
+		public float C;
+	}
+
+	class TestClassNotSerializable
 	{
 		public float A;
 		public float B;
@@ -33,13 +41,6 @@ namespace PrefabLikeTest
 	}
 
 	class TestNodePrimitive : Node
-	{
-		public int Value1;
-		public float Value2;
-		public string Value3;
-	}
-
-	class TestNodePrimitive2 : Node
 	{
 		public bool ValueBool;
 		public byte ValueByte;
@@ -77,7 +78,7 @@ namespace PrefabLikeTest
 			var before = new FieldState();
 			before.Store(v);
 
-			v.Value1 = 5;
+			v.ValueInt32 = 5;
 
 			var after = new FieldState();
 			after.Store(v);
@@ -88,7 +89,7 @@ namespace PrefabLikeTest
 				var group = pair.Key;
 				var field = group.Keys[0] as AccessKeyField;
 				Assert.AreEqual(1, diff.Count);
-				Assert.AreEqual("Value1", field.Name);
+				Assert.AreEqual("ValueInt32", field.Name);
 				Assert.AreEqual(5, pair.Value);
 			}
 
@@ -98,7 +99,7 @@ namespace PrefabLikeTest
 				var group = pair.Key;
 				var field = group.Keys[0] as AccessKeyField;
 				Assert.AreEqual(1, diff.Count);
-				Assert.AreEqual("Value1", field.Name);
+				Assert.AreEqual("ValueInt32", field.Name);
 				Assert.AreEqual(0, pair.Value);
 			}
 		}
@@ -154,8 +155,11 @@ namespace PrefabLikeTest
 			var after = new FieldState();
 			after.Store(v);
 
-			var diff = before.GenerateDifference(after);
-			Assert.AreEqual(2, diff.Count);
+			var diff1 = before.GenerateDifference(after);
+			Assert.AreEqual(1, diff1.Count);
+
+			var diff2 = after.GenerateDifference(before);
+			Assert.AreEqual(2, diff2.Count);
 		}
 	}
 }

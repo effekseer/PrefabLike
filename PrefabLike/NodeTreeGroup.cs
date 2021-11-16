@@ -99,6 +99,18 @@ namespace PrefabLike
 	{
 		public List<NodeTreeBase> Bases = new List<NodeTreeBase>();
 
+		JToken ConvertCSToJson(Object o)
+		{
+			if (o != null)
+			{
+				return JToken.FromObject(o);
+			}
+			else
+			{
+				return null;
+			}
+		}
+
 		public string Serialize()
 		{
 			var root = new JObject();
@@ -131,7 +143,8 @@ namespace PrefabLike
 					{
 						var p = new JObject();
 						p["Key"] = pair.Key.Serialize();
-						p["Value"] = JToken.FromObject(pair.Value);
+						p["Value"] = ConvertCSToJson(pair.Value);
+
 						difference.Add(p);
 					}
 
