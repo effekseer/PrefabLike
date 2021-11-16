@@ -160,61 +160,143 @@ namespace PrefabLikeTest
 			}
 		}
 
-		public static object CreateRandomData(System.Random random, System.Type type)
+		public static object CreateRandomData(System.Random random, bool avoidDefault, System.Type type)
 		{
 			if (type == typeof(bool))
 			{
+				if (avoidDefault)
+				{
+					return true;
+				}
+
 				return random.Next(2) == 0 ? false : true;
 			}
 			else if (type == typeof(byte))
 			{
-				return (byte)random.Next(byte.MinValue, byte.MaxValue + 1);
+				byte t = 0;
+				do
+				{
+					t = (byte)random.Next(byte.MinValue, byte.MaxValue + 1);
+				}
+				while (avoidDefault && t == default(byte));
+
+				return t;
 			}
 			else if (type == typeof(sbyte))
 			{
-				return (sbyte)random.Next(sbyte.MinValue, sbyte.MaxValue + 1);
+				sbyte t = 0;
+				do
+				{
+					t = (sbyte)random.Next(sbyte.MinValue, sbyte.MaxValue + 1);
+				}
+				while (avoidDefault && t == default(sbyte));
+
+				return t;
 			}
 			else if (type == typeof(short))
 			{
-				return (short)random.Next(short.MinValue, short.MaxValue + 1);
+				short t = 0;
+				do
+				{
+					t = (short)random.Next(short.MinValue, short.MaxValue + 1);
+				}
+				while (avoidDefault && t == default(short));
+
+				return t;
 			}
 			else if (type == typeof(ushort))
 			{
-				return (ushort)random.Next(ushort.MinValue, ushort.MaxValue + 1);
+				ushort t = 0;
+				do
+				{
+					t = (ushort)random.Next(ushort.MinValue, ushort.MaxValue + 1);
+				}
+				while (avoidDefault && t == default(ushort));
+
+				return t;
 			}
 			else if (type == typeof(int))
 			{
-				return random.Next();
+				int t = 0;
+				do
+				{
+					t = random.Next();
+				}
+				while (avoidDefault && t == default(int));
+
+				return t;
 			}
 			else if (type == typeof(uint))
 			{
-				var bytes = new byte[4];
-				random.NextBytes(bytes);
-				return System.BitConverter.ToUInt32(bytes);
+				uint t = 0;
+				do
+				{
+					var bytes = new byte[4];
+					random.NextBytes(bytes);
+					t = System.BitConverter.ToUInt32(bytes);
+				}
+				while (avoidDefault && t == default(uint));
+
+				return t;
 			}
 			else if (type == typeof(long))
 			{
-				var bytes = new byte[8];
-				random.NextBytes(bytes);
-				return System.BitConverter.ToInt64(bytes);
+				long t = 0;
+				do
+				{
+					var bytes = new byte[8];
+					random.NextBytes(bytes);
+					t = System.BitConverter.ToInt64(bytes);
+				}
+				while (avoidDefault && t == default(long));
+
+				return t;
 			}
 			else if (type == typeof(ulong))
 			{
-				var bytes = new byte[8];
-				random.NextBytes(bytes);
-				return System.BitConverter.ToUInt64(bytes);
+				ulong t = 0;
+				do
+				{
+					var bytes = new byte[8];
+					random.NextBytes(bytes);
+					t = System.BitConverter.ToUInt64(bytes);
+				}
+				while (avoidDefault && t == default(ulong));
+
+				return t;
 			}
 			else if (type == typeof(float))
 			{
-				return (float)random.NextDouble();
+				float t = 0;
+				do
+				{
+					t = (float)random.NextDouble();
+				}
+				while (avoidDefault && t == default(float));
+
+				return t;
 			}
 			else if (type == typeof(double))
 			{
-				return (double)random.NextDouble();
+				double t = 0;
+				do
+				{
+					t = (double)random.NextDouble();
+				}
+				while (avoidDefault && t == default(double));
+
+				return t;
 			}
 			else if (type == typeof(char))
 			{
-				return (char)random.Next(char.MinValue, char.MaxValue + 1);
+				char t = default(char);
+				do
+				{
+					t = (char)random.Next(char.MinValue, char.MaxValue + 1);
+				}
+				while (avoidDefault && t == default(char));
+
+				return t;
 			}
 			else if (type == typeof(string))
 			{
@@ -223,6 +305,12 @@ namespace PrefabLikeTest
 			else if (type.IsEnum)
 			{
 				var values = type.GetEnumValues();
+
+				if (avoidDefault)
+				{
+					return values.GetValue(random.Next(1, values.Length));
+				}
+
 				return values.GetValue(random.Next(0, values.Length));
 			}
 			else if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(List<>))
@@ -233,7 +321,7 @@ namespace PrefabLikeTest
 
 				for (int i = 0; i < count; i++)
 				{
-					ret.Add(CreateRandomData(random, elmType));
+					ret.Add(CreateRandomData(random, avoidDefault, elmType));
 				}
 
 				return ret;
@@ -248,14 +336,14 @@ namespace PrefabLikeTest
 
 				for (int i = 0; i < count; i++)
 				{
-					var key = CreateRandomData(random, keyType);
+					var key = CreateRandomData(random, avoidDefault, keyType);
 
 					if (ret.Contains(key))
 					{
 						continue;
 					}
 
-					ret.Add(key, CreateRandomData(random, valueType));
+					ret.Add(key, CreateRandomData(random, avoidDefault, valueType));
 				}
 
 				return ret;
@@ -267,7 +355,7 @@ namespace PrefabLikeTest
 
 				for (int i = 0; i < count; i++)
 				{
-					ret.SetValue(CreateRandomData(random, type.GetElementType()), i);
+					ret.SetValue(CreateRandomData(random, avoidDefault, type.GetElementType()), i);
 				}
 			}
 			else if (type.GetCustomAttributes(true).OfType<System.SerializableAttribute>().Any())
@@ -276,14 +364,14 @@ namespace PrefabLikeTest
 				if (constructor != null)
 				{
 					var inst = constructor.Invoke(null);
-					AssignRandomField(random, ref inst);
+					AssignRandomField(random, avoidDefault, ref inst);
 					return inst;
 				}
 			}
 			return null;
 		}
 
-		public static Dictionary<System.Reflection.FieldInfo, object> AssignRandomField<T>(System.Random random, ref T o)
+		public static Dictionary<System.Reflection.FieldInfo, object> AssignRandomField<T>(System.Random random, bool avoidDefault, ref T o)
 		{
 			var assigned = new Dictionary<System.Reflection.FieldInfo, object>();
 
@@ -294,7 +382,7 @@ namespace PrefabLikeTest
 					continue;
 				}
 
-				var value = CreateRandomData(random, field.FieldType);
+				var value = CreateRandomData(random, avoidDefault, field.FieldType);
 				if (value != null)
 				{
 					if (field.FieldType.IsGenericType && field.FieldType.GetGenericTypeDefinition() == typeof(List<>))

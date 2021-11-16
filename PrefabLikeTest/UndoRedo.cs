@@ -68,7 +68,7 @@ namespace PrefabLikeTest
 
 			commandManager.StartEditFields(nodeTreeGroup, instance, instance.Root);
 
-			var assignedUnedit = Helper.AssignRandomField(random, ref instance.Root);
+			var assignedUnedit = Helper.AssignRandomField(random, true, ref instance.Root);
 
 			commandManager.NotifyEditFields(instance.Root);
 
@@ -78,7 +78,7 @@ namespace PrefabLikeTest
 
 			commandManager.StartEditFields(nodeTreeGroup, instance, instance.Root);
 
-			var assignedEdit1 = Helper.AssignRandomField(random, ref instance.Root);
+			var assignedEdit1 = Helper.AssignRandomField(random, true, ref instance.Root);
 
 			commandManager.NotifyEditFields(instance.Root);
 
@@ -94,7 +94,7 @@ namespace PrefabLikeTest
 
 			commandManager.StartEditFields(nodeTreeGroup, instance, instance.Root);
 
-			var assignedEdit2 = Helper.AssignRandomField(random, ref instance.Root);
+			var assignedEdit2 = Helper.AssignRandomField(random, true, ref instance.Root);
 
 			commandManager.NotifyEditFields(instance.Root);
 
@@ -102,7 +102,7 @@ namespace PrefabLikeTest
 
 			commandManager.StartEditFields(nodeTreeGroup, instance, instance.Root);
 
-			var assignedEdit3 = Helper.AssignRandomField(random, ref instance.Root);
+			var assignedEdit3 = Helper.AssignRandomField(random, true, ref instance.Root);
 
 			commandManager.NotifyEditFields(instance.Root);
 
@@ -110,7 +110,7 @@ namespace PrefabLikeTest
 
 			commandManager.Undo();
 
-			if(canMergeChanges)
+			if (canMergeChanges)
 			{
 				Helper.AreEqual(assignedEdit1, ref instance.Root);
 

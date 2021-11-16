@@ -49,7 +49,7 @@ namespace PrefabLikeTest
 
 			commandManager.StartEditFields(nodeTreeGroup, instance, instance.Root);
 
-			var state = Helper.AssignRandomField(random, ref instance.Root);
+			var state = Helper.AssignRandomField(random, false, ref instance.Root);
 
 			commandManager.NotifyEditFields(instance.Root);
 			commandManager.EndEditFields(instance.Root);

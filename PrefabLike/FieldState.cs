@@ -39,6 +39,10 @@ namespace PrefabLike
 				}
 
 				var length = listElementLengthes.FirstOrDefault(_ => StartWith(a.Key.Keys, _.Key.Keys.Take(_.Key.Keys.Length - 1)));
+				if (length.Key == null)
+				{
+					continue;
+				}
 
 				if (Convert.ToInt64(a.Key.Keys.Skip(length.Key.Keys.Length - 2).OfType<AccessKeyListElement>().First().Index) >= Convert.ToInt64(length.Value))
 				{
