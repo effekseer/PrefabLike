@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -138,20 +139,22 @@ namespace PrefabLikeExample
 					{
 						commandManager.StartEditFields(nodeTreeGroup, nodeTree, selectedNode);
 
-						var fields = selectedNode.GetType().GetFields();
+						Action<FieldGetterSetter> updateFields = null;
 
-						foreach (var field in fields)
+						updateFields = (FieldGetterSetter getterSetter) =>
 						{
-							var value = field.GetValue(selectedNode);
+
+							var value = getterSetter.GetValue();
+							var name = getterSetter.GetName();
 
 							if (value is string)
 							{
 								var s = (string)value;
 
-								var result = Altseed2.Engine.Tool.InputText(field.Name, s, 200, Altseed2.ToolInputTextFlags.None);
+								var result = Altseed2.Engine.Tool.InputText(name, s, 200, Altseed2.ToolInputTextFlags.None);
 								if (result != null)
 								{
-									field.SetValue(selectedNode, result);
+									getterSetter.SetValue(result);
 									commandManager.NotifyEditFields(selectedNode);
 								}
 							}
@@ -159,9 +162,9 @@ namespace PrefabLikeExample
 							{
 								var v = (int)value;
 
-								if (Altseed2.Engine.Tool.DragInt(field.Name, ref v, 1, -100, 100, "%d", Altseed2.ToolSliderFlags.None))
+								if (Altseed2.Engine.Tool.DragInt(name, ref v, 1, -100, 100, "%d", Altseed2.ToolSliderFlags.None))
 								{
-									field.SetValue(selectedNode, v);
+									getterSetter.SetValue(v);
 									commandManager.NotifyEditFields(selectedNode);
 								}
 							}
@@ -169,22 +172,51 @@ namespace PrefabLikeExample
 							{
 								var v = (float)value;
 
-								if (Altseed2.Engine.Tool.DragFloat(field.Name, ref v, 1, -100, 100, "%f", Altseed2.ToolSliderFlags.None))
+								if (Altseed2.Engine.Tool.DragFloat(name, ref v, 1, -100, 100, "%f", Altseed2.ToolSliderFlags.None))
 								{
-									field.SetValue(selectedNode, v);
+									getterSetter.SetValue(v);
 									commandManager.NotifyEditFields(selectedNode);
+								}
+							}
+							else if (value is IList)
+							{
+								var v = (IList)value;
+								var count = v.Count;
+								if (Altseed2.Engine.Tool.DragInt(name, ref count, 1, 0, 100, "%d", Altseed2.ToolSliderFlags.None))
+								{
+									Helper.ResizeList(v, count);
+
+									commandManager.NotifyEditFields(selectedNode);
+								}
+
+								var listGetterSetter = new FieldGetterSetter();
+
+								for (int i = 0; i < v.Count; i++)
+								{
+									listGetterSetter.Reset(v, i);
+									updateFields(listGetterSetter);
 								}
 							}
 							else
 							{
-								Altseed2.Engine.Tool.Text(field.Name);
+								Altseed2.Engine.Tool.Text(name);
 							}
+						};
+
+						var fields = selectedNode.GetType().GetFields();
+
+						var getterSetter = new FieldGetterSetter();
+
+						foreach (var field in fields)
+						{
+							getterSetter.Reset(selectedNode, field);
+							updateFields(getterSetter);
 						}
 
 						commandManager.EndEditFields(selectedNode);
 					}
 
-					if(!Altseed2.Engine.Tool.IsAnyItemActive())
+					if (!Altseed2.Engine.Tool.IsAnyItemActive())
 					{
 						commandManager.SetFlagToBlockMergeCommands();
 					}
@@ -203,6 +235,131 @@ namespace PrefabLikeExample
 			public string Name = "Node";
 			public int Value1;
 			public float Value2;
+			public List<int> List1 = new List<int>();
+		}
+	}
+
+	class FieldGetterSetter
+	{
+		object parent;
+		System.Reflection.FieldInfo fieldInfo;
+		int? index;
+
+		public void Reset(object o, System.Reflection.FieldInfo fieldInfo)
+		{
+			parent = o;
+			this.fieldInfo = fieldInfo;
+			index = null;
+		}
+
+		public void Reset(object o, int index)
+		{
+			parent = o;
+			fieldInfo = null;
+			this.index = index;
+		}
+
+		public string GetName()
+		{
+			if (fieldInfo != null)
+			{
+				return fieldInfo.Name;
+			}
+			else if (index.HasValue)
+			{
+				return index.Value.ToString();
+			}
+
+			return string.Empty;
+		}
+
+		public object GetValue()
+		{
+			if (fieldInfo != null)
+			{
+				return fieldInfo.GetValue(parent);
+			}
+			else if (index.HasValue)
+			{
+				return Helper.GetValueWithIndex(parent, index.Value);
+			}
+
+			return null;
+		}
+
+		public void SetValue(object value)
+		{
+			if (fieldInfo != null)
+			{
+				fieldInfo.SetValue(parent, value);
+			}
+			else if (index.HasValue)
+			{
+				Helper.SetValueToIndex(parent, value, index.Value);
+			}
+		}
+	}
+
+	class Helper
+	{
+		public static void ResizeList(IList list, int count)
+		{
+			while (list.Count < count)
+			{
+				list.Add(CreateDefaultValue(list.GetType().GetGenericArguments()[0]));
+			}
+
+			while (list.Count > count)
+			{
+				list.RemoveAt(list.Count - 1);
+			}
+		}
+
+		public static object GetValueWithIndex(object target, int index)
+		{
+			foreach (var pi in target.GetType().GetProperties())
+			{
+				if (pi.GetIndexParameters().Length != 1)
+				{
+					continue;
+				}
+
+				return pi.GetValue(target, new object[] { index });
+			}
+			return null;
+		}
+
+		public static bool SetValueToIndex(object target, object value, int index)
+		{
+			foreach (var pi in target.GetType().GetProperties())
+			{
+				if (pi.GetIndexParameters().Length != 1)
+				{
+					continue;
+				}
+
+				pi.SetValue(target, Convert.ChangeType(value, pi.PropertyType), new object[] { index });
+				return true;
+			}
+			return false;
+		}
+
+		public static object CreateDefaultValue(Type type)
+		{
+			if (type.IsValueType)
+			{
+				return Activator.CreateInstance(type);
+			}
+			else
+			{
+				var constructor = type.GetConstructor(new Type[] { });
+				if (constructor == null)
+				{
+					return null;
+				}
+
+				return constructor.Invoke(null);
+			}
 		}
 	}
 }
