@@ -125,5 +125,123 @@ namespace PrefabLikeTest
 
 			Helper.AreEqual(assignedEdit3, ref instance.Root);
 		}
+
+		[Test]
+		public void PrefabEditFieldPrimitive()
+		{
+			PrefabEditFieldTest<TestNodePrimitive>(true);
+		}
+
+		[Test]
+		public void PrefabEditFieldList()
+		{
+			PrefabEditFieldTest<TestNode_ListValue>(false);
+		}
+
+		[Test]
+		public void PrefabEditFieldListClass()
+		{
+			PrefabEditFieldTest<TestNode_ListClass>(false);
+		}
+
+		[Test]
+		public void PrefabEditFieldListClassNotSerializable()
+		{
+			PrefabEditFieldTest<TestNode_List<TestClassNotSerializable>>(false);
+		}
+
+		void PrefabEditFieldTest<T>(bool canMergeChanges)
+		{
+			var env = new MultiNodeTreeEnvironment();
+			var random = new System.Random();
+
+			var nodeTreeGroupChild = new NodeTreeGroup();
+			var nodeTreeGroup = new NodeTreeGroup();
+
+			env.NodeTrees.Add("C:/test/Tree1", nodeTreeGroupChild);
+			env.NodeTrees.Add("C:/test/Tree2", nodeTreeGroup);
+
+			nodeTreeGroupChild.Init(typeof(T), env);
+			var instanceChild = Utility.CreateNodeFromNodeTreeGroup(nodeTreeGroupChild, env);
+
+			var commandManagerChild = new CommandManager();
+			commandManagerChild.StartEditFields(nodeTreeGroupChild, instanceChild, instanceChild.Root);
+
+			var assignedEditChild = Helper.AssignRandomField(random, true, ref instanceChild.Root);
+
+			commandManagerChild.NotifyEditFields(instanceChild.Root);
+
+			commandManagerChild.EndEditFields(instanceChild.Root);
+
+			var id = nodeTreeGroup.Init(typeof(PrefabLike.Node), env);
+			nodeTreeGroup.AddNodeTreeGroup(id, nodeTreeGroupChild, env);
+			var instance = Utility.CreateNodeFromNodeTreeGroup(nodeTreeGroup, env);
+
+			{
+				var node = instance.Root.Children[0];
+				Helper.AreEqual(assignedEditChild, ref node);
+			}
+
+			var commandManager = new CommandManager();
+
+			commandManager.StartEditFields(nodeTreeGroup, instance, instance.Root);
+
+			var assignedUnedit = Helper.AssignRandomField(random, true, ref instance.Root);
+
+			commandManager.NotifyEditFields(instance.Root);
+
+			commandManager.EndEditFields(instance.Root);
+
+			commandManager.SetFlagToBlockMergeCommands();
+
+			commandManager.StartEditFields(nodeTreeGroup, instance, instance.Root);
+
+			var assignedEdit1 = Helper.AssignRandomField(random, true, ref instance.Root);
+
+			commandManager.NotifyEditFields(instance.Root);
+
+			commandManager.EndEditFields(instance.Root);
+
+			commandManager.Undo();
+
+			Helper.AreEqual(assignedUnedit, ref instance.Root);
+
+			commandManager.Redo();
+
+			Helper.AreEqual(assignedEdit1, ref instance.Root);
+
+			commandManager.StartEditFields(nodeTreeGroup, instance, instance.Root);
+
+			var assignedEdit2 = Helper.AssignRandomField(random, true, ref instance.Root);
+
+			commandManager.NotifyEditFields(instance.Root);
+
+			commandManager.EndEditFields(instance.Root);
+
+			commandManager.StartEditFields(nodeTreeGroup, instance, instance.Root);
+
+			var assignedEdit3 = Helper.AssignRandomField(random, true, ref instance.Root);
+
+			commandManager.NotifyEditFields(instance.Root);
+
+			commandManager.EndEditFields(instance.Root);
+
+			commandManager.Undo();
+
+			if (canMergeChanges)
+			{
+				Helper.AreEqual(assignedEdit1, ref instance.Root);
+
+				commandManager.Redo();
+			}
+			else
+			{
+				Helper.AreEqual(assignedEdit2, ref instance.Root);
+
+				commandManager.Redo();
+			}
+
+			Helper.AreEqual(assignedEdit3, ref instance.Root);
+		}
 	}
 }
