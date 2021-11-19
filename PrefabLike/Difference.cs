@@ -55,7 +55,7 @@ namespace PrefabLike
 			return false;
 		}
 
-		public static void ApplyDifference(ref object target, Dictionary<AccessKeyGroup, object> difference)
+		public static void ApplyDifference(ref object target, Dictionary<AccessKeyGroup, object> difference, Asset asset, IAssetInstanceRoot root, Environment env)
 		{
 			var differenceFirst = difference.Where(_ => _.Key.Keys.Last() is AccessKeyListCount).ToArray();
 			var differenceSecond = difference.Where(_ => !(_.Key.Keys.Last() is AccessKeyListCount)).ToArray();
@@ -166,14 +166,22 @@ namespace PrefabLike
 						var field = objects[i].GetType().GetField(k.Name);
 						var o = objects[i];
 
-						if (o is IList)
+						// TODO : Refactor
+						if (field.FieldType.IsGenericType && field.FieldType.GetGenericTypeDefinition() == typeof(List<>))
 						{
-							// List の場合、その Count を表す KeyGroup は次のようになっている。
-							// - [0] AccessKeyField { Name = "List型のフィールド名" }
-							// - [1] AccessKeyListCount {}
-							// このとき [0] の場合はこの if に入ってくる。
-							// プリミティブな値の場合はここでフィールドに値を格納する必要があるが、
-							// そうではないオブジェクト型は ↑ のほうでインスタンス作成済みなので、ここでは何もする必要はない。
+							// Skip
+						}
+						else if (field.FieldType.GetInterfaces().Contains(typeof(IInstanceID)))
+						{
+							var id = Convert.ToInt32(objects[i + 1]);
+							objects[i] = root.FindInstance(id);
+							field.SetValue(o, objects[i]);
+						}
+						else if (field.FieldType.IsSubclassOf(typeof(Asset)))
+						{
+							var path = Convert.ToString(objects[i + 1]);
+							objects[i] = env.GetAsset(path);
+							field.SetValue(o, objects[i]);
 						}
 						else
 						{
