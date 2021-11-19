@@ -68,7 +68,6 @@ namespace PrefabLike
 
 			var type = o.GetType();
 
-
 			if (type.IsPrimitive)
 			{
 				// Boolean Byte SByte Int16 UInt16 Int32 UInt32 Int64 UInt64 IntPtr UIntPtr Char Double Single 
@@ -78,7 +77,7 @@ namespace PrefabLike
 			{
 				return o;
 			}
-			else if (type.IsSubclassOf(typeof(IInstanceID)))
+			else if (type.GetInterfaces().Contains(typeof(IInstanceID)))
 			{
 				var v = o as IInstanceID;
 				return v.InstanceID;

@@ -171,7 +171,7 @@ namespace PrefabLike
 						{
 							// Skip
 						}
-						else if (field.FieldType.IsSubclassOf(typeof(IInstanceID)))
+						else if (field.FieldType.GetInterfaces().Contains(typeof(IInstanceID)))
 						{
 							var id = Convert.ToInt32(objects[i + 1]);
 							objects[i] = root.FindInstance(id);
