@@ -73,15 +73,16 @@ namespace PrefabLikeTest
 		[Test]
 		public void DiffPrimitive()
 		{
+			var env = new Environment();
 			var v = new TestNodePrimitive();
 
 			var before = new FieldState();
-			before.Store(v);
+			before.Store(v, env);
 
 			v.ValueInt32 = 5;
 
 			var after = new FieldState();
-			after.Store(v);
+			after.Store(v, env);
 
 			{
 				var diff = after.GenerateDifference(before);
@@ -107,17 +108,18 @@ namespace PrefabLikeTest
 		[Test]
 		public void DiffStruct()
 		{
+			var env = new Environment();
 			var v = new TestNodeStruct();
 			v.Struct1.A = 1.0f;
 			v.Struct1.St.B = 3.0f;
 
 			var before = new FieldState();
-			before.Store(v);
+			before.Store(v, env);
 			v.Struct1.A = 2.0f;
 			v.Struct1.St.B = 4.0f;
 
 			var after = new FieldState();
-			after.Store(v);
+			after.Store(v, env);
 
 			var diff = before.GenerateDifference(after);
 			Assert.AreEqual(2, diff.Count);
@@ -127,16 +129,17 @@ namespace PrefabLikeTest
 		[Test]
 		public void DiffClass()
 		{
+			var env = new Environment();
 			var v = new TestNodeClass();
 			v.Class1_1 = new TestClass1();
 			v.Class1_1.A = 1.0f;
 
 			var before = new FieldState();
-			before.Store(v);
+			before.Store(v, env);
 			v.Class1_1.A = 2.0f;
 
 			var after = new FieldState();
-			after.Store(v);
+			after.Store(v, env);
 
 			var diff = before.GenerateDifference(after);
 			Assert.AreEqual(1, diff.Count);
@@ -146,14 +149,15 @@ namespace PrefabLikeTest
 		[Test]
 		public void DiffList()
 		{
+			var env = new Environment();
 			var v = new TestList1();
 
 			var before = new FieldState();
-			before.Store(v);
+			before.Store(v, env);
 			v.Values.Add(1);
 
 			var after = new FieldState();
-			after.Store(v);
+			after.Store(v, env);
 
 			var diff1 = before.GenerateDifference(after);
 			Assert.AreEqual(1, diff1.Count);

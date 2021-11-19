@@ -7,8 +7,8 @@ namespace PrefabLike
 {
 	public class Command
 	{
-		virtual public void Execute() { }
-		virtual public void Unexecute() { }
+		virtual public void Execute(Environment env) { }
+		virtual public void Unexecute(Environment env) { }
 	}
 
 	public class DelegateCommand : Command
@@ -16,12 +16,12 @@ namespace PrefabLike
 		public Action OnExecute;
 		public Action OnUnexecute;
 
-		public override void Execute()
+		public override void Execute(Environment env)
 		{
 			OnExecute?.Invoke();
 		}
 
-		public override void Unexecute()
+		public override void Unexecute(Environment env)
 		{
 			OnUnexecute?.Invoke();
 		}
@@ -41,24 +41,24 @@ namespace PrefabLike
 
 		public Dictionary<AccessKeyGroup, object> OldDifference;
 
-		public override void Execute()
+		public override void Execute(Environment env)
 		{
 			var instance = Root.FindInstance(InstanceID);
 			if (instance != null)
 			{
 				object obj = instance;
-				Difference.ApplyDifference(ref obj, DiffRedo);
+				Difference.ApplyDifference(ref obj, DiffRedo, Asset, Root, env);
 			}
 
 			Asset.SetDifference(InstanceID, NewDifference);
 		}
-		public override void Unexecute()
+		public override void Unexecute(Environment env)
 		{
 			var instance = Root.FindInstance(InstanceID);
 			if (instance != null)
 			{
 				object obj = instance;
-				Difference.ApplyDifference(ref obj, DiffUndo);
+				Difference.ApplyDifference(ref obj, DiffUndo, Asset, Root, env);
 			}
 
 			Asset.SetDifference(InstanceID, OldDifference);
@@ -167,22 +167,22 @@ namespace PrefabLike
 		}
 
 
-		public void Undo()
+		public void Undo(Environment env)
 		{
 			if (currentCommand >= 0)
 			{
-				commands[currentCommand].Unexecute();
+				commands[currentCommand].Unexecute(env);
 				currentCommand--;
 			}
 
 			SetFlagToBlockMergeCommands();
 		}
 
-		public void Redo()
+		public void Redo(Environment env)
 		{
 			if (currentCommand + 1 < commands.Count)
 			{
-				commands[currentCommand + 1].Execute();
+				commands[currentCommand + 1].Execute(env);
 				currentCommand++;
 			}
 
@@ -267,10 +267,10 @@ namespace PrefabLike
 			AddCommand(command);
 		}
 
-		public void StartEditFields(Asset asset, IAssetInstanceRoot root, IInstanceID o)
+		public void StartEditFields(Asset asset, IAssetInstanceRoot root, IInstanceID o, Environment env)
 		{
 			var state = new EditFieldState { Target = o, Asset = asset, Root = root };
-			state.State.Store(o);
+			state.State.Store(o, env);
 			editFieldStates.Add(o, state);
 		}
 
@@ -282,14 +282,14 @@ namespace PrefabLike
 			}
 		}
 
-		public bool EndEditFields(IInstanceID o)
+		public bool EndEditFields(IInstanceID o, Environment env)
 		{
 			if (editFieldStates.TryGetValue(o, out var v))
 			{
 				if (v.IsEdited)
 				{
 					var fs = new FieldState();
-					fs.Store(o);
+					fs.Store(o, env);
 					var diffUndo = v.State.GenerateDifference(fs);
 					var diffRedo = fs.GenerateDifference(v.State);
 

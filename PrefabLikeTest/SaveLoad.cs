@@ -47,12 +47,12 @@ namespace PrefabLikeTest
 
 			var instance = Utility.CreateNodeFromNodeTreeGroup(nodeTreeGroup, env);
 
-			commandManager.StartEditFields(nodeTreeGroup, instance, instance.Root);
+			commandManager.StartEditFields(nodeTreeGroup, instance, instance.Root, env);
 
 			var state = Helper.AssignRandomField(random, false, ref instance.Root);
 
 			commandManager.NotifyEditFields(instance.Root);
-			commandManager.EndEditFields(instance.Root);
+			commandManager.EndEditFields(instance.Root, env);
 
 			var json = nodeTreeGroup.Serialize();
 
