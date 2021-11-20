@@ -49,7 +49,7 @@ namespace PrefabLike
 					continue;
 				}
 
-				pi.SetValue(target, Convert.ChangeType(value, pi.PropertyType), new object[] { index });
+				pi.SetValue(target, value, new object[] { index });
 				return true;
 			}
 			return false;
@@ -69,6 +69,7 @@ namespace PrefabLike
 
 				//--------------------
 				// 1. Create Instances
+				Type lastType = null;
 
 				for (int i = 0; i < keys.Length; i++)
 				{
@@ -84,6 +85,8 @@ namespace PrefabLike
 						{
 							goto Exit;
 						}
+
+						lastType = field.FieldType;
 
 						var o = field.GetValue(obj);
 
@@ -116,6 +119,8 @@ namespace PrefabLike
 					}
 					else if (key is AccessKeyListCount aklc)
 					{
+						lastType = null;
+
 						var o = objects[objects.Count - 1];
 						if (o is IList list)
 						{
@@ -137,8 +142,12 @@ namespace PrefabLike
 					}
 					else if (key is AccessKeyListElement akle)
 					{
+						lastType = null;
+
 						if (objects[objects.Count - 1] is IList list)
 						{
+							lastType = list.GetType().GenericTypeArguments[0];
+
 							var value = GetValueWithIndex(list, akle.Index);
 							objects.Add(value);
 						}
@@ -151,7 +160,33 @@ namespace PrefabLike
 
 				System.Diagnostics.Debug.Assert(objects.Count - 1 == keys.Length);
 
-				objects[objects.Count - 1] = diff.Value;
+				if (lastType == null)
+				{
+					goto Exit;
+				}
+				else if (diff.Value == null)
+				{
+					objects[objects.Count - 1] = null;
+				}
+				else if (lastType.GetInterfaces().Contains(typeof(IInstanceID)))
+				{
+					var id = Convert.ToInt32(diff.Value);
+					objects[objects.Count - 1] = root.FindInstance(id);
+				}
+				else if (lastType.IsSubclassOf(typeof(Asset)))
+				{
+					var path = Convert.ToString(diff.Value);
+					objects[objects.Count - 1] = env.GetAsset(path);
+				}
+				else if (diff.Value.GetType() == typeof(System.Numerics.BigInteger))
+				{
+					var big = (System.Numerics.BigInteger)diff.Value;
+					objects[objects.Count - 1] = Convert.ChangeType((UInt64)big, lastType);
+				}
+				else
+				{
+					objects[objects.Count - 1] = Convert.ChangeType(diff.Value, lastType);
+				}
 
 				//--------------------
 				// 2. Set Values
@@ -166,40 +201,8 @@ namespace PrefabLike
 						var field = objects[i].GetType().GetField(k.Name);
 						var o = objects[i];
 
-						// TODO : Refactor
-						if (field.FieldType.IsGenericType && field.FieldType.GetGenericTypeDefinition() == typeof(List<>))
-						{
-							// Skip
-						}
-						else if (field.FieldType.GetInterfaces().Contains(typeof(IInstanceID)))
-						{
-							var id = Convert.ToInt32(objects[i + 1]);
-							objects[i] = root.FindInstance(id);
-							field.SetValue(o, objects[i]);
-						}
-						else if (field.FieldType.IsSubclassOf(typeof(Asset)))
-						{
-							var path = Convert.ToString(objects[i + 1]);
-							objects[i] = env.GetAsset(path);
-							field.SetValue(o, objects[i]);
-						}
-						else
-						{
-							// TODO: refactor
-							// 型変換の Helper 組んだ方がよさそう
-							var srcType = objects[i + 1].GetType();
-							if (srcType == typeof(System.Numerics.BigInteger))
-							{
-								var big = (System.Numerics.BigInteger)objects[i + 1];
-								field.SetValue(o, Convert.ChangeType((UInt64)big, field.FieldType));
-								objects[i] = o;
-							}
-							else
-							{
-								field.SetValue(o, Convert.ChangeType(objects[i + 1], field.FieldType));
-								objects[i] = o;
-							}
-						}
+						field.SetValue(o, objects[i + 1]);
+						objects[i] = o;
 					}
 					else if (key is AccessKeyListCount)
 					{

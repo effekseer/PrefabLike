@@ -338,7 +338,7 @@ namespace PrefabLikeExample
 					continue;
 				}
 
-				pi.SetValue(target, Convert.ChangeType(value, pi.PropertyType), new object[] { index });
+				pi.SetValue(target, value, new object[] { index });
 				return true;
 			}
 			return false;

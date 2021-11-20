@@ -41,6 +41,7 @@ namespace PrefabLikeTest
 	class TestNodeRef : Node
 	{
 		public Node Ref;
+		public List<Node> Refs;
 	}
 
 	class TestClassNotSerializable

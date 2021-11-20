@@ -76,6 +76,8 @@ namespace PrefabLikeTest
 			commandManager.StartEditFields(nodeTreeGroup, instance, instance.Root, env);
 
 			(instance.Root as TestNodeRef).Ref = instance.Root;
+			(instance.Root as TestNodeRef).Refs = new List<Node>();
+			(instance.Root as TestNodeRef).Refs.Add(instance.Root);
 
 			commandManager.NotifyEditFields(instance.Root);
 			commandManager.EndEditFields(instance.Root, env);
@@ -88,6 +90,7 @@ namespace PrefabLikeTest
 			var instanceRoot = instance2.Root as TestNodeRef;
 
 			Assert.True(Helper.IsValueEqual(instanceRoot, instanceRoot.Ref));
+			Assert.True(Helper.IsValueEqual(instanceRoot, instanceRoot.Refs[0]));
 			Assert.True(Helper.IsValueEqual(instance, instance2));
 		}
 	}
