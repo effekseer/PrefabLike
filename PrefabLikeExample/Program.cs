@@ -34,12 +34,12 @@ namespace PrefabLikeExample
 				{
 					if (Altseed2.Engine.Tool.Button("Undo"))
 					{
-						commandManager.Undo();
+						commandManager.Undo(env);
 					}
 
 					if (Altseed2.Engine.Tool.Button("Redo"))
 					{
-						commandManager.Redo();
+						commandManager.Redo(env);
 					}
 
 					if (Altseed2.Engine.Tool.Button("Save"))
@@ -137,7 +137,7 @@ namespace PrefabLikeExample
 				{
 					if (selectedNode != null)
 					{
-						commandManager.StartEditFields(nodeTreeGroup, nodeTree, selectedNode);
+						commandManager.StartEditFields(nodeTreeGroup, nodeTree, selectedNode, env);
 
 						Action<FieldGetterSetter> updateFields = null;
 
@@ -213,7 +213,7 @@ namespace PrefabLikeExample
 							updateFields(getterSetter);
 						}
 
-						commandManager.EndEditFields(selectedNode);
+						commandManager.EndEditFields(selectedNode, env);
 					}
 
 					if (!Altseed2.Engine.Tool.IsAnyItemActive())
@@ -338,7 +338,7 @@ namespace PrefabLikeExample
 					continue;
 				}
 
-				pi.SetValue(target, Convert.ChangeType(value, pi.PropertyType), new object[] { index });
+				pi.SetValue(target, value, new object[] { index });
 				return true;
 			}
 			return false;

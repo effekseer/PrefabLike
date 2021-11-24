@@ -45,10 +45,10 @@ namespace PrefabLikeTest
 
 			var instance = Utility.CreateNodeFromNodeTreeGroup(nodeTreeGroup, env);
 
-			commandManager.StartEditFields(nodeTreeGroup, instance, instance.Root);
+			commandManager.StartEditFields(nodeTreeGroup, instance, instance.Root, env);
 			(instance.Root as TestNodePrimitive).ValueInt32 = 5;
 			commandManager.NotifyEditFields(instance.Root);
-			commandManager.EndEditFields(instance.Root);
+			commandManager.EndEditFields(instance.Root, env);
 
 			instance = Utility.CreateNodeFromNodeTreeGroup(nodeTreeGroup, env);
 
@@ -66,10 +66,10 @@ namespace PrefabLikeTest
 
 			var instance = Utility.CreateNodeFromNodeTreeGroup(nodeTreeGroup, env);
 
-			commandManager.StartEditFields(nodeTreeGroup, instance, instance.Root);
+			commandManager.StartEditFields(nodeTreeGroup, instance, instance.Root, env);
 			(instance.Root as TestNodeStruct).Struct1.A = 5;
 			commandManager.NotifyEditFields(instance.Root);
-			commandManager.EndEditFields(instance.Root);
+			commandManager.EndEditFields(instance.Root, env);
 
 			instance = Utility.CreateNodeFromNodeTreeGroup(nodeTreeGroup, env);
 
@@ -86,11 +86,11 @@ namespace PrefabLikeTest
 
 			var instance = Utility.CreateNodeFromNodeTreeGroup(nodeTreeGroup, env);
 
-			commandManager.StartEditFields(nodeTreeGroup, instance, instance.Root);
+			commandManager.StartEditFields(nodeTreeGroup, instance, instance.Root, env);
 			(instance.Root as TestNodeClass).Class1_1 = new TestClass1();
 			(instance.Root as TestNodeClass).Class1_1.A = 2.0f;
 			commandManager.NotifyEditFields(instance.Root);
-			commandManager.EndEditFields(instance.Root);
+			commandManager.EndEditFields(instance.Root, env);
 
 			instance = Utility.CreateNodeFromNodeTreeGroup(nodeTreeGroup, env);
 

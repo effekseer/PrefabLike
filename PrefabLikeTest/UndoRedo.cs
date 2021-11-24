@@ -24,10 +24,10 @@ namespace PrefabLikeTest
 
 			commandManager.AddNode(nodeTreeGroup, instance, instance.Root.InstanceID, typeof(Node), env);
 
-			commandManager.Undo();
+			commandManager.Undo(env);
 			Assert.AreEqual(0, instance.Root.Children.Count);
 
-			commandManager.Redo();
+			commandManager.Redo(env);
 			Assert.AreEqual(1, instance.Root.Children.Count);
 			Assert.IsTrue(instance.Root.Children[0] != null);
 		}
@@ -66,61 +66,61 @@ namespace PrefabLikeTest
 			nodeTreeGroup.Init(typeof(T), env);
 			var instance = Utility.CreateNodeFromNodeTreeGroup(nodeTreeGroup, env);
 
-			commandManager.StartEditFields(nodeTreeGroup, instance, instance.Root);
+			commandManager.StartEditFields(nodeTreeGroup, instance, instance.Root, env);
 
 			var assignedUnedit = Helper.AssignRandomField(random, true, ref instance.Root);
 
 			commandManager.NotifyEditFields(instance.Root);
 
-			commandManager.EndEditFields(instance.Root);
+			commandManager.EndEditFields(instance.Root, env);
 
 			commandManager.SetFlagToBlockMergeCommands();
 
-			commandManager.StartEditFields(nodeTreeGroup, instance, instance.Root);
+			commandManager.StartEditFields(nodeTreeGroup, instance, instance.Root, env);
 
 			var assignedEdit1 = Helper.AssignRandomField(random, true, ref instance.Root);
 
 			commandManager.NotifyEditFields(instance.Root);
 
-			commandManager.EndEditFields(instance.Root);
+			commandManager.EndEditFields(instance.Root, env);
 
-			commandManager.Undo();
+			commandManager.Undo(env);
 
 			Helper.AreEqual(assignedUnedit, ref instance.Root);
 
-			commandManager.Redo();
+			commandManager.Redo(env);
 
 			Helper.AreEqual(assignedEdit1, ref instance.Root);
 
-			commandManager.StartEditFields(nodeTreeGroup, instance, instance.Root);
+			commandManager.StartEditFields(nodeTreeGroup, instance, instance.Root, env);
 
 			var assignedEdit2 = Helper.AssignRandomField(random, true, ref instance.Root);
 
 			commandManager.NotifyEditFields(instance.Root);
 
-			commandManager.EndEditFields(instance.Root);
+			commandManager.EndEditFields(instance.Root, env);
 
-			commandManager.StartEditFields(nodeTreeGroup, instance, instance.Root);
+			commandManager.StartEditFields(nodeTreeGroup, instance, instance.Root, env);
 
 			var assignedEdit3 = Helper.AssignRandomField(random, true, ref instance.Root);
 
 			commandManager.NotifyEditFields(instance.Root);
 
-			commandManager.EndEditFields(instance.Root);
+			commandManager.EndEditFields(instance.Root, env);
 
-			commandManager.Undo();
+			commandManager.Undo(env);
 
 			if (canMergeChanges)
 			{
 				Helper.AreEqual(assignedEdit1, ref instance.Root);
 
-				commandManager.Redo();
+				commandManager.Redo(env);
 			}
 			else
 			{
 				Helper.AreEqual(assignedEdit2, ref instance.Root);
 
-				commandManager.Redo();
+				commandManager.Redo(env);
 			}
 
 			Helper.AreEqual(assignedEdit3, ref instance.Root);
@@ -165,13 +165,13 @@ namespace PrefabLikeTest
 			var instanceChild = Utility.CreateNodeFromNodeTreeGroup(nodeTreeGroupChild, env);
 
 			var commandManagerChild = new CommandManager();
-			commandManagerChild.StartEditFields(nodeTreeGroupChild, instanceChild, instanceChild.Root);
+			commandManagerChild.StartEditFields(nodeTreeGroupChild, instanceChild, instanceChild.Root, env);
 
 			var assignedEditChild = Helper.AssignRandomField(random, true, ref instanceChild.Root);
 
 			commandManagerChild.NotifyEditFields(instanceChild.Root);
 
-			commandManagerChild.EndEditFields(instanceChild.Root);
+			commandManagerChild.EndEditFields(instanceChild.Root, env);
 
 			var id = nodeTreeGroup.Init(typeof(PrefabLike.Node), env);
 			nodeTreeGroup.AddNodeTreeGroup(id, nodeTreeGroupChild, env);
@@ -184,89 +184,89 @@ namespace PrefabLikeTest
 
 			var commandManager = new CommandManager();
 
-			commandManager.StartEditFields(nodeTreeGroup, instance, instance.Root);
+			commandManager.StartEditFields(nodeTreeGroup, instance, instance.Root, env);
 
 			var assignedUnedit = Helper.AssignRandomField(random, true, ref instance.Root);
 
 			commandManager.NotifyEditFields(instance.Root);
 
-			commandManager.EndEditFields(instance.Root);
+			commandManager.EndEditFields(instance.Root, env);
 
-			commandManager.StartEditFields(nodeTreeGroup, instance, instance.Root.Children[0]);
+			commandManager.StartEditFields(nodeTreeGroup, instance, instance.Root.Children[0], env);
 
 			var childTemp = instance.Root.Children[0];
 			var assignedChildUnedit = Helper.AssignRandomField(random, true, ref childTemp);
 
 			commandManager.NotifyEditFields(instance.Root.Children[0]);
 
-			commandManager.EndEditFields(instance.Root.Children[0]);
+			commandManager.EndEditFields(instance.Root.Children[0], env);
 
 			commandManager.SetFlagToBlockMergeCommands();
 
-			commandManager.StartEditFields(nodeTreeGroup, instance, instance.Root);
+			commandManager.StartEditFields(nodeTreeGroup, instance, instance.Root, env);
 
 			var assignedEdit1 = Helper.AssignRandomField(random, true, ref instance.Root);
 
 			commandManager.NotifyEditFields(instance.Root);
 
-			commandManager.EndEditFields(instance.Root);
+			commandManager.EndEditFields(instance.Root, env);
 
-			commandManager.StartEditFields(nodeTreeGroup, instance, instance.Root.Children[0]);
+			commandManager.StartEditFields(nodeTreeGroup, instance, instance.Root.Children[0], env);
 
 			childTemp = instance.Root.Children[0];
 			var assignedChildEdit = Helper.AssignRandomField(random, true, ref childTemp);
 
 			commandManager.NotifyEditFields(instance.Root.Children[0]);
 
-			commandManager.EndEditFields(instance.Root.Children[0]);
+			commandManager.EndEditFields(instance.Root.Children[0], env);
 
-			commandManager.Undo();
+			commandManager.Undo(env);
 
-			commandManager.Undo();
+			commandManager.Undo(env);
 
 			Helper.AreEqual(assignedUnedit, ref instance.Root);
 
 			childTemp = instance.Root.Children[0];
 			Helper.AreEqual(assignedChildUnedit, ref childTemp);
 
-			commandManager.Redo();
+			commandManager.Redo(env);
 
-			commandManager.Redo();
+			commandManager.Redo(env);
 
 			Helper.AreEqual(assignedEdit1, ref instance.Root);
 
 			childTemp = instance.Root.Children[0];
 			Helper.AreEqual(assignedChildEdit, ref childTemp);
 
-			commandManager.StartEditFields(nodeTreeGroup, instance, instance.Root);
+			commandManager.StartEditFields(nodeTreeGroup, instance, instance.Root, env);
 
 			var assignedEdit2 = Helper.AssignRandomField(random, true, ref instance.Root);
 
 			commandManager.NotifyEditFields(instance.Root);
 
-			commandManager.EndEditFields(instance.Root);
+			commandManager.EndEditFields(instance.Root, env);
 
-			commandManager.StartEditFields(nodeTreeGroup, instance, instance.Root);
+			commandManager.StartEditFields(nodeTreeGroup, instance, instance.Root, env);
 
 			var assignedEdit3 = Helper.AssignRandomField(random, true, ref instance.Root);
 
 			commandManager.NotifyEditFields(instance.Root);
 
-			commandManager.EndEditFields(instance.Root);
+			commandManager.EndEditFields(instance.Root, env);
 
-			commandManager.Undo();
+			commandManager.Undo(env);
 
 			if (canMergeChanges)
 			{
 				Helper.AreEqual(assignedEdit1, ref instance.Root);
 
-				commandManager.Redo();
+				commandManager.Redo(env);
 			}
 			else
 			{
 				Helper.AreEqual(assignedEdit2, ref instance.Root);
 
-				commandManager.Redo();
+				commandManager.Redo(env);
 			}
 
 			Helper.AreEqual(assignedEdit3, ref instance.Root);

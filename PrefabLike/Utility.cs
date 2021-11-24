@@ -56,6 +56,8 @@ namespace PrefabLike
 
 			var parentIdToChild = new List<Tuple<int, Node>>();
 
+			var baseToNode = new Dictionary<NodeTreeBase, Node>();
+
 			foreach (var b in nodeTreeGroup.InternalData.Bases)
 			{
 				Node node = null;
@@ -103,6 +105,31 @@ namespace PrefabLike
 
 				applyID(node);
 
+				parentIdToChild.Add(Tuple.Create(b.ParentID, node));
+
+				baseToNode.Add(b, node);
+			}
+
+			Node rootNode = null;
+
+			foreach (var pc in parentIdToChild)
+			{
+				if (idToNode.ContainsKey(pc.Item1))
+				{
+					var parent = idToNode[pc.Item1];
+					parent.Children.Add(pc.Item2);
+				}
+				else
+				{
+					rootNode = pc.Item2;
+				}
+			}
+
+			var ret = new NodeTree();
+			ret.Root = rootNode;
+
+			foreach (var b in nodeTreeGroup.InternalData.Bases)
+			{
 				foreach (var difference in b.Differences)
 				{
 					Func<int, Node, Node> findNode = null;
@@ -126,31 +153,15 @@ namespace PrefabLike
 						return null;
 					};
 
+					var node = baseToNode[b];
+
 					var targetNode = findNode(difference.Key, node);
 					var target = (object)targetNode;
-					Difference.ApplyDifference(ref target, difference.Value);
+					Difference.ApplyDifference(ref target, difference.Value, nodeTreeGroup, ret, env);
 				}
 
-				parentIdToChild.Add(Tuple.Create(b.ParentID, node));
 			}
 
-			Node rootNode = null;
-
-			foreach (var pc in parentIdToChild)
-			{
-				if (idToNode.ContainsKey(pc.Item1))
-				{
-					var parent = idToNode[pc.Item1];
-					parent.Children.Add(pc.Item2);
-				}
-				else
-				{
-					rootNode = pc.Item2;
-				}
-			}
-
-			var ret = new NodeTree();
-			ret.Root = rootNode;
 			return ret;
 		}
 	}

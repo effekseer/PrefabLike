@@ -47,18 +47,50 @@ namespace PrefabLikeTest
 
 			var instance = Utility.CreateNodeFromNodeTreeGroup(nodeTreeGroup, env);
 
-			commandManager.StartEditFields(nodeTreeGroup, instance, instance.Root);
+			commandManager.StartEditFields(nodeTreeGroup, instance, instance.Root, env);
 
 			var state = Helper.AssignRandomField(random, false, ref instance.Root);
 
 			commandManager.NotifyEditFields(instance.Root);
-			commandManager.EndEditFields(instance.Root);
+			commandManager.EndEditFields(instance.Root, env);
 
 			var json = nodeTreeGroup.Serialize();
 
 			var nodeTreeGroup2 = NodeTreeGroup.Deserialize(json);
 			var instance2 = Utility.CreateNodeFromNodeTreeGroup(nodeTreeGroup2, env);
 
+			Assert.True(Helper.IsValueEqual(instance, instance2));
+		}
+
+		[Test]
+		public void SaveLoadRef()
+		{
+			var env = new PrefabLike.Environment();
+			var random = new System.Random();
+			var commandManager = new CommandManager();
+			var nodeTreeGroup = new NodeTreeGroup();
+			nodeTreeGroup.Init(typeof(TestNodeRef), env);
+
+			var instance = Utility.CreateNodeFromNodeTreeGroup(nodeTreeGroup, env);
+
+			commandManager.StartEditFields(nodeTreeGroup, instance, instance.Root, env);
+
+			(instance.Root as TestNodeRef).Ref = instance.Root;
+			(instance.Root as TestNodeRef).Refs = new List<Node>();
+			(instance.Root as TestNodeRef).Refs.Add(instance.Root);
+
+			commandManager.NotifyEditFields(instance.Root);
+			commandManager.EndEditFields(instance.Root, env);
+
+			var json = nodeTreeGroup.Serialize();
+
+			var nodeTreeGroup2 = NodeTreeGroup.Deserialize(json);
+			var instance2 = Utility.CreateNodeFromNodeTreeGroup(nodeTreeGroup2, env);
+
+			var instanceRoot = instance2.Root as TestNodeRef;
+
+			Assert.True(Helper.IsValueEqual(instanceRoot, instanceRoot.Ref));
+			Assert.True(Helper.IsValueEqual(instanceRoot, instanceRoot.Refs[0]));
 			Assert.True(Helper.IsValueEqual(instance, instance2));
 		}
 	}

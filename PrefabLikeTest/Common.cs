@@ -20,4 +20,35 @@ namespace PrefabLikeTest
 			return NodeTrees.FirstOrDefault(_ => _.Value == asset).Key;
 		}
 	}
+
+	class TestNodePrimitive : Node
+	{
+		public bool ValueBool;
+		public byte ValueByte;
+		public sbyte ValueSByte;
+		public double ValueDobule;
+		public float ValueFloat;
+		public int ValueInt32;
+		public uint ValueUInt32;
+		public long ValueInt64;
+		public ulong ValueUInt64;
+		public short ValueInt16;
+		public ushort ValueUInt16;
+		public char ValueChar;
+		public string ValueString;
+	}
+
+	class TestNodeRef : Node
+	{
+		public Node Ref;
+		public List<Node> Refs;
+	}
+
+	class TestClassNotSerializable
+	{
+		public float A;
+		public float B;
+		public float C;
+	}
+
 }

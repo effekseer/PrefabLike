@@ -59,7 +59,7 @@ namespace PrefabLike
 
 	public class FieldState
 	{
-		object ConvertValue(object o)
+		object ConvertValue(object o, Environment env)
 		{
 			if (o is null)
 			{
@@ -67,7 +67,6 @@ namespace PrefabLike
 			}
 
 			var type = o.GetType();
-
 
 			if (type.IsPrimitive)
 			{
@@ -78,13 +77,15 @@ namespace PrefabLike
 			{
 				return o;
 			}
-			else if (type.IsSubclassOf(typeof(Node)))
+			else if (type.GetInterfaces().Contains(typeof(IInstanceID)))
 			{
-				return o;
+				var v = o as IInstanceID;
+				return v.InstanceID;
 			}
 			else if (type.IsSubclassOf(typeof(Asset)))
 			{
-				return o;
+				var v = o as Asset;
+				return env.GetAssetPath(v);
 			}
 			else if (type == typeof(Guid))
 			{
@@ -99,7 +100,7 @@ namespace PrefabLike
 
 				for (int i = 0; i < list.Count; i++)
 				{
-					var v = ConvertValue(list[i]);
+					var v = ConvertValue(list[i], env);
 					values.Add(new AccessKeyListElement { Index = i }, v);
 				}
 
@@ -117,11 +118,11 @@ namespace PrefabLike
 			}
 			else
 			{
-				return GetValues(o);
+				return GetValues(o, env);
 			}
 		}
 
-		Dictionary<AccessKey, object> GetValues(object o)
+		Dictionary<AccessKey, object> GetValues(object o, Environment env)
 		{
 			Dictionary<AccessKey, object> values = new Dictionary<AccessKey, object>();
 
@@ -140,7 +141,7 @@ namespace PrefabLike
 					continue;
 				}
 
-				var converted = ConvertValue(value);
+				var converted = ConvertValue(value, env);
 				if (converted is null)
 				{
 					continue;
@@ -187,9 +188,10 @@ namespace PrefabLike
 		/// This state is used as a snapshot of the object to take the change differences.
 		/// </summary>
 		/// <param name="o"></param>
-		public void Store(object o)
+		/// <param name="env"></param>
+		public void Store(object o, Environment env)
 		{
-			currentValues = GetValues(o);
+			currentValues = GetValues(o, env);
 		}
 
 		public Dictionary<AccessKeyGroup, object> GenerateDifference(FieldState baseState)

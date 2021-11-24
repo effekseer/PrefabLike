@@ -83,10 +83,10 @@ namespace PrefabLikeTest
 
 			var instance = Utility.CreateNodeFromNodeTreeGroup(nodeTreeGroup, env);
 
-			commandManager.StartEditFields(nodeTreeGroup, instance, instance.Root);
+			commandManager.StartEditFields(nodeTreeGroup, instance, instance.Root, env);
 			(instance.Root as TestNodePrimitive).ValueInt32 = 1;
 			commandManager.NotifyEditFields(instance.Root);
-			commandManager.EndEditFields(instance.Root);
+			commandManager.EndEditFields(instance.Root, env);
 
 			instance = Utility.CreateNodeFromNodeTreeGroup(nodeTreeGroup, env);
 
@@ -107,10 +107,10 @@ namespace PrefabLikeTest
 
 			var commandManager = new CommandManager();
 			var instance = Utility.CreateNodeFromNodeTreeGroup(nodeTreeGroup, env);
-			commandManager.StartEditFields(nodeTreeGroup, instance, instance.Root);
+			commandManager.StartEditFields(nodeTreeGroup, instance, instance.Root, env);
 			(instance.Root as NodeChange1).Value1 = intValue;
 			commandManager.NotifyEditFields(instance.Root);
-			commandManager.EndEditFields(instance.Root);
+			commandManager.EndEditFields(instance.Root, env);
 
 			env.ReturnType = typeof(NodeChange2);
 			{
@@ -123,7 +123,7 @@ namespace PrefabLikeTest
 			Assert.AreEqual((instance.Root as NodeChange2).Value1, intValue);
 			Assert.AreEqual(instance.Root.Children.Count, 1);
 
-			commandManager.Undo();
+			commandManager.Undo(env);
 
 			Assert.AreEqual((instance.Root as NodeChange2).Value1, 0);
 		}
@@ -143,10 +143,10 @@ namespace PrefabLikeTest
 
 			var commandManager = new CommandManager();
 			var instance = Utility.CreateNodeFromNodeTreeGroup(nodeTreeGroup, env);
-			commandManager.StartEditFields(nodeTreeGroup, instance, instance.Root);
+			commandManager.StartEditFields(nodeTreeGroup, instance, instance.Root, env);
 			(instance.Root as NodeChange2).Value1 = intValue;
 			commandManager.NotifyEditFields(instance.Root);
-			commandManager.EndEditFields(instance.Root);
+			commandManager.EndEditFields(instance.Root, env);
 
 			env.ReturnType = typeof(NodeChange1);
 			{
@@ -159,7 +159,7 @@ namespace PrefabLikeTest
 			Assert.AreEqual((instance.Root as NodeChange1).Value1, intValue);
 			Assert.AreEqual(instance.Root.Children.Count, 0);
 
-			commandManager.Undo();
+			commandManager.Undo(env);
 
 			Assert.AreEqual((instance.Root as NodeChange1).Value1, 0);
 		}
