@@ -6,6 +6,29 @@ using System.Linq;
 
 namespace PrefabLikeTest
 {
+	public class Node : INode
+	{
+		public int InstanceID { get; set; }
+
+		[System.NonSerialized]
+		public List<Node> Children = new List<Node>();
+
+		public void AddChild(INode node)
+		{
+			Children.Add(node as Node);
+		}
+
+		public void RemoveChild(int instanceID)
+		{
+			Children.RemoveAll(_ => _.InstanceID == instanceID);
+		}
+
+		public IReadOnlyCollection<INode> GetChildren()
+		{
+			return Children;
+		}
+	}
+
 	class MultiNodeTreeEnvironment : PrefabLike.Environment
 	{
 		public Dictionary<string, NodeTreeGroup> NodeTrees = new Dictionary<string, NodeTreeGroup>();

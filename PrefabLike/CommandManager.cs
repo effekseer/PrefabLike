@@ -197,10 +197,10 @@ namespace PrefabLike
 
 			Action execute = () =>
 			{
-				var parentNode = nodeTree.FindInstance(parentID) as Node;
+				var parentNode = nodeTree.FindInstance(parentID) as INode;
 				var newNodeTree = Utility.CreateNodeFromNodeTreeGroup(nodeTreeGroup, env);
 				var newNode = newNodeTree.FindInstance(newNodeID);
-				parentNode.Children.Add(newNode as Node);
+				parentNode.AddChild(newNode as INode);
 			};
 
 			execute();
@@ -217,7 +217,7 @@ namespace PrefabLike
 				var parent = nodeTree.FindParent(newNodeID);
 				if (parent != null)
 				{
-					parent.Children.RemoveAll(_ => _.InstanceID == newNodeID);
+					parent.RemoveChild(newNodeID);
 				}
 
 				nodeTreeGroup.InternalData = NodeTreeGroupInternalData.Deserialize(before);
@@ -228,7 +228,7 @@ namespace PrefabLike
 
 		public void RemoveNode(NodeTreeGroup nodeTreeGroup, NodeTree nodeTree, int nodeID, Environment env)
 		{
-			var parentNode = nodeTree.FindParent(nodeID) as Node;
+			var parentNode = nodeTree.FindParent(nodeID) as INode;
 			var parentNodeID = parentNode.InstanceID;
 
 			var before = nodeTreeGroup.InternalData.Serialize();
@@ -241,8 +241,8 @@ namespace PrefabLike
 
 			Action execute = () =>
 			{
-				var currentParentNode = nodeTree.FindInstance(parentNodeID) as Node;
-				currentParentNode.Children.RemoveAll(_ => _.InstanceID == nodeID);
+				var currentParentNode = nodeTree.FindInstance(parentNodeID) as INode;
+				currentParentNode.RemoveChild(nodeID);
 			};
 
 			execute();
@@ -258,10 +258,10 @@ namespace PrefabLike
 			{
 				nodeTreeGroup.InternalData = NodeTreeGroupInternalData.Deserialize(before);
 
-				var parentNode = nodeTree.FindInstance(parentNodeID) as Node;
+				var parentNode = nodeTree.FindInstance(parentNodeID) as INode;
 				var newNodeTree = Utility.CreateNodeFromNodeTreeGroup(nodeTreeGroup, env);
 				var newNode = newNodeTree.FindInstance(nodeID);
-				parentNode.Children.Add(newNode as Node);
+				parentNode.AddChild(newNode as INode);
 			};
 
 			AddCommand(command);

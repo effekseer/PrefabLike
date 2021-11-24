@@ -8,26 +8,26 @@ namespace PrefabLike
 {
 	public class NodeTree : IAssetInstanceRoot
 	{
-		public Node Root;
+		public INode Root;
 
 		public IInstanceID? FindInstance(int id)
 		{
 			return FindInstance(Root, id);
 		}
 
-		public Node FindParent(int id)
+		public INode FindParent(int id)
 		{
 			return FindParent(Root, id);
 		}
 
-		IInstanceID? FindInstance(Node node, int id)
+		IInstanceID? FindInstance(INode node, int id)
 		{
 			if (node.InstanceID == id)
 			{
 				return node;
 			}
 
-			foreach (var child in node.Children)
+			foreach (var child in node.GetChildren())
 			{
 				var result = FindInstance(child, id);
 				if (result != null)
@@ -40,14 +40,14 @@ namespace PrefabLike
 
 		}
 
-		Node FindParent(Node parent, int id)
+		INode FindParent(INode parent, int id)
 		{
-			if (parent.Children.Any(_ => _.InstanceID == id))
+			if (parent.GetChildren().Any(_ => _.InstanceID == id))
 			{
 				return parent;
 			}
 
-			foreach (var child in parent.Children)
+			foreach (var child in parent.GetChildren())
 			{
 				var result = FindParent(child, id);
 				if (result != null)
@@ -246,9 +246,9 @@ namespace PrefabLike
 			}
 		}
 
-		internal void AssignID(NodeTreeBase nodeTreeBase, Node node)
+		internal void AssignID(NodeTreeBase nodeTreeBase, INode node)
 		{
-			Action<Node> assignID = null;
+			Action<INode> assignID = null;
 
 			assignID = (n) =>
 			{
@@ -261,7 +261,7 @@ namespace PrefabLike
 				nodeTreeBase.IDRemapper.Add(n.InstanceID, newID);
 				n.InstanceID = newID;
 
-				foreach (var child in n.Children)
+				foreach (var child in n.GetChildren())
 				{
 					assignID(child);
 				}
@@ -274,7 +274,7 @@ namespace PrefabLike
 		{
 			var nodeType = env.GetType(typeName);
 			var constructor = nodeType.GetConstructor(Type.EmptyTypes);
-			var node = (Node)constructor.Invoke(null);
+			var node = (INode)constructor.Invoke(null);
 
 			var nodeTreeBase = new NodeTreeBase();
 			nodeTreeBase.BaseType = typeName;

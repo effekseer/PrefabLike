@@ -25,8 +25,8 @@ namespace PrefabLikeExample
 				return;
 			}
 
-			PrefabLike.Node selectedNode = null;
-			PrefabLike.Node popupedNode = null;
+			Node selectedNode = null;
+			Node popupedNode = null;
 
 			while (Altseed2.Engine.DoEvents())
 			{
@@ -71,9 +71,9 @@ namespace PrefabLikeExample
 				{
 					string menuKey = "menu";
 
-					Action<PrefabLike.Node> updateNode = null;
+					Action<Node> updateNode = null;
 
-					Action<PrefabLike.Node> showNodePopup = (node) =>
+					Action<Node> showNodePopup = (node) =>
 					{
 						if (Altseed2.Engine.Tool.IsItemHovered(Altseed2.ToolHoveredFlags.None))
 						{
@@ -109,7 +109,7 @@ namespace PrefabLikeExample
 						}
 					};
 
-					updateNode(nodeTree.Root);
+					updateNode(nodeTree.Root as Node);
 
 					if (Altseed2.Engine.Tool.BeginPopup(menuKey, Altseed2.ToolWindowFlags.None))
 					{
@@ -230,12 +230,35 @@ namespace PrefabLikeExample
 			Altseed2.Engine.Terminate();
 		}
 
-		public class NodeStruct : PrefabLike.Node
+		public class NodeStruct : Node
 		{
 			public string Name = "Node";
 			public int Value1;
 			public float Value2;
 			public List<int> List1 = new List<int>();
+		}
+	}
+
+	public class Node : PrefabLike.INode
+	{
+		public int InstanceID { get; set; }
+
+		[System.NonSerialized]
+		public List<Node> Children = new List<Node>();
+
+		public void AddChild(PrefabLike.INode node)
+		{
+			Children.Add(node as Node);
+		}
+
+		public void RemoveChild(int instanceID)
+		{
+			Children.RemoveAll(_ => _.InstanceID == instanceID);
+		}
+
+		public IReadOnlyCollection<PrefabLike.INode> GetChildren()
+		{
+			return Children;
 		}
 	}
 

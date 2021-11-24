@@ -17,11 +17,12 @@ namespace PrefabLike
 		public IInstanceID? FindInstance(int id);
 	}
 
-	public class Node : IInstanceID
+	public interface INode : IInstanceID
 	{
-		public int InstanceID { get; set; }
+		public void AddChild(INode node);
 
-		[System.NonSerialized]
-		public List<Node> Children = new List<Node>();
+		public void RemoveChild(int instanceID);
+
+		public IReadOnlyCollection<INode> GetChildren();
 	}
 }

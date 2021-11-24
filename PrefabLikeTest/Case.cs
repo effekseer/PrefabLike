@@ -8,12 +8,12 @@ namespace PrefabLikeTest
 {
 	class Case
 	{
-		class NodeChange1 : PrefabLike.Node
+		class NodeChange1 : Node
 		{
 			public int Value1;
 		}
 
-		class NodeChange2 : PrefabLike.Node
+		class NodeChange2 : Node
 		{
 			public int Value1;
 			public int Value2;
@@ -52,24 +52,24 @@ namespace PrefabLikeTest
 
 			var instance = Utility.CreateNodeFromNodeTreeGroup(nodeTreeGroup, env);
 			var root = instance.Root;
-			Assert.AreEqual(root.Children.Count(), 0);
+			Assert.AreEqual(root.GetChildren().Count(), 0);
 
 			commandManager.AddNode(nodeTreeGroup, instance, root.InstanceID, typeof(Node), env);
-			Assert.AreEqual(instance.Root.Children.Count(), 1);
+			Assert.AreEqual(instance.Root.GetChildren().Count(), 1);
 
 			{
 				var instanceTemp = Utility.CreateNodeFromNodeTreeGroup(nodeTreeGroup, env);
 				root = instanceTemp.Root;
-				Assert.AreEqual(root.Children.Count(), 1);
+				Assert.AreEqual(root.GetChildren().Count(), 1);
 			}
 
-			commandManager.RemoveNode(nodeTreeGroup, instance, root.Children[0].InstanceID, env);
-			Assert.AreEqual(instance.Root.Children.Count(), 0);
+			commandManager.RemoveNode(nodeTreeGroup, instance, root.GetChildren().First().InstanceID, env);
+			Assert.AreEqual(instance.Root.GetChildren().Count(), 0);
 
 			{
 				var instanceTemp = Utility.CreateNodeFromNodeTreeGroup(nodeTreeGroup, env);
 				root = instanceTemp.Root;
-				Assert.AreEqual(root.Children.Count(), 0);
+				Assert.AreEqual(root.GetChildren().Count(), 0);
 			}
 		}
 
@@ -116,12 +116,12 @@ namespace PrefabLikeTest
 			{
 				var instanceTemp = Utility.CreateNodeFromNodeTreeGroup(nodeTreeGroup, env);
 				Assert.AreEqual((instanceTemp.Root as NodeChange2).Value1, intValue);
-				Assert.AreEqual(instanceTemp.Root.Children.Count, 1);
+				Assert.AreEqual(instanceTemp.Root.GetChildren().Count, 1);
 			}
 
 			PrefabLike.Utility.RebuildNodeTree(nodeTreeGroup, instance, env);
 			Assert.AreEqual((instance.Root as NodeChange2).Value1, intValue);
-			Assert.AreEqual(instance.Root.Children.Count, 1);
+			Assert.AreEqual(instance.Root.GetChildren().Count, 1);
 
 			commandManager.Undo(env);
 
@@ -152,12 +152,12 @@ namespace PrefabLikeTest
 			{
 				var instanceTemp = Utility.CreateNodeFromNodeTreeGroup(nodeTreeGroup, env);
 				Assert.AreEqual((instanceTemp.Root as NodeChange1).Value1, intValue);
-				Assert.AreEqual(instanceTemp.Root.Children.Count, 0);
+				Assert.AreEqual(instanceTemp.Root.GetChildren().Count, 0);
 			}
 
 			PrefabLike.Utility.RebuildNodeTree(nodeTreeGroup, instance, env);
 			Assert.AreEqual((instance.Root as NodeChange1).Value1, intValue);
-			Assert.AreEqual(instance.Root.Children.Count, 0);
+			Assert.AreEqual(instance.Root.GetChildren().Count, 0);
 
 			commandManager.Undo(env);
 
@@ -183,15 +183,15 @@ namespace PrefabLikeTest
 
 			PrefabLike.Utility.RebuildNodeTree(nodeTreeGroup1, instance, env);
 
-			Assert.AreEqual(instance.Root.Children.Count(), 1);
-			Assert.AreEqual(instance.Root.Children[0].Children.Count(), 0);
+			Assert.AreEqual(instance.Root.GetChildren().Count(), 1);
+			Assert.AreEqual(instance.Root.GetChildren().First().GetChildren().Count(), 0);
 
 			nodeTreeGroup2.AddNode(id2, typeof(Node), env);
 
 			PrefabLike.Utility.RebuildNodeTree(nodeTreeGroup1, instance, env);
 
-			Assert.AreEqual(instance.Root.Children.Count(), 1);
-			Assert.AreEqual(instance.Root.Children[0].Children.Count(), 1);
+			Assert.AreEqual(instance.Root.GetChildren().Count(), 1);
+			Assert.AreEqual(instance.Root.GetChildren().First().GetChildren().Count(), 1);
 		}
 	}
 }

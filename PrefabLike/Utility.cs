@@ -52,22 +52,22 @@ namespace PrefabLike
 
 		public static NodeTree CreateNodeFromNodeTreeGroup(NodeTreeGroup nodeTreeGroup, Environment env)
 		{
-			var idToNode = new Dictionary<int, Node>();
+			var idToNode = new Dictionary<int, INode>();
 
-			var parentIdToChild = new List<Tuple<int, Node>>();
+			var parentIdToChild = new List<Tuple<int, INode>>();
 
-			var baseToNode = new Dictionary<NodeTreeBase, Node>();
+			var baseToNode = new Dictionary<NodeTreeBase, INode>();
 
 			foreach (var b in nodeTreeGroup.InternalData.Bases)
 			{
-				Node node = null;
+				INode node = null;
 
 				if (b.BaseType != null)
 				{
 					var nodeType = env.GetType(b.BaseType);
 
 					var constructor = nodeType.GetConstructor(Type.EmptyTypes);
-					node = (Node)constructor.Invoke(null);
+					node = (INode)constructor.Invoke(null);
 				}
 				else if (b.Template != null)
 				{
@@ -82,7 +82,7 @@ namespace PrefabLike
 					throw new InvalidOperationException();
 				}
 
-				Action<Node> applyID = null;
+				Action<INode> applyID = null;
 
 				applyID = (n) =>
 				{
@@ -97,7 +97,7 @@ namespace PrefabLike
 
 					idToNode.Add(n.InstanceID, n);
 
-					foreach (var child in n.Children)
+					foreach (var child in n.GetChildren())
 					{
 						applyID(child);
 					}
@@ -110,14 +110,14 @@ namespace PrefabLike
 				baseToNode.Add(b, node);
 			}
 
-			Node rootNode = null;
+			INode rootNode = null;
 
 			foreach (var pc in parentIdToChild)
 			{
 				if (idToNode.ContainsKey(pc.Item1))
 				{
 					var parent = idToNode[pc.Item1];
-					parent.Children.Add(pc.Item2);
+					parent.AddChild(pc.Item2);
 				}
 				else
 				{
@@ -132,16 +132,16 @@ namespace PrefabLike
 			{
 				foreach (var difference in b.Differences)
 				{
-					Func<int, Node, Node> findNode = null;
+					Func<int, INode, INode> findNode = null;
 
-					findNode = (int id, Node n) =>
+					findNode = (int id, INode n) =>
 					{
 						if (n.InstanceID == id)
 						{
 							return n;
 						}
 
-						foreach (var child in n.Children)
+						foreach (var child in n.GetChildren())
 						{
 							var ret = findNode(id, child);
 							if (ret != null)

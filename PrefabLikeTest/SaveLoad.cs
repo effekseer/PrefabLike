@@ -75,9 +75,9 @@ namespace PrefabLikeTest
 
 			commandManager.StartEditFields(nodeTreeGroup, instance, instance.Root, env);
 
-			(instance.Root as TestNodeRef).Ref = instance.Root;
+			(instance.Root as TestNodeRef).Ref = instance.Root as Node;
 			(instance.Root as TestNodeRef).Refs = new List<Node>();
-			(instance.Root as TestNodeRef).Refs.Add(instance.Root);
+			(instance.Root as TestNodeRef).Refs.Add(instance.Root as Node);
 
 			commandManager.NotifyEditFields(instance.Root);
 			commandManager.EndEditFields(instance.Root, env);

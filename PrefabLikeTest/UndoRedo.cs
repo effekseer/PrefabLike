@@ -25,11 +25,11 @@ namespace PrefabLikeTest
 			commandManager.AddNode(nodeTreeGroup, instance, instance.Root.InstanceID, typeof(Node), env);
 
 			commandManager.Undo(env);
-			Assert.AreEqual(0, instance.Root.Children.Count);
+			Assert.AreEqual(0, instance.Root.GetChildren().Count);
 
 			commandManager.Redo(env);
-			Assert.AreEqual(1, instance.Root.Children.Count);
-			Assert.IsTrue(instance.Root.Children[0] != null);
+			Assert.AreEqual(1, instance.Root.GetChildren().Count);
+			Assert.IsTrue(instance.Root.GetChildren().First() != null);
 		}
 
 		[Test]
@@ -173,12 +173,12 @@ namespace PrefabLikeTest
 
 			commandManagerChild.EndEditFields(instanceChild.Root, env);
 
-			var id = nodeTreeGroup.Init(typeof(PrefabLike.Node), env);
+			var id = nodeTreeGroup.Init(typeof(Node), env);
 			nodeTreeGroup.AddNodeTreeGroup(id, nodeTreeGroupChild, env);
 			var instance = Utility.CreateNodeFromNodeTreeGroup(nodeTreeGroup, env);
 
 			{
-				var node = instance.Root.Children[0];
+				var node = instance.Root.GetChildren().First();
 				Helper.AreEqual(assignedEditChild, ref node);
 			}
 
@@ -192,14 +192,14 @@ namespace PrefabLikeTest
 
 			commandManager.EndEditFields(instance.Root, env);
 
-			commandManager.StartEditFields(nodeTreeGroup, instance, instance.Root.Children[0], env);
+			commandManager.StartEditFields(nodeTreeGroup, instance, instance.Root.GetChildren().First(), env);
 
-			var childTemp = instance.Root.Children[0];
+			var childTemp = instance.Root.GetChildren().First();
 			var assignedChildUnedit = Helper.AssignRandomField(random, true, ref childTemp);
 
-			commandManager.NotifyEditFields(instance.Root.Children[0]);
+			commandManager.NotifyEditFields(instance.Root.GetChildren().First());
 
-			commandManager.EndEditFields(instance.Root.Children[0], env);
+			commandManager.EndEditFields(instance.Root.GetChildren().First(), env);
 
 			commandManager.SetFlagToBlockMergeCommands();
 
@@ -211,14 +211,14 @@ namespace PrefabLikeTest
 
 			commandManager.EndEditFields(instance.Root, env);
 
-			commandManager.StartEditFields(nodeTreeGroup, instance, instance.Root.Children[0], env);
+			commandManager.StartEditFields(nodeTreeGroup, instance, instance.Root.GetChildren().First(), env);
 
-			childTemp = instance.Root.Children[0];
+			childTemp = instance.Root.GetChildren().First();
 			var assignedChildEdit = Helper.AssignRandomField(random, true, ref childTemp);
 
-			commandManager.NotifyEditFields(instance.Root.Children[0]);
+			commandManager.NotifyEditFields(instance.Root.GetChildren().First());
 
-			commandManager.EndEditFields(instance.Root.Children[0], env);
+			commandManager.EndEditFields(instance.Root.GetChildren().First(), env);
 
 			commandManager.Undo(env);
 
@@ -226,7 +226,7 @@ namespace PrefabLikeTest
 
 			Helper.AreEqual(assignedUnedit, ref instance.Root);
 
-			childTemp = instance.Root.Children[0];
+			childTemp = instance.Root.GetChildren().First();
 			Helper.AreEqual(assignedChildUnedit, ref childTemp);
 
 			commandManager.Redo(env);
@@ -235,7 +235,7 @@ namespace PrefabLikeTest
 
 			Helper.AreEqual(assignedEdit1, ref instance.Root);
 
-			childTemp = instance.Root.Children[0];
+			childTemp = instance.Root.GetChildren().First();
 			Helper.AreEqual(assignedChildEdit, ref childTemp);
 
 			commandManager.StartEditFields(nodeTreeGroup, instance, instance.Root, env);
