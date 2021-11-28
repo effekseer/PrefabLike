@@ -9,6 +9,12 @@ namespace PrefabLike
 {
 	public class FieldState
 	{
+		public class Element
+		{
+			public AccessKey Target;
+			public object Value;
+		}
+
 		object ConvertValue(object o, Environment env)
 		{
 			if (o is null)
@@ -44,14 +50,14 @@ namespace PrefabLike
 			else if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(List<>))
 			{
 				var list = (IList)o;
-				var values = new Dictionary<AccessKey, object>();
+				var values = new List<Element>();
 
-				values.Add(new AccessKeyListCount(), list.Count);
+				values.Add(new Element { Target = new AccessKeyListCount(), Value = list.Count });
 
 				for (int i = 0; i < list.Count; i++)
 				{
 					var v = ConvertValue(list[i], env);
-					values.Add(new AccessKeyListElement { Index = i }, v);
+					values.Add(new Element { Target = new AccessKeyListElement { Index = i }, Value = v });
 				}
 
 				return values;
@@ -72,9 +78,9 @@ namespace PrefabLike
 			}
 		}
 
-		Dictionary<AccessKey, object> GetValues(object o, Environment env)
+		List<Element> GetValues(object o, Environment env)
 		{
-			Dictionary<AccessKey, object> values = new Dictionary<AccessKey, object>();
+			List<Element> values = new List<Element>();
 
 			var fields = o.GetType().GetFields();
 			foreach (var field in fields)
@@ -92,26 +98,26 @@ namespace PrefabLike
 				}
 
 				var key = new AccessKeyField { Name = field.Name };
-				values.Add(key, converted);
+				values.Add(new Element { Target = key, Value = converted });
 			}
 
 			return values;
 		}
 
-		Dictionary<AccessKeyGroup, object> MakeGroup(Dictionary<AccessKey, object> a2o)
+		Difference MakeGroup(List<Element> a2o)
 		{
-			var dst = new Dictionary<AccessKeyGroup, object>();
+			var dst = new Difference();
 
-			Action<AccessKey[], Dictionary<AccessKey, object>> recursive = null;
-			recursive = (AccessKey[] keys, Dictionary<AccessKey, object> a2or) =>
+			Action<AccessKey[], List<Element>> recursive = null;
+			recursive = (AccessKey[] keys, List<Element> a2or) =>
 			{
 				foreach (var kv in a2or)
 				{
-					var nextKeys = keys.Concat(new[] { kv.Key }).ToArray();
+					var nextKeys = keys.Concat(new[] { kv.Target }).ToArray();
 
-					if (kv.Value is Dictionary<AccessKey, object>)
+					if (kv.Value is List<Element> elms)
 					{
-						recursive(nextKeys, kv.Value as Dictionary<AccessKey, object>);
+						recursive(nextKeys, elms);
 					}
 					else
 					{
@@ -125,7 +131,7 @@ namespace PrefabLike
 			return dst;
 		}
 
-		Dictionary<AccessKey, object> currentValues = new Dictionary<AccessKey, object>();
+		List<Element> currentValues = new List<Element>();
 
 		/// <summary>
 		/// Stores the current state of the specified object in this FieldState.
