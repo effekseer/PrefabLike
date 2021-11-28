@@ -151,26 +151,28 @@ namespace PrefabLike
 			var baseValues = MakeGroup(baseState.currentValues);
 			var current = MakeGroup(currentValues);
 
-			foreach (var value in baseValues)
+			foreach (var value in baseValues.Modifications)
 			{
-				if (!current.ContainsKey(value.Key))
+				if (!current.ContainTarget(value.Target))
 				{
-					ret.Add(value.Key, value.Value);
+					ret.Add(value.Target, value.Value);
 					continue;
 				}
 
-				var newVal = current[value.Key];
-				if (!object.Equals(newVal, value.Value))
+				if (current.TryGetValue(value.Target, out var o))
 				{
-					ret.Add(value.Key, newVal);
+					if (!object.Equals(o, value.Value))
+					{
+						ret.Add(value.Target, o);
+					}
 				}
 			}
 
-			foreach (var value in current)
+			foreach (var value in current.Modifications)
 			{
-				if (!baseValues.ContainsKey(value.Key))
+				if (!baseValues.ContainTarget(value.Target))
 				{
-					ret.Add(value.Key, value.Value);
+					ret.Add(value.Target, value.Value);
 				}
 			}
 

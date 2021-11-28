@@ -26,6 +26,25 @@ namespace PrefabLike
 			modifications.Add(modification);
 		}
 
+		public bool ContainTarget(AccessKeyGroup target)
+		{
+			return modifications.Any(_ => _.Target.Equals(target));
+		}
+
+		public bool TryGetValue(AccessKeyGroup target, out object o)
+		{
+			o = null;
+			var modification = modifications.FirstOrDefault(_ => _.Target.Equals(target));
+
+			if (modification != null)
+			{
+				o = modification.Value;
+				return true;
+			}
+
+			return false;
+		}
+
 		public static Difference MergeDifference(Difference diffRedo, Difference oldDifference)
 		{
 			var newDifference = new Difference();
