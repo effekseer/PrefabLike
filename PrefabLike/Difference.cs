@@ -174,10 +174,7 @@ namespace PrefabLike
 
 		public static void ApplyDifference(ref object target, Difference difference, Asset asset, IAssetInstanceRoot root, Environment env)
 		{
-			var differenceFirst = difference.modifications.Where(_ => _.Target.Keys.Last() is AccessKeyListCount).ToArray();
-			var differenceSecond = difference.modifications.Where(_ => !(_.Target.Keys.Last() is AccessKeyListCount)).ToArray();
-
-			foreach (var diff in differenceFirst.Concat(differenceSecond))
+			foreach (var diff in difference.modifications)
 			{
 				var keys = diff.Target.Keys;
 
