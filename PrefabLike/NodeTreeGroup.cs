@@ -82,7 +82,7 @@ namespace PrefabLike
 		/// <summary>
 		/// IDとそのIDのインスタンスの変更
 		/// </summary>
-		public Dictionary<int, Dictionary<AccessKeyGroup, object>> Differences = new Dictionary<int, Dictionary<AccessKeyGroup, object>>();
+		public Dictionary<int, Difference> Differences = new Dictionary<int, Difference>();
 
 		/// <summary>
 		/// 親のID
@@ -139,10 +139,10 @@ namespace PrefabLike
 
 					var difference = new JArray();
 
-					foreach (var pair in ds.Value)
+					foreach (var pair in ds.Value.Modifications)
 					{
 						var p = new JObject();
-						p["Key"] = pair.Key.Serialize();
+						p["Key"] = pair.Target.Serialize();
 						p["Value"] = ConvertCSToJson(pair.Value);
 
 						difference.Add(p);
@@ -201,7 +201,7 @@ namespace PrefabLike
 					var targetID = (int)ds["Key"];
 
 					var difference = ds["Value"] as JArray;
-					var diff = new Dictionary<AccessKeyGroup, object>();
+					var diff = new Difference();
 
 					foreach (var pair in difference)
 					{
@@ -362,7 +362,7 @@ namespace PrefabLike
 			return true;
 		}
 
-		internal override Dictionary<AccessKeyGroup, object> GetDifference(int instanceID)
+		internal override Difference GetDifference(int instanceID)
 		{
 			foreach (var b in InternalData.Bases)
 			{
@@ -375,7 +375,7 @@ namespace PrefabLike
 			return null;
 		}
 
-		internal override void SetDifference(int instanceID, Dictionary<AccessKeyGroup, object> difference)
+		internal override void SetDifference(int instanceID, Difference difference)
 		{
 			foreach (var b in InternalData.Bases)
 			{

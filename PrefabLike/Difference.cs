@@ -6,8 +6,106 @@ using System.Linq;
 
 namespace PrefabLike
 {
-	class Difference
+	public class Difference
 	{
+		public class Modification
+		{
+			public AccessKeyGroup Target;
+			public object Value;
+		}
+
+		public IReadOnlyCollection<Modification> Modifications { get { return modifications; } }
+
+		List<Modification> modifications = new List<Modification>();
+
+		public void Add(AccessKeyGroup target, object value)
+		{
+			var modification = new Modification();
+			modification.Target = target;
+			modification.Value = value;
+			modifications.Add(modification);
+		}
+
+		public static Difference MergeDifference(Difference diffRedo, Difference oldDifference)
+		{
+			var newDifference = new Difference();
+
+			foreach (var diff in oldDifference.modifications)
+			{
+				var m = new Modification();
+				m.Target = diff.Target;
+				m.Value = diff.Value;
+				newDifference.modifications.Add(m);
+			}
+
+			foreach (var diff in diffRedo.modifications)
+			{
+				var elm = newDifference.modifications.FirstOrDefault(_ => _.Target.Equals(diff.Target));
+				if (elm != null)
+				{
+					elm.Value = diff.Value;
+				}
+				else
+				{
+					var m = new Modification();
+					m.Target = diff.Target;
+					m.Value = diff.Value;
+					newDifference.modifications.Add(m);
+				}
+			}
+
+			RemoveInvalidElements(newDifference);
+
+			return newDifference;
+		}
+
+		public static void RemoveInvalidElements(Difference values)
+		{
+			List<Modification> listElementLengthes = new List<Modification>();
+			foreach (var a in values.modifications)
+			{
+				if (a.Target.Keys.OfType<AccessKeyListCount>().Any())
+				{
+					listElementLengthes.Add(a);
+				}
+			}
+
+			var removing = new List<AccessKeyGroup>();
+			foreach (var a in values.modifications)
+			{
+				if (!(a.Target.Keys.OfType<AccessKeyListElement>().Any()))
+				{
+					continue;
+				}
+
+				var length = listElementLengthes.FirstOrDefault(_ => StartWith(a.Target.Keys, _.Target.Keys.Take(_.Target.Keys.Length - 1)));
+				if (length == null)
+				{
+					continue;
+				}
+
+				if (Convert.ToInt64(a.Target.Keys.Skip(length.Target.Keys.Length - 2).OfType<AccessKeyListElement>().First().Index) >= Convert.ToInt64(length.Value))
+				{
+					removing.Add(a.Target);
+				}
+			}
+
+			foreach (var a in removing)
+			{
+				values.modifications.RemoveAll(_ => _.Target.Equals(a));
+			}
+		}
+
+		static bool StartWith(IEnumerable<AccessKey> data, IEnumerable<AccessKey> prefix)
+		{
+			if (data.Count() < prefix.Count())
+			{
+				return false;
+			}
+
+			return prefix.SequenceEqual(data.Take(prefix.Count()));
+		}
+
 		static object CreateDefaultValue(Type type)
 		{
 			if (type.IsValueType)
@@ -55,14 +153,14 @@ namespace PrefabLike
 			return false;
 		}
 
-		public static void ApplyDifference(ref object target, Dictionary<AccessKeyGroup, object> difference, Asset asset, IAssetInstanceRoot root, Environment env)
+		public static void ApplyDifference(ref object target, Difference difference, Asset asset, IAssetInstanceRoot root, Environment env)
 		{
-			var differenceFirst = difference.Where(_ => _.Key.Keys.Last() is AccessKeyListCount).ToArray();
-			var differenceSecond = difference.Where(_ => !(_.Key.Keys.Last() is AccessKeyListCount)).ToArray();
+			var differenceFirst = difference.modifications.Where(_ => _.Target.Keys.Last() is AccessKeyListCount).ToArray();
+			var differenceSecond = difference.modifications.Where(_ => !(_.Target.Keys.Last() is AccessKeyListCount)).ToArray();
 
 			foreach (var diff in differenceFirst.Concat(differenceSecond))
 			{
-				var keys = diff.Key.Keys;
+				var keys = diff.Target.Keys;
 
 				var objects = new List<object>();
 				objects.Add(target);

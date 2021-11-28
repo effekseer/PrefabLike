@@ -62,20 +62,20 @@ namespace PrefabLikeTest
 
 			{
 				var diff = after.GenerateDifference(before);
-				var pair = diff.First();
-				var group = pair.Key;
+				var pair = diff.Modifications.First();
+				var group = pair.Target;
 				var field = group.Keys[0] as AccessKeyField;
-				Assert.AreEqual(1, diff.Count);
+				Assert.AreEqual(1, diff.Modifications.Count);
 				Assert.AreEqual("ValueInt32", field.Name);
 				Assert.AreEqual(5, pair.Value);
 			}
 
 			{
 				var diff = before.GenerateDifference(after);
-				var pair = diff.First();
-				var group = pair.Key;
+				var pair = diff.Modifications.First();
+				var group = pair.Target;
 				var field = group.Keys[0] as AccessKeyField;
-				Assert.AreEqual(1, diff.Count);
+				Assert.AreEqual(1, diff.Modifications.Count);
 				Assert.AreEqual("ValueInt32", field.Name);
 				Assert.AreEqual(0, pair.Value);
 			}
@@ -98,8 +98,8 @@ namespace PrefabLikeTest
 			after.Store(v, env);
 
 			var diff = before.GenerateDifference(after);
-			Assert.AreEqual(2, diff.Count);
-			Assert.AreEqual(1.0f, diff.First().Value);
+			Assert.AreEqual(2, diff.Modifications.Count);
+			Assert.AreEqual(1.0f, diff.Modifications.First().Value);
 		}
 
 		[Test]
@@ -118,8 +118,8 @@ namespace PrefabLikeTest
 			after.Store(v, env);
 
 			var diff = before.GenerateDifference(after);
-			Assert.AreEqual(1, diff.Count);
-			Assert.AreEqual(1.0f, diff.First().Value);
+			Assert.AreEqual(1, diff.Modifications.Count);
+			Assert.AreEqual(1.0f, diff.Modifications.First().Value);
 		}
 
 		[Test]
@@ -136,10 +136,10 @@ namespace PrefabLikeTest
 			after.Store(v, env);
 
 			var diff1 = before.GenerateDifference(after);
-			Assert.AreEqual(1, diff1.Count);
+			Assert.AreEqual(1, diff1.Modifications.Count);
 
 			var diff2 = after.GenerateDifference(before);
-			Assert.AreEqual(2, diff2.Count);
+			Assert.AreEqual(2, diff2.Modifications.Count);
 		}
 	}
 }

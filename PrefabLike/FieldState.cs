@@ -7,56 +7,6 @@ using Newtonsoft.Json.Linq;
 
 namespace PrefabLike
 {
-	class FieldStateUtils
-	{
-		static bool StartWith(IEnumerable<AccessKey> data, IEnumerable<AccessKey> prefix)
-		{
-			if (data.Count() < prefix.Count())
-			{
-				return false;
-			}
-
-			return prefix.SequenceEqual(data.Take(prefix.Count()));
-		}
-
-		public static void RemoveInvalidElements(Dictionary<AccessKeyGroup, object> values)
-		{
-			List<KeyValuePair<AccessKeyGroup, object>> listElementLengthes = new List<KeyValuePair<AccessKeyGroup, object>>();
-			foreach (var a in values)
-			{
-				if (a.Key.Keys.OfType<AccessKeyListCount>().Any())
-				{
-					listElementLengthes.Add(a);
-				}
-			}
-
-			var removing = new List<AccessKeyGroup>();
-			foreach (var a in values)
-			{
-				if (!(a.Key.Keys.OfType<AccessKeyListElement>().Any()))
-				{
-					continue;
-				}
-
-				var length = listElementLengthes.FirstOrDefault(_ => StartWith(a.Key.Keys, _.Key.Keys.Take(_.Key.Keys.Length - 1)));
-				if (length.Key == null)
-				{
-					continue;
-				}
-
-				if (Convert.ToInt64(a.Key.Keys.Skip(length.Key.Keys.Length - 2).OfType<AccessKeyListElement>().First().Index) >= Convert.ToInt64(length.Value))
-				{
-					removing.Add(a.Key);
-				}
-			}
-
-			foreach (var a in removing)
-			{
-				values.Remove(a);
-			}
-		}
-	}
-
 	public class FieldState
 	{
 		object ConvertValue(object o, Environment env)
@@ -129,12 +79,6 @@ namespace PrefabLike
 			var fields = o.GetType().GetFields();
 			foreach (var field in fields)
 			{
-				// TODO : refactor
-				if (field.Name == "Children")
-				{
-					continue;
-				}
-
 				var value = field.GetValue(o);
 				if (value is null)
 				{
@@ -194,9 +138,9 @@ namespace PrefabLike
 			currentValues = GetValues(o, env);
 		}
 
-		public Dictionary<AccessKeyGroup, object> GenerateDifference(FieldState baseState)
+		public Difference GenerateDifference(FieldState baseState)
 		{
-			var ret = new Dictionary<AccessKeyGroup, object>();
+			var ret = new Difference();
 
 			var baseValues = MakeGroup(baseState.currentValues);
 			var current = MakeGroup(currentValues);
@@ -224,7 +168,7 @@ namespace PrefabLike
 				}
 			}
 
-			FieldStateUtils.RemoveInvalidElements(ret);
+			Difference.RemoveInvalidElements(ret);
 
 			return ret;
 		}
