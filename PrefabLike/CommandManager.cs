@@ -33,13 +33,13 @@ namespace PrefabLike
 		public IAssetInstanceRoot Root;
 		public int InstanceID { get; set; }
 
-		public Dictionary<AccessKeyGroup, object> DiffRedo;
+		public Difference DiffRedo;
 
-		public Dictionary<AccessKeyGroup, object> DiffUndo;
+		public Difference DiffUndo;
 
-		public Dictionary<AccessKeyGroup, object> NewDifference;
+		public Difference NewDifference;
 
-		public Dictionary<AccessKeyGroup, object> OldDifference;
+		public Difference OldDifference;
 
 		public override void Execute(Environment env)
 		{
@@ -73,11 +73,11 @@ namespace PrefabLike
 				return null;
 			}
 
-			var keys1 = first.DiffRedo.Keys;
-			var keys2 = second.DiffRedo.Keys;
+			var keys1 = first.DiffRedo.Modifications.Select(_ => _.Target);
+			var keys2 = second.DiffRedo.Modifications.Select(_ => _.Target);
 
 
-			if (keys1.Count == keys2.Count && keys1.Union(keys2).Count() == keys2.Count())
+			if (keys1.Count() == keys2.Count() && keys1.Union(keys2).Count() == keys2.Count())
 			{
 				var cmd = new ValueChangeCommand();
 
@@ -299,29 +299,16 @@ namespace PrefabLike
 
 					var oldDifference = asset.GetDifference(instanceID);
 
-					var newDifference = new Dictionary<AccessKeyGroup, object>();
+					Difference newDifference = new Difference();
 
 					if (oldDifference != null)
 					{
-						foreach (var kv in oldDifference)
-						{
-							newDifference.Add(kv.Key, kv.Value);
-						}
+						newDifference = Difference.MergeDifference(diffRedo, oldDifference);
 					}
-
-					foreach (var diff in diffRedo)
+					else
 					{
-						if (newDifference.ContainsKey(diff.Key))
-						{
-							newDifference[diff.Key] = diff.Value;
-						}
-						else
-						{
-							newDifference.Add(diff.Key, diff.Value);
-						}
+						newDifference = diffRedo;
 					}
-
-					FieldStateUtils.RemoveInvalidElements(newDifference);
 
 					asset.SetDifference(instanceID, newDifference);
 
