@@ -64,7 +64,7 @@ namespace PrefabLikeTest
 				var diff = after.GenerateDifference(before);
 				var pair = diff.Modifications.First();
 				var group = pair.Target;
-				var field = group.Keys[0] as AccessKeyField;
+				var field = group.Keys[0];
 				Assert.AreEqual(1, diff.Modifications.Count);
 				Assert.AreEqual("ValueInt32", field.Name);
 				Assert.AreEqual(5, pair.Value);
@@ -74,7 +74,7 @@ namespace PrefabLikeTest
 				var diff = before.GenerateDifference(after);
 				var pair = diff.Modifications.First();
 				var group = pair.Target;
-				var field = group.Keys[0] as AccessKeyField;
+				var field = group.Keys[0];
 				Assert.AreEqual(1, diff.Modifications.Count);
 				Assert.AreEqual("ValueInt32", field.Name);
 				Assert.AreEqual(0, pair.Value);

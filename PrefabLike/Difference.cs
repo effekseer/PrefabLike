@@ -83,7 +83,7 @@ namespace PrefabLike
 			List<Modification> listElementLengthes = new List<Modification>();
 			foreach (var a in values.modifications)
 			{
-				if (a.Target.Keys.OfType<AccessKeyListCount>().Any())
+				if (a.Target.Keys.Any(_ => _.Name == Consts.Size))
 				{
 					listElementLengthes.Add(a);
 				}
@@ -92,7 +92,7 @@ namespace PrefabLike
 			var removing = new List<AccessKeyGroup>();
 			foreach (var a in values.modifications)
 			{
-				if (!(a.Target.Keys.OfType<AccessKeyListElement>().Any()))
+				if (!(a.Target.Keys.Any(_ => _.Name == Consts.Data)))
 				{
 					continue;
 				}
@@ -103,7 +103,7 @@ namespace PrefabLike
 					continue;
 				}
 
-				if (Convert.ToInt64(a.Target.Keys.Skip(length.Target.Keys.Length - 2).OfType<AccessKeyListElement>().First().Index) >= Convert.ToInt64(length.Value))
+				if (Convert.ToInt64(a.Target.Keys.Skip(length.Target.Keys.Length - 2).First(_ => _.Name == Consts.Data).Index) >= Convert.ToInt64(length.Value))
 				{
 					removing.Add(a.Target);
 				}
@@ -187,11 +187,48 @@ namespace PrefabLike
 
 				for (int i = 0; i < keys.Length; i++)
 				{
-					var key = keys[i];
+					var akf = keys[i];
 
-					if (key is AccessKeyField akf)
+					var obj = objects[objects.Count - 1];
+
+					if (akf.Name == Consts.Size)
 					{
-						var obj = objects[objects.Count - 1];
+						lastType = null;
+
+						var o = objects[objects.Count - 1];
+						if (o is IList list)
+						{
+							var count = Convert.ToInt64(diff.Value);
+							if (list.Count > count)
+							{
+								list.Clear();
+							}
+
+							while (list.Count < count)
+							{
+								var type = o.GetType().GetGenericArguments()[0];
+								var newValue = CreateDefaultValue(type);
+								list.Add(newValue);
+							}
+						}
+
+						objects.Add(new object());
+
+					}
+					else if (akf.Name == Consts.Data)
+					{
+						lastType = null;
+
+						if (objects[objects.Count - 1] is IList list)
+						{
+							lastType = list.GetType().GenericTypeArguments[0];
+
+							var value = GetValueWithIndex(list, akf.Index.Value);
+							objects.Add(value);
+						}
+					}
+					else
+					{
 						var field = obj.GetType().GetField(akf.Name);
 
 						// not found because a data structure was changed
@@ -230,45 +267,6 @@ namespace PrefabLike
 						}
 
 						objects.Add(o);
-					}
-					else if (key is AccessKeyListCount aklc)
-					{
-						lastType = null;
-
-						var o = objects[objects.Count - 1];
-						if (o is IList list)
-						{
-							var count = Convert.ToInt64(diff.Value);
-							if (list.Count > count)
-							{
-								list.Clear();
-							}
-
-							while (list.Count < count)
-							{
-								var type = o.GetType().GetGenericArguments()[0];
-								var newValue = CreateDefaultValue(type);
-								list.Add(newValue);
-							}
-						}
-
-						objects.Add(new object());
-					}
-					else if (key is AccessKeyListElement akle)
-					{
-						lastType = null;
-
-						if (objects[objects.Count - 1] is IList list)
-						{
-							lastType = list.GetType().GenericTypeArguments[0];
-
-							var value = GetValueWithIndex(list, akle.Index);
-							objects.Add(value);
-						}
-					}
-					else
-					{
-						throw new Exception();
 					}
 				}
 
@@ -309,27 +307,23 @@ namespace PrefabLike
 				{
 					var key = keys[i];
 
-					if (key is AccessKeyField)
+					var k = key;
+					if (k.Name == Consts.Size)
 					{
-						var k = key as AccessKeyField;
+
+					}
+					else if (k.Name == Consts.Data)
+					{
+						SetValueToIndex(objects[i], objects[i + 1], k.Index.Value);
+					}
+					else
+					{
 						var field = objects[i].GetType().GetField(k.Name);
 						var o = objects[i];
 
 						field.SetValue(o, objects[i + 1]);
 						objects[i] = o;
-					}
-					else if (key is AccessKeyListCount)
-					{
-						// None
-					}
-					else if (key is AccessKeyListElement)
-					{
-						var k = key as AccessKeyListElement;
-						SetValueToIndex(objects[i], objects[i + 1], k.Index);
-					}
-					else
-					{
-						throw new Exception();
+
 					}
 				}
 			Exit:;
