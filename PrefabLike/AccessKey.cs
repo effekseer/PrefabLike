@@ -74,6 +74,8 @@ namespace PrefabLike
 
 	public abstract class AccessKey
 	{
+		public string Name;
+		public int? Index;
 		public enum AccessKeyType
 		{
 			Field = 0,
@@ -98,12 +100,6 @@ namespace PrefabLike
 				case AccessKeyType.Field:
 					key = new AccessKeyField();
 					break;
-				case AccessKeyType.ListElement:
-					key = new AccessKeyListElement();
-					break;
-				case AccessKeyType.ListCount:
-					key = new AccessKeyListCount();
-					break;
 				default:
 					throw new NotImplementedException();
 			}
@@ -119,8 +115,6 @@ namespace PrefabLike
 
 	public class AccessKeyField : AccessKey
 	{
-		public string Name;
-
 		public override int GetHashCode()
 		{
 			return Name.GetHashCode();
@@ -140,84 +134,25 @@ namespace PrefabLike
 		protected override void Serialize(JObject o)
 		{
 			o["Name"] = Name;
+			if (Index.HasValue)
+			{
+				o["Index"] = Index.Value;
+			}
 		}
 
 		protected override void Deserialize(JObject o)
 		{
 			Name = (string)o["Name"];
+
+			if (o.ContainsKey("Index"))
+			{
+				Index = (int)o["Index"];
+			}
 		}
 
 		public override string ToString()
 		{
 			return Name;
-		}
-	}
-
-	public class AccessKeyListCount : AccessKey
-	{
-		public override int GetHashCode()
-		{
-			return 0;
-		}
-
-		public override bool Equals(object obj)
-		{
-			var o = obj as AccessKeyListCount;
-			if (o is null)
-				return false;
-
-			return true;
-		}
-
-		public override AccessKeyType Type { get => AccessKeyType.ListCount; }
-
-		protected override void Serialize(JObject o)
-		{
-			//throw new NotImplementedException();
-		}
-		protected override void Deserialize(JObject o)
-		{
-			//throw new NotImplementedException();
-		}
-
-		public override string ToString()
-		{
-			return "!Count";
-		}
-	}
-
-	public class AccessKeyListElement : AccessKey
-	{
-		public int Index;
-
-		public override int GetHashCode()
-		{
-			return Index.GetHashCode();
-		}
-
-		public override bool Equals(object obj)
-		{
-			var o = obj as AccessKeyListElement;
-			if (o is null)
-				return false;
-
-			return Index == o.Index;
-		}
-		public override AccessKeyType Type { get => AccessKeyType.ListElement; }
-
-		protected override void Serialize(JObject o)
-		{
-			o["Index"] = Index;
-		}
-
-		protected override void Deserialize(JObject o)
-		{
-			Index = (int)o["Index"];
-		}
-
-		public override string ToString()
-		{
-			return "[" + Index + "]";
 		}
 	}
 }

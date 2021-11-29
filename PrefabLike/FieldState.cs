@@ -52,12 +52,12 @@ namespace PrefabLike
 				var list = (IList)o;
 				var values = new List<Element>();
 
-				values.Add(new Element { Target = new AccessKeyListCount(), Value = list.Count });
+				values.Add(new Element { Target = new AccessKeyField() { Name = Consts.Size }, Value = list.Count });
 
 				for (int i = 0; i < list.Count; i++)
 				{
 					var v = ConvertValue(list[i], env);
-					values.Add(new Element { Target = new AccessKeyListElement { Index = i }, Value = v });
+					values.Add(new Element { Target = new AccessKeyField() { Name = Consts.Data, Index = i }, Value = v });
 				}
 
 				return values;
