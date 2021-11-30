@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Linq;
-using Newtonsoft.Json.Linq;
 
 namespace PrefabLike
 {
@@ -62,36 +61,16 @@ namespace PrefabLike
 
 	class NodeTreeBase
 	{
-		/// <summary>
-		/// この Prefab が生成するインスタンスの型。
-		/// Template と同時に使うことはできない。BaseType を持つなら、Template は null でなければならない。
-		/// </summary>
 		public string BaseType;
 
-		/// <summary>
-		/// 継承元。Prefab は別の Prefab を元に作成することができる。
-		/// BaseType が null の場合、これをもとにインスタンスを作成する。
-		/// </summary>
 		public string Template;
 
-		/// <summary>
-		/// IDをリマップする。
-		/// </summary>
 		public Dictionary<int, int> IDRemapper = new Dictionary<int, int>();
 
-		/// <summary>
-		/// IDとそのIDのインスタンスの変更
-		/// </summary>
 		public Dictionary<int, Difference> Differences = new Dictionary<int, Difference>();
 
-		/// <summary>
-		/// 親のID
-		/// </summary>
 		public int ParentID;
 
-		/// <summary>
-		/// ルートのID
-		/// </summary>
 		public int RootID = -1;
 	}
 
@@ -99,133 +78,14 @@ namespace PrefabLike
 	{
 		public List<NodeTreeBase> Bases = new List<NodeTreeBase>();
 
-		JToken ConvertCSToJson(Object o)
-		{
-			if (o != null)
-			{
-				return JToken.FromObject(o);
-			}
-			else
-			{
-				return null;
-			}
-		}
-
 		public string Serialize()
 		{
-			var root = new JObject();
-			var basesArray = new JArray();
-
-			foreach (var b in Bases)
-			{
-				var jnode = new JObject();
-
-				if (!string.IsNullOrEmpty(b.BaseType))
-				{
-					jnode["BaseType"] = b.BaseType;
-				}
-
-				if (!string.IsNullOrEmpty(b.Template))
-				{
-					jnode["Template"] = b.Template;
-				}
-
-				var differences = new JArray();
-
-				foreach (var ds in b.Differences)
-				{
-					var kv = new JObject();
-					kv["Key"] = ds.Key;
-
-					var difference = new JArray();
-
-					foreach (var pair in ds.Value.Modifications)
-					{
-						var p = new JObject();
-						p["Key"] = pair.Target.Serialize();
-						p["Value"] = ConvertCSToJson(pair.Value);
-
-						difference.Add(p);
-					}
-
-					kv["Value"] = difference;
-					differences.Add(kv);
-				}
-
-				jnode["Differences"] = differences;
-
-				jnode["RootID"] = b.RootID;
-
-				jnode["ParentID"] = b.ParentID;
-
-				var idRemapper = new JObject();
-				foreach (var kv in b.IDRemapper)
-				{
-					idRemapper[kv.Key.ToString()] = kv.Value;
-				}
-
-				jnode["IDRemapper"] = idRemapper;
-
-				basesArray.Add(jnode);
-			}
-
-			root["Bases"] = basesArray;
-			return root.ToString();
+			return JsonSerializer.Serialize(this);
 		}
 
 		public static NodeTreeGroupInternalData Deserialize(string json)
 		{
-			var internalData = new NodeTreeGroupInternalData();
-
-			var o = JObject.Parse(json);
-			var bases = o["Bases"] as JArray;
-
-			foreach (var b in bases.Cast<JObject>())
-			{
-				var nb = new NodeTreeBase();
-
-				if (b.ContainsKey("BaseType"))
-				{
-					nb.BaseType = (string)b["BaseType"];
-				}
-
-				if (b.ContainsKey("Template"))
-				{
-					nb.Template = (string)b["Template"];
-				}
-
-				var differences = b["Differences"];
-
-				foreach (var ds in differences)
-				{
-					var targetID = (int)ds["Key"];
-
-					var difference = ds["Value"] as JArray;
-					var diff = new Difference();
-
-					foreach (var pair in difference)
-					{
-						var key = AccessKeyGroup.Deserialize((JObject)pair["Key"]); //AccessKey.FromJson((JObject)pair["Key"]);
-						var value = pair["Value"].ToObject<object>();
-						diff.Add(key, value);
-					}
-
-					nb.Differences.Add(targetID, diff);
-				}
-
-				nb.RootID = (int)b["RootID"];
-
-				nb.ParentID = (int)b["ParentID"];
-
-				foreach (var kv in b["IDRemapper"] as JObject)
-				{
-					nb.IDRemapper.Add(int.Parse(kv.Key), (int)kv.Value);
-				}
-
-				internalData.Bases.Add(nb);
-			}
-
-			return internalData;
+			return JsonSerializer.Deserialize<NodeTreeGroupInternalData>(json);
 		}
 	}
 
@@ -395,17 +255,15 @@ namespace PrefabLike
 
 		public string Serialize()
 		{
-			var o = new JObject();
-			o["InternalData"] = InternalData.Serialize();
-			string json = o.ToString();
-			return json;
+			return InternalData.Serialize();
 		}
 
 		public static NodeTreeGroup Deserialize(string json)
 		{
-			var o = JObject.Parse(json);
 			var prefab = new NodeTreeGroup();
-			prefab.InternalData = NodeTreeGroupInternalData.Deserialize((string)o["InternalData"]);
+
+			prefab.InternalData = NodeTreeGroupInternalData.Deserialize(json);
+
 			return prefab;
 		}
 	}

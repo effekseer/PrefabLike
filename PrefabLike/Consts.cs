@@ -10,5 +10,6 @@ namespace PrefabLike
 	{
 		public const string Size = "!Size";
 		public const string Data = "!Data";
+		public const string Dict = "!Dict";
 	}
 }
