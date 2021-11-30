@@ -33,21 +33,9 @@ namespace PrefabLike
 			{
 				return (string)value;
 			}
-			else if (value is float)
+			else if (value.GetType().IsPrimitive)
 			{
-				return (float)value;
-			}
-			else if (value is int)
-			{
-				return (int)value;
-			}
-			else if (value is double)
-			{
-				return (double)value;
-			}
-			else if (value is bool)
-			{
-				return (bool)value;
+				return JToken.FromObject(value);
 			}
 			else if (value.GetType().IsArray)
 			{
@@ -176,7 +164,7 @@ namespace PrefabLike
 			{
 				if (jtoken.Type == JTokenType.Integer)
 				{
-					return jtoken.Value<int>();
+					return Convert.ChangeType(jtoken.Value<object>(), type);
 				}
 				else if (jtoken.Type == JTokenType.Float)
 				{
