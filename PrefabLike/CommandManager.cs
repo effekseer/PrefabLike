@@ -299,7 +299,7 @@ namespace PrefabLike
 
 					var oldDifference = asset.GetDifference(instanceID);
 
-					Difference newDifference = new Difference();
+					Difference newDifference = null;
 
 					if (oldDifference != null)
 					{

@@ -6,8 +6,10 @@ using System.Linq;
 
 namespace PrefabLike
 {
+	[Serializable]
 	public class Difference
 	{
+		[Serializable]
 		public class Modification
 		{
 			public AccessKeyGroup Target;
@@ -187,11 +189,11 @@ namespace PrefabLike
 
 				for (int i = 0; i < keys.Length; i++)
 				{
-					var akf = keys[i];
+					var key = keys[i];
 
 					var obj = objects[objects.Count - 1];
 
-					if (akf.Name == Consts.Size)
+					if (key.Name == Consts.Size)
 					{
 						lastType = null;
 
@@ -215,7 +217,7 @@ namespace PrefabLike
 						objects.Add(new object());
 
 					}
-					else if (akf.Name == Consts.Data)
+					else if (key.Name == Consts.Data)
 					{
 						lastType = null;
 
@@ -223,13 +225,13 @@ namespace PrefabLike
 						{
 							lastType = list.GetType().GenericTypeArguments[0];
 
-							var value = GetValueWithIndex(list, akf.Index.Value);
+							var value = GetValueWithIndex(list, key.Index.Value);
 							objects.Add(value);
 						}
 					}
 					else
 					{
-						var field = obj.GetType().GetField(akf.Name);
+						var field = obj.GetType().GetField(key.Name);
 
 						// not found because a data structure was changed
 						if (field == null)
@@ -323,7 +325,6 @@ namespace PrefabLike
 
 						field.SetValue(o, objects[i + 1]);
 						objects[i] = o;
-
 					}
 				}
 			Exit:;
